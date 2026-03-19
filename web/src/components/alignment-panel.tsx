@@ -1,67 +1,109 @@
-export function AlignmentPanel() {
-  const alignments = [
-    {
-      statement: "Border communities need more direct federal engagement, not just enforcement presence",
-      communities: ["Mexican-American Diaspora", "Rural Border Towns", "Policy Wonks DC"],
-      agreement_pct: 87,
-    },
-    {
-      statement: "Remote work has permanently changed the relationship between cities and rural areas",
-      communities: ["Rural Appalachia", "Bay Area Tech Workers", "Academic Economists"],
-      agreement_pct: 74,
-    },
-  ];
+"use client";
+
+import { SEED_COMMUNITIES } from "@/lib/seed-data";
+import type { CommunityAlignment } from "@shared/types";
+
+interface AlignmentPanelProps {
+  alignments: CommunityAlignment[];
+  topicTitle?: string;
+}
+
+function getCommunityColor(id: string): string {
+  const community = SEED_COMMUNITIES.find((c) => c.id === id);
+  return community?.color_hex ?? "#4A4A6A";
+}
+
+function getCommunityName(id: string): string {
+  const community = SEED_COMMUNITIES.find((c) => c.id === id);
+  return community?.name ?? "Unknown";
+}
+
+export function AlignmentPanel({ alignments, topicTitle }: AlignmentPanelProps) {
+  const sorted = [...alignments].sort(
+    (a, b) => b.agreement_pct - a.agreement_pct
+  );
+
+  const topAgreement = sorted[0]?.agreement_pct ?? 0;
 
   return (
-    <aside className="w-[320px] h-full bg-prism-bg-secondary border-l border-prism-border flex flex-col">
+    <aside className="w-[320px] h-full bg-prism-bg-secondary border-l border-prism-border flex flex-col shrink-0 hidden lg:flex">
+      {/* Header */}
       <div className="p-4 border-b border-prism-border">
-        <h2 className="text-sm font-semibold text-prism-text-primary">Cross-Community Alignment</h2>
-        <p className="text-xs text-prism-text-dim mt-0.5">Where communities agree</p>
+        <h2 className="text-sm font-semibold text-prism-text-primary">
+          Cross-Community Alignment
+        </h2>
+        <p className="text-xs text-prism-text-dim mt-0.5">
+          {topicTitle ? `Where communities agree on "${topicTitle}"` : "Where communities agree"}
+        </p>
       </div>
 
-      <div className="p-3 border-b border-prism-border">
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-prism-text-dim">
-            Most Agreed
-          </span>
-          <span className="font-mono text-lg font-bold text-prism-accent-verified">
-            {alignments[0].agreement_pct}%
-          </span>
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-3 space-y-3">
-        {alignments.map((item, i) => (
-          <div
-            key={i}
-            className="p-3 rounded-lg bg-prism-bg-elevated border border-prism-border"
-          >
-            <p className="text-sm text-prism-text-primary leading-snug mb-2">
-              &ldquo;{item.statement}&rdquo;
-            </p>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="flex-1 h-1.5 bg-prism-bg-primary rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-prism-accent-verified rounded-full transition-all"
-                  style={{ width: `${item.agreement_pct}%` }}
-                />
-              </div>
-              <span className="font-mono text-xs text-prism-accent-verified font-bold">
-                {item.agreement_pct}%
-              </span>
-            </div>
-            <div className="flex flex-wrap gap-1">
-              {item.communities.map((c) => (
-                <span
-                  key={c}
-                  className="text-[10px] px-1.5 py-0.5 rounded bg-prism-bg-primary text-prism-text-dim"
-                >
-                  {c}
-                </span>
-              ))}
-            </div>
+      {/* Top stat */}
+      {sorted.length > 0 && (
+        <div className="p-3 border-b border-prism-border">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-prism-text-dim">
+              Highest Agreement
+            </span>
+            <span className="font-mono text-lg font-bold text-prism-accent-verified">
+              {topAgreement}%
+            </span>
           </div>
-        ))}
+        </div>
+      )}
+
+      {/* Alignment cards */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-3">
+        {sorted.length > 0 ? (
+          sorted.map((item) => (
+            <div
+              key={item.id}
+              className="p-3 rounded-lg bg-prism-bg-elevated border border-prism-border"
+            >
+              <p className="text-sm text-prism-text-primary leading-snug mb-3">
+                &ldquo;{item.alignment_statement}&rdquo;
+              </p>
+
+              {/* Agreement bar */}
+              <div className="flex items-center gap-2 mb-2.5">
+                <div className="flex-1 h-1.5 bg-prism-bg-primary rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-prism-accent-verified rounded-full transition-all duration-500"
+                    style={{ width: `${item.agreement_pct}%` }}
+                  />
+                </div>
+                <span className="font-mono text-xs text-prism-accent-verified font-bold w-10 text-right">
+                  {item.agreement_pct}%
+                </span>
+              </div>
+
+              {/* Community tags with colors */}
+              <div className="flex flex-wrap gap-1">
+                {item.community_ids.map((cid) => (
+                  <span
+                    key={cid}
+                    className="text-[10px] px-1.5 py-0.5 rounded inline-flex items-center gap-1"
+                    style={{
+                      backgroundColor: getCommunityColor(cid) + "15",
+                      color: getCommunityColor(cid),
+                    }}
+                  >
+                    <span
+                      className="w-1.5 h-1.5 rounded-full"
+                      style={{ backgroundColor: getCommunityColor(cid) }}
+                    />
+                    {getCommunityName(cid)}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-sm text-prism-text-dim">
+              Select a topic to see alignment data.
+            </p>
+          </div>
+        )}
       </div>
     </aside>
   );

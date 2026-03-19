@@ -1,14 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import type { ReactionType } from "@shared/types";
+import type { CommunityType, ReactionType } from "@shared/types";
 import { REACTION_LABELS } from "@/lib/constants";
 
 interface PerspectiveCardProps {
+  id: string;
   community: {
     name: string;
     region: string;
-    community_type: string;
+    community_type: CommunityType;
     color_hex: string;
     verified: boolean;
   };
@@ -16,16 +17,27 @@ interface PerspectiveCardProps {
   context: string;
   category_tag: string;
   reaction_count: number;
+  bookmark_count?: number;
+  isNew?: boolean;
+  onSelect?: (id: string) => void;
+  animationDelay?: number;
 }
 
 export function PerspectiveCard({
+  id,
   community,
   quote,
   context,
   category_tag,
   reaction_count,
+  bookmark_count = 0,
+  isNew = false,
+  onSelect,
+  animationDelay = 0,
 }: PerspectiveCardProps) {
-  const [activeReaction, setActiveReaction] = useState<ReactionType | null>(null);
+  const [activeReaction, setActiveReaction] = useState<ReactionType | null>(
+    null
+  );
   const [bookmarked, setBookmarked] = useState(false);
 
   const handleReaction = (type: ReactionType) => {
@@ -34,21 +46,50 @@ export function PerspectiveCard({
 
   return (
     <div
-      className="rounded-[10px] border border-prism-border bg-prism-bg-secondary p-5 animate-fade-in"
-      style={{ borderLeftWidth: "3px", borderLeftColor: community.color_hex }}
+      className="rounded-[10px] border border-prism-border bg-prism-bg-secondary p-5 opacity-0 animate-fade-in cursor-pointer hover:bg-prism-bg-elevated/50 transition-colors duration-200 group relative"
+      style={{
+        borderLeftWidth: "3px",
+        borderLeftColor: community.color_hex,
+        animationDelay: `${animationDelay}ms`,
+        animationFillMode: "forwards",
+      }}
+      onClick={() => onSelect?.(id)}
+      role="article"
+      tabIndex={0}
     >
-      <div className="flex items-center gap-2 mb-3">
-        <div
-          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold"
-          style={{ backgroundColor: community.color_hex + "20", color: community.color_hex }}
-        >
-          {community.name.charAt(0)}
+      {/* NEW TO YOU indicator for Discover tab */}
+      {isNew && (
+        <div className="absolute -top-2 -right-2 bg-prism-accent-active text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-lg">
+          ✦ NEW TO YOU
         </div>
-        <div className="flex-1">
+      )}
+
+      {/* Community header */}
+      <div className="flex items-center gap-2.5 mb-3">
+        <div
+          className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+          style={{
+            backgroundColor: community.color_hex + "20",
+            color: community.color_hex,
+          }}
+        >
+          {community.name
+            .split(" ")
+            .map((w) => w[0])
+            .slice(0, 2)
+            .join("")}
+        </div>
+        <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className="text-sm font-medium text-prism-text-primary">{community.name}</span>
+            <span className="text-sm font-medium text-prism-text-primary truncate">
+              {community.name}
+            </span>
             {community.verified && (
-              <svg className="w-3.5 h-3.5 text-prism-accent-verified" viewBox="0 0 20 20" fill="currentColor">
+              <svg
+                className="w-3.5 h-3.5 text-prism-accent-verified shrink-0"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
                 <path
                   fillRule="evenodd"
                   d="M16.403 12.652a3 3 0 010-5.304 3 3 0 00-3.75-3.751 3 3 0 00-5.305 0 3 3 0 00-3.751 3.75 3 3 0 000 5.305 3 3 0 003.75 3.751 3 3 0 005.305 0 3 3 0 003.751-3.75zm-2.546-4.46a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
@@ -61,46 +102,69 @@ export function PerspectiveCard({
         </div>
       </div>
 
+      {/* Quote — the most important element */}
       <blockquote className="font-display italic text-base leading-relaxed text-prism-text-primary mb-3">
         &ldquo;{quote}&rdquo;
       </blockquote>
 
-      <p className="text-[13px] text-prism-text-secondary leading-snug mb-4">{context}</p>
+      {/* Context */}
+      <p className="text-[13px] text-prism-text-secondary leading-snug mb-4">
+        {context}
+      </p>
 
+      {/* Footer: category tag + reactions */}
       <div className="flex items-center justify-between">
         <span className="text-xs px-2 py-0.5 rounded-full bg-prism-bg-elevated text-prism-text-dim">
           {category_tag}
         </span>
-        <div className="flex items-center gap-1">
-          {(Object.entries(REACTION_LABELS) as [ReactionType, { emoji: string; label: string }][]).map(
-            ([type, { emoji, label }]) => (
-              <button
-                key={type}
-                onClick={() => handleReaction(type)}
-                className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-colors ${
-                  activeReaction === type
-                    ? "bg-prism-accent-active/20 text-prism-accent-active"
-                    : "text-prism-text-dim hover:text-prism-text-secondary hover:bg-prism-bg-elevated"
-                }`}
-                title={label}
-              >
-                <span>{emoji}</span>
-                <span className="font-mono text-[10px]">
-                  {reaction_count + (activeReaction === type ? 1 : 0)}
-                </span>
-              </button>
-            )
-          )}
+        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+          {(
+            Object.entries(REACTION_LABELS) as [
+              ReactionType,
+              { emoji: string; label: string },
+            ][]
+          ).map(([type, { emoji, label }]) => (
+            <button
+              key={type}
+              onClick={() => handleReaction(type)}
+              className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-all duration-150 ${
+                activeReaction === type
+                  ? "bg-prism-accent-active/20 text-prism-accent-active scale-105"
+                  : "text-prism-text-dim hover:text-prism-text-secondary hover:bg-prism-bg-elevated"
+              }`}
+              title={label}
+              aria-label={label}
+            >
+              <span>{emoji}</span>
+              <span className="font-mono text-[10px]">
+                {reaction_count + (activeReaction === type ? 1 : 0)}
+              </span>
+            </button>
+          ))}
           <button
             onClick={() => setBookmarked(!bookmarked)}
-            className={`ml-1 p-1 rounded transition-colors ${
-              bookmarked ? "text-prism-accent-active" : "text-prism-text-dim hover:text-prism-text-secondary"
+            className={`ml-1 p-1 rounded transition-all duration-150 ${
+              bookmarked
+                ? "text-prism-accent-active"
+                : "text-prism-text-dim hover:text-prism-text-secondary"
             }`}
-            title="Bookmark"
+            title={bookmarked ? "Remove bookmark" : "Bookmark"}
+            aria-label={bookmarked ? "Remove bookmark" : "Bookmark"}
           >
-            <svg className="w-4 h-4" viewBox="0 0 20 20" fill={bookmarked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5">
+            <svg
+              className="w-4 h-4"
+              viewBox="0 0 20 20"
+              fill={bookmarked ? "currentColor" : "none"}
+              stroke="currentColor"
+              strokeWidth="1.5"
+            >
               <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
             </svg>
+            {bookmark_count > 0 && (
+              <span className="font-mono text-[10px] ml-0.5">
+                {bookmark_count + (bookmarked ? 1 : 0)}
+              </span>
+            )}
           </button>
         </div>
       </div>
