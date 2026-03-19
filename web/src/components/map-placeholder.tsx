@@ -1,72 +1,121 @@
 "use client";
 
-import type { Community } from "../../../shared/types";
+import { COMMUNITY_COLORS } from "@/lib/constants";
+import type { CommunityType } from "@shared/types";
 
-const COMMUNITY_TYPE_COLORS: Record<string, string> = {
-  civic: "#4A9EFF",
-  diaspora: "#F59E0B",
-  rural: "#22C55E",
-  policy: "#A855F7",
-  academic: "#EC4899",
-  cultural: "#F97316",
-};
+const MOCK_PINS: {
+  x: number;
+  y: number;
+  type: CommunityType;
+  size: "lg" | "md" | "sm";
+}[] = [
+  { x: 25, y: 40, type: "rural", size: "lg" },
+  { x: 18, y: 35, type: "civic", size: "md" },
+  { x: 30, y: 55, type: "diaspora", size: "lg" },
+  { x: 70, y: 30, type: "academic", size: "sm" },
+  { x: 55, y: 45, type: "cultural", size: "md" },
+  { x: 80, y: 50, type: "policy", size: "sm" },
+  { x: 42, y: 28, type: "civic", size: "lg" },
+  { x: 65, y: 60, type: "diaspora", size: "md" },
+];
 
-interface MapPlaceholderProps {
-  communities: Community[];
-}
+const SIZE_MAP = { lg: 14, md: 10, sm: 6 };
 
-export function MapPlaceholder({ communities }: MapPlaceholderProps) {
+export function MapPlaceholder() {
   return (
-    <div className="absolute inset-0 bg-[#0a0a1a] overflow-hidden">
-      <div className="absolute inset-0 opacity-10">
-        <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#334155" strokeWidth="0.5" />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#grid)" />
-        </svg>
+    <div className="relative w-full h-full rounded-xl overflow-hidden bg-prism-map-ocean border border-prism-border">
+      <div className="absolute inset-0 bg-prism-map-land/30" />
+
+      {/* SVG continent outlines */}
+      <svg
+        className="absolute inset-0 w-full h-full opacity-20"
+        viewBox="0 0 100 70"
+        preserveAspectRatio="none"
+      >
+        <path
+          d="M15 20 Q20 15 25 18 L30 25 Q28 35 22 40 L18 45 Q12 50 15 55 L20 60 Q25 58 28 55"
+          fill="#161B22"
+          stroke="#2A3441"
+          strokeWidth="0.3"
+        />
+        <path
+          d="M55 15 Q65 10 75 18 L80 25 Q78 35 70 40 L65 38 Q60 32 58 25"
+          fill="#161B22"
+          stroke="#2A3441"
+          strokeWidth="0.3"
+        />
+      </svg>
+
+      {/* LIVE indicator */}
+      <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-prism-bg-primary/80 backdrop-blur-sm px-2.5 py-1 rounded-full z-10">
+        <span className="w-2 h-2 rounded-full bg-prism-accent-live animate-pulse-slow" />
+        <span className="text-[10px] font-semibold tracking-widest text-prism-accent-live uppercase">
+          Live
+        </span>
       </div>
 
-      {communities.map((community, i) => {
-        const positions = [
-          { left: "35%", top: "40%" },
-          { left: "55%", top: "55%" },
-          { left: "45%", top: "30%" },
-        ];
-        const pos = positions[i % positions.length];
-        const color = COMMUNITY_TYPE_COLORS[community.community_type] ?? "#666";
-
+      {/* Map pins */}
+      {MOCK_PINS.map((pin, i) => {
+        const size = SIZE_MAP[pin.size];
+        const color = COMMUNITY_COLORS[pin.type];
         return (
           <div
-            key={community.id}
-            className="absolute transform -translate-x-1/2 -translate-y-1/2 group cursor-pointer"
-            style={{ left: pos.left, top: pos.top }}
+            key={i}
+            className="absolute animate-pulse-glow"
+            style={{
+              left: `${pin.x}%`,
+              top: `${pin.y}%`,
+              transform: "translate(-50%, -50%)",
+            }}
           >
+            {pin.size !== "sm" && (
+              <>
+                <div
+                  className="absolute rounded-full"
+                  style={{
+                    width: size * 3,
+                    height: size * 3,
+                    backgroundColor: color,
+                    opacity: 0.15,
+                    left: "50%",
+                    top: "50%",
+                    transform: "translate(-50%, -50%)",
+                  }}
+                />
+                <div
+                  className="absolute rounded-full"
+                  style={{
+                    width: size * 2,
+                    height: size * 2,
+                    backgroundColor: color,
+                    opacity: 0.3,
+                    left: "50%",
+                    top: "50%",
+                    transform: "translate(-50%, -50%)",
+                  }}
+                />
+              </>
+            )}
             <div
-              className="absolute -inset-4 rounded-full animate-ping opacity-20"
-              style={{ backgroundColor: color }}
+              className="relative rounded-full"
+              style={{
+                width: size,
+                height: size,
+                backgroundColor: color,
+                boxShadow: `0 0 ${size}px ${color}60`,
+              }}
             />
-            <div
-              className="absolute -inset-2 rounded-full opacity-30"
-              style={{ backgroundColor: color }}
-            />
-            <div
-              className="w-4 h-4 rounded-full relative z-10 shadow-lg"
-              style={{ backgroundColor: color, boxShadow: `0 0 20px ${color}80` }}
-            />
-            <div className="absolute left-6 top-1/2 -translate-y-1/2 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-              <span className="text-xs font-medium text-white bg-black/70 px-2 py-1 rounded">
-                {community.name}
-              </span>
-            </div>
           </div>
         );
       })}
 
-      <div className="absolute bottom-4 left-4 text-xs text-zinc-600">
-        Map placeholder — Mapbox GL JS will render here with a valid token
+      {/* Mapbox token prompt */}
+      <div className="absolute bottom-3 left-3 bg-prism-bg-primary/80 backdrop-blur-sm px-3 py-2 rounded-lg">
+        <p className="text-[11px] text-prism-text-dim">
+          {process.env.NEXT_PUBLIC_MAPBOX_TOKEN
+            ? "Mapbox connected"
+            : "Add NEXT_PUBLIC_MAPBOX_TOKEN for live map"}
+        </p>
       </div>
     </div>
   );
