@@ -35,11 +35,13 @@ cd web && npm run build
 
 ### Key Gotchas
 
-- **ShadCN v4 + Tailwind v3**: The project uses ShadCN UI components that have been downgraded to Tailwind CSS v3 compatibility. The `components.json` references `style: "base-nova"` but the actual components in `src/components/ui/` are v3-compatible rewrites. When adding new ShadCN components via `npx shadcn@latest add`, you may need to manually adjust them for Tailwind v3 syntax (e.g., replace `@import "shadcn/tailwind.css"` with `@tailwind` directives, remove `@base-ui/react` imports).
+- **ShadCN v4 + Tailwind v3**: The project uses ShadCN UI components that have been downgraded to Tailwind CSS v3 compatibility. The `components.json` references `style: "base-nova"` but the actual components in `src/components/ui/` are v3-compatible rewrites. When adding new ShadCN components via `npx shadcn@latest add`, you **must** manually adjust them for Tailwind v3 syntax: replace `@import "shadcn/tailwind.css"` with `@tailwind` directives, remove `@base-ui/react` imports, and replace `useRender` patterns with standard `React.forwardRef`.
 - **Supabase local dev requires Docker**: The Supabase CLI is installed as a dev dependency (`npx supabase`), but `supabase start` requires Docker, which is not available in the Cloud Agent environment. Use Supabase cloud project credentials in `.env.local` for testing, or mock data for UI development.
-- **Environment variables**: Copy `web/.env.example` to `web/.env.local` and fill in real values for Supabase and Mapbox. The checked-in `.env.local` has local Supabase dev defaults and a placeholder Mapbox token.
+- **Supabase client is nullable**: `src/lib/supabase.ts` exports `supabase` as `SupabaseClient | null`. It returns `null` when the Supabase URL is not a valid HTTP(S) URL. Always null-check before using.
+- **Environment variables**: Secrets are injected via environment. Copy `web/.env.example` to `web/.env.local` and fill in real values. Required: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_MAPBOX_TOKEN` (must start with `pk.`).
+- **Health check endpoint**: `GET /api/health` reports the status of Supabase connection and env var configuration. Use it to verify credentials are working.
 - **Shared types import path**: Components import from `../../../shared/types` (relative path). This works with the current directory structure but future work should add a path alias.
-- **Map placeholder**: The center map area renders a placeholder grid with animated community pins. Real Mapbox GL JS rendering requires a valid `NEXT_PUBLIC_MAPBOX_TOKEN`.
+- **Mapbox map**: The `PrismMap` component (`src/components/prism-map.tsx`) dynamically imports `mapbox-gl` and gracefully falls back to an error message when the token is missing or invalid. Mapbox CSS is loaded via CDN link in `layout.tsx`.
 
 ### Spec Documents
 
