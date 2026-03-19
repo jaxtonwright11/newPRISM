@@ -1,178 +1,209 @@
 # PRISM — Cursor Agent Rules
 # File location: /newPRISM/.cursor/rules/prism.md
-# Cursor Background Agents read this on every task. Do not delete or move.
+# Read this + all files in /docs/ before every task.
+
+---
+
+## REQUIRED READING BEFORE ANY TASK
+Read all files in /docs/ before starting any work:
+- /docs/PRISM_PLATFORM_CONTEXT_V2.md — what PRISM is, philosophy
+- /docs/PRISM_SITE_FEATURES_V2.md — every feature spec
+- /docs/PRISM_SUPPLEMENTARY_V2.md — founder context, what NOT to build
+- /docs/prism-full-spec.md — full technical spec, schema, API routes, types
+- /docs/PRISM_DESIGN_SPEC.md — visual design spec, colors, typography, map style
 
 ---
 
 ## WHAT PRISM IS
 
-PRISM is a community perspective social media platform. Social media redesigned
-around understanding rather than outrage.
+PRISM is a community perspective social media platform AND a geographic social network.
+Social media redesigned around understanding rather than outrage.
 
-The core experience: a live map showing where verified geographic and demographic
-communities are actively discussing current events, perspective cards surfacing their
-voices in their own words, cross-community alignment data showing where different
-communities agree, and a connection feature so users can meet people from communities
-they've read about.
+Core experience: a live map showing where verified geographic and demographic communities
+are discussing current events. Users post from within their community radius, read
+perspectives globally, react with understanding-focused reactions, and connect directly
+with people from communities they've encountered.
 
-Founding question: why can't we understand each other?
-
-PRISM IS NOT a prediction market, forecasting platform, polling tool, news aggregator,
-or debate forum. If you see those terms in this codebase, that is wrong — correct it.
+PRISM IS NOT a prediction market, forecasting platform, polling tool, or debate forum.
+Correct any such references immediately.
 
 ---
 
-## TECH STACK
+## TECH STACK (never deviate)
 
 | Layer | Technology |
 |---|---|
 | Web | Next.js 14 App Router, TypeScript, Tailwind CSS |
 | Mobile | React Native, Expo SDK 50+ |
-| Database | Supabase PostgreSQL |
-| Auth | Supabase Auth |
-| Realtime | Supabase Realtime |
+| Backend | Supabase PostgreSQL + Auth + Realtime |
 | Maps | Mapbox GL JS (web), Mapbox React Native SDK (mobile) |
-| Map style | Custom dark vector tile — Apple Maps aesthetic |
-| Shared types | /shared/types/index.ts |
-| Hosting | Vercel (web), Expo EAS (mobile) |
-
-Never introduce a technology not on this list without flagging it first.
-
----
-
-## REPO STRUCTURE
-```
-/newPRISM
-  /web                    Next.js app
-    /app                  App Router pages + layouts
-    /components           UI components (map, cards, sidebar, alignment, engagement)
-    /lib                  Service clients (supabase, supabase-browser, mapbox)
-    /hooks                Custom React hooks
-    /types                Web-specific types
-  /mobile                 Expo React Native
-    /app                  Expo Router pages
-    /components           Mobile components
-    /lib                  Mobile service clients
-  /supabase
-    /migrations           Numbered SQL migration files
-    /functions            Edge functions
-  /shared
-    /types/index.ts       ALL shared TypeScript interfaces (single source of truth)
-  /docs
-  .cursor/rules/prism.md  This file (do not modify)
-```
+| Map style | Custom dark vector tile — Apple Maps / Snap Maps aesthetic |
+| UI Components | ShadCN + MagicUI (installed via MCP) |
+| Analytics | PostHog |
+| Shared types | /shared/types/index.ts only |
 
 ---
 
-## SECURITY — EVERY PR MUST PASS ALL OF THESE
+## DATABASE — 14 TABLES (not 11)
 
-1. RLS ENABLED: every Supabase table touched has Row Level Security enabled
-   and at least one policy. Check:
-   SELECT tablename, rowsecurity FROM pg_tables WHERE schemaname = 'public';
+The schema has been updated. Tables:
+communities, topics, perspectives, posts, users, user_profiles, contributors,
+reactions, post_likes, bookmarks, community_alignments, community_connections,
+direct_messages, notifications
 
-2. NO HARDCODED SECRETS: grep diff for keys, tokens, passwords. Zero tolerance.
-   Environment variables only.
+Key additions from previous spec:
+- posts table: individual user posts with radius_miles, post_type (permanent/story), expires_at
+- post_likes table: simple heart like for personal posts (separate from perspective reactions)
+- direct_messages table: for cross-community connections
+- users table now includes: ghost_mode, verification_level (1/2/3), default_radius_miles
 
-3. INPUT VALIDATION: every user-facing field uses zod schema validation.
+RLS on ALL 14 tables. No exceptions.
 
-4. RATE LIMITING: every new Next.js API route has rate limiting.
+---
 
-5. AUTH CHECK: every protected route verifies session before executing:
-   const { data: { session } } = await supabase.auth.getSession()
-   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+## KEY FEATURES TO BUILD CORRECTLY
 
-6. TYPESCRIPT: tsc --noEmit zero errors before PR opens.
+**Ghost Mode (non-negotiable):**
+When ghost_mode = true on a user record, that user's pin must NOT appear in any
+map query, any API response, or any realtime subscription. It must be invisible
+at the database query level, not filtered in the frontend.
 
-7. NO ANY TYPES: use unknown and narrow it.
+**Radius-Based Posting:**
+Posts store approximate latitude/longitude (community center + random offset within radius).
+Never store exact GPS coordinates. Radius options: 10/20/30/40 miles. Default 40.
 
-If any check fails — fix before opening PR. No exceptions.
+**Stories (24-hour posts):**
+post_type = 'story', expires_at = created_at + 24 hours.
+Map query must exclude expired stories. Run a cleanup job or filter by expires_at > NOW().
+
+**Two-tier post types on the map:**
+- Community perspective pins: larger, community color, use community icon
+- Personal post pins: smaller, user's community color, different shape/indicator
+Both types appear on the map but must be visually distinct.
+
+**Onboarding AHA moment:**
+Map must load BEFORE profile creation. Show value first. The sequence:
+map loads → topic highlighted → perspectives shown → THEN prompt to create account.
+Never gate the map behind account creation.
+
+**Reactions are different for each type:**
+- Perspective cards: 'i_see_this' | 'i_didnt_know_this' | 'i_agree'
+- Personal posts: simple heart like
+Never cross-apply these systems.
+
+**Discover feed:**
+Must NOT optimize for engagement or virality. Must explicitly surface perspectives
+from communities the user has NEVER interacted with. Algorithm: zero_engagement_communities
+sorted by topical relevance to user's interests, filtered for diversity of viewpoint.
+
+---
+
+## SECURITY — EVERY PR MUST PASS
+
+1. RLS on all 14 tables — every migration includes policies
+2. No hardcoded secrets — environment variables only
+3. Zod validation on all user-facing fields
+4. Rate limiting on all API routes
+5. Auth check on all protected routes
+6. Ghost mode enforced at DB query level (not frontend)
+7. Location data: radius-approximate only, never exact GPS
+8. Direct messages: encrypted at rest
+9. TypeScript strict — zero `any` types, `tsc --noEmit` passes
 
 ---
 
 ## CODE STANDARDS
 
-- Server components by default. 'use client' only when necessary.
+- Server components by default. 'use client' only when required.
 - Data fetching: server components or SWR/React Query. Never useEffect for data.
-- API calls from components go through /lib files. Never raw fetch in components.
-- No business logic in UI components.
+- API calls through /lib files. Never raw fetch in components.
+- Mobile-first CSS (375px base). WCAG 2.1 AA on all text.
 - JSDoc on every exported function and component.
-- Mobile-first: design at 375px, scale up with sm: md: lg:
-- WCAG 2.1 AA: 4.5:1 contrast minimum on all text.
 - Commit format: "feat: [what]" / "fix: [what]" / "chore: [what]" / "security: [what]"
-- Commit at feature completion, not at every file save.
+
+---
+
+## UI COMPONENTS
+
+Use ShadCN + MagicUI components via MCP whenever available before writing custom CSS.
+ShadCN = clean base components. MagicUI = transitions and animations on top of ShadCN.
+21st.dev components can be copied for design elements that aren't in ShadCN/MagicUI.
+
+Do NOT build generic-looking AI interfaces. PRISM should look like a dark intelligence
+dashboard, not a SaaS template. Reference /docs/PRISM_DESIGN_SPEC.md for every design decision.
+
+---
+
+## ANALYTICS
+
+PostHog is installed. Track these events minimum:
+- map_topic_selected
+- perspective_card_viewed
+- perspective_card_reaction (with reaction_type)
+- connection_request_sent
+- connection_request_accepted
+- post_created (with post_type: story/permanent)
+- story_viewed
+- discover_feed_opened
+- onboarding_aha_moment (when user reads 2+ perspectives before creating account)
+
+These events are how we know if PRISM is working as intended.
 
 ---
 
 ## MIGRATION RULES
 
-Every database change requires a new migration file. Never modify existing ones.
+Every database change = new migration file. Never modify existing.
 Naming: /supabase/migrations/YYYYMMDDHHMMSS_description.sql
-
-Every migration must include:
-1. Schema change
-2. ALTER TABLE [name] ENABLE ROW LEVEL SECURITY;
-3. At least one RLS policy
+Every migration must include schema change + RLS enable + at least one policy.
 
 ---
 
-## DESIGN RULES
+## BUILD ORDER
 
-- No text on the map. Zero labels, zero city names, zero abbreviations.
-- Community colors = community TYPE, never political leaning.
-- The quote is the most important element in every perspective card.
-- Reaction types: 'i_see_this' | 'i_didnt_know_this' | 'i_agree' only.
-- Alignment panel: shows convergence ONLY. Never division data.
-- No follower counts anywhere on the platform.
-- Topic-first navigation. Communities surface under topics, not the reverse.
+1. Scaffold + shared types + Supabase schema (14 tables) + seed data
+2. Auth (email/password + Google OAuth, verification levels)
+3. Map (Mapbox dark style, community + post pins, ghost mode, topic filter)
+4. Onboarding AHA flow (map first, value before account creation)
+5. Topic sidebar (search, Live Now, Communities)
+6. Perspective cards (quote, reactions, share, bookmark)
+7. Personal posts + stories (create, radius, 24h expiry, likes)
+8. Alignment panel (convergence only)
+9. Feed tabs (Nearby / Communities / Discover)
+10. Community Pulse (daily notification + digest)
+11. Cross-community connection + direct messaging
+12. PostHog analytics events
+13. Mobile (React Native mirrors web MVP)
+
+Complete each phase. Do not skip ahead.
 
 ---
 
 ## DO NOT BUILD
 
 - Comment sections
-- Follower counts or follower-based social graph
-- Algorithmic feed optimizing for engagement or outrage
+- Follower counts (use "communities connected")
+- Algorithmic feed optimizing for engagement/outrage
 - Community profile pages as browsable accounts
-- Open source data download section
-- Polling or survey features
 - Advertising
-- Prediction markets, forecasting, or probability score features
-- Division data in the alignment panel
-
----
-
-## MVP BUILD ORDER
-
-1. Scaffold + shared types + Supabase schema + seed data
-2. Auth (email/password + Google OAuth)
-3. Map (Mapbox dark style, community pins with glow, topic filtering)
-4. Topic sidebar (search, Live Now, Communities list)
-5. Perspective cards (quote, verified badge, reactions, share, bookmark)
-6. Cross-community alignment panel
-7. Engagement + user profiles + notifications
-8. Cross-community connection feature
-9. Mobile (React Native mirrors web MVP)
-
-Complete each phase. Do not skip ahead.
+- Prediction markets, forecasting, probability scores
+- Division data in alignment panel
+- Dislike, downvote, or any negative reaction
+- Video creation tools
+- Exact GPS coordinate storage
 
 ---
 
 ## DECISION FORMAT
 
-Genuine architectural fork:
-DECISION NEEDED: [describe the choice]
-Options:
-  A) [option] — [trade-off]
-  B) [option] — [trade-off]
-Recommendation: [which and why]
+Genuine fork:
+DECISION NEEDED: [choice] — A) [option] B) [option] — Recommendation: [which and why]
 
-Better approach than specified:
-BETTER APPROACH FOUND: [what]
-Reason: [why it's better]
-Trade-off: [what we lose]
-Proceeding unless blocked.
+Better approach:
+BETTER APPROACH FOUND: [what] — Reason: [why] — Trade-off: [cost] — Proceeding unless blocked.
 
-Security check failure:
-SECURITY BLOCK: [which check failed]
-Fix required: [what needs to change]
-PR will not open until resolved.
+Security failure:
+SECURITY BLOCK: [which check failed] — Fix: [what's needed] — PR will not open until resolved.
+
+Claude Code tip: after every correction, update this file or CLAUDE.md with a rule
+so the same mistake isn't made again.
