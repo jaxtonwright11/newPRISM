@@ -11,8 +11,10 @@ import {
   getPerspectivesByTopic,
   getAlignmentsByTopic,
   SEED_PERSPECTIVES,
+  getCommunityById,
 } from "@/lib/seed-data";
-import type { TopicStatus } from "@shared/types";
+import { COMMUNITY_COLORS } from "@/lib/constants";
+import type { CommunityType, TopicStatus } from "@shared/types";
 
 const STATUS_BADGE: Record<TopicStatus, { label: string; color: string }> = {
   hot: {
@@ -43,6 +45,12 @@ export default function TopicDetailPage() {
   const topic = getTopicBySlug(slug);
   const perspectives = getPerspectivesByTopic(slug);
   const alignments = topic ? getAlignmentsByTopic(topic.id) : [];
+
+  // Build unique community list for this topic
+  const communityIds = Array.from(new Set(perspectives.map((p) => p.community_id)));
+  const activeCommunities = communityIds
+    .map((id) => getCommunityById(id))
+    .filter(Boolean);
 
   const [selectedPerspectiveId, setSelectedPerspectiveId] = useState<
     string | null
@@ -121,12 +129,33 @@ export default function TopicDetailPage() {
 
           <div className="flex items-center gap-4 mt-3">
             <span className="text-xs text-prism-text-dim font-mono">
-              {topic.perspective_count} perspectives
+              {perspectives.length} perspectives
             </span>
             <span className="text-xs text-prism-text-dim font-mono">
-              {topic.community_count} communities
+              {activeCommunities.length} communities
             </span>
           </div>
+
+          {/* Active communities strip */}
+          {activeCommunities.length > 0 && (
+            <div className="flex items-center gap-2 mt-4 flex-wrap">
+              {activeCommunities.map((community) => {
+                if (!community) return null;
+                const color = COMMUNITY_COLORS[community.community_type as CommunityType];
+                return (
+                  <Link
+                    key={community.id}
+                    href={`/community/${community.id}`}
+                    className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[11px] font-medium transition-colors hover:opacity-80"
+                    style={{ backgroundColor: color + "15", color }}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
+                    {community.name}
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </header>
 
         {/* Perspectives */}

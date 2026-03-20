@@ -145,6 +145,38 @@ export default function ProfilePage() {
           </p>
         </div>
 
+        {/* Quick actions */}
+        <div className="grid grid-cols-2 gap-3">
+          <Link
+            href="/messages"
+            className="flex items-center gap-3 p-4 rounded-2xl bg-prism-bg-secondary border border-prism-border hover:border-prism-accent-active/30 transition-colors"
+          >
+            <div className="w-9 h-9 rounded-full bg-prism-accent-active/20 flex items-center justify-center">
+              <svg className="w-4.5 h-4.5 text-prism-accent-active w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-prism-text-primary">Messages</p>
+              <p className="text-xs text-prism-text-dim">3 connections</p>
+            </div>
+          </Link>
+          <Link
+            href="/bookmarks"
+            className="flex items-center gap-3 p-4 rounded-2xl bg-prism-bg-secondary border border-prism-border hover:border-prism-accent-active/30 transition-colors"
+          >
+            <div className="w-9 h-9 rounded-full bg-prism-accent-active/20 flex items-center justify-center">
+              <svg className="w-5 h-5 text-prism-accent-active" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-prism-text-primary">Saved</p>
+              <p className="text-xs text-prism-text-dim">4 perspectives</p>
+            </div>
+          </Link>
+        </div>
+
         {/* Ghost mode + radius quick settings */}
         <div className="bg-prism-bg-secondary border border-prism-border rounded-2xl p-4">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-prism-text-dim mb-3">
