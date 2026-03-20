@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { StoryViewer } from "@/components/story-viewer";
 
 interface Story {
   id: string;
@@ -78,12 +79,47 @@ interface StoriesStripProps {
 
 export function StoriesStrip({ onComposeStory }: StoriesStripProps) {
   const [viewedIds, setViewedIds] = useState<Set<string>>(new Set());
+  const [activeStoryId, setActiveStoryId] = useState<string | null>(null);
 
   const handleView = (id: string) => {
     setViewedIds((prev) => new Set(Array.from(prev).concat(id)));
+    setActiveStoryId(id);
   };
 
+  const viewableStories = MOCK_STORIES.filter((s) => !s.isOwn);
+
+  const handleNext = () => {
+    if (!activeStoryId) return;
+    const idx = viewableStories.findIndex((s) => s.id === activeStoryId);
+    if (idx < viewableStories.length - 1) {
+      const next = viewableStories[idx + 1];
+      handleView(next.id);
+    } else {
+      setActiveStoryId(null);
+    }
+  };
+
+  const handlePrev = () => {
+    if (!activeStoryId) return;
+    const idx = viewableStories.findIndex((s) => s.id === activeStoryId);
+    if (idx > 0) {
+      const prev = viewableStories[idx - 1];
+      setActiveStoryId(prev.id);
+    }
+  };
+
+  const activeStory = viewableStories.find((s) => s.id === activeStoryId) ?? null;
+
   return (
+    <>
+    {activeStory && (
+      <StoryViewer
+        story={activeStory}
+        onClose={() => setActiveStoryId(null)}
+        onNext={handleNext}
+        onPrev={handlePrev}
+      />
+    )}
     <div className="px-3 md:px-4 py-2 border-b border-prism-border">
       <div className="flex items-center gap-3 overflow-x-auto scrollbar-none pb-1">
         {MOCK_STORIES.map((story) => (
@@ -96,6 +132,7 @@ export function StoriesStrip({ onComposeStory }: StoriesStripProps) {
                 handleView(story.id);
               }
             }}
+
             className="flex flex-col items-center gap-1 shrink-0 group"
             aria-label={story.isOwn ? "Add your story" : `View ${story.communityName}'s story`}
           >
@@ -105,13 +142,14 @@ export function StoriesStrip({ onComposeStory }: StoriesStripProps) {
                 story.isOwn
                   ? "border-2 border-dashed border-prism-border"
                   : viewedIds.has(story.id)
-                  ? "bg-prism-bg-elevated"
+                  ? "border-2 border-prism-bg-elevated"
                   : ""
               }`}
               style={
                 !story.isOwn && !viewedIds.has(story.id)
                   ? {
-                      background: `linear-gradient(135deg, ${story.color}, ${story.color}80)`,
+                      background: "linear-gradient(135deg, #FF6B8A, #F59E0B)",
+                      padding: "2px",
                     }
                   : undefined
               }
@@ -166,5 +204,6 @@ export function StoriesStrip({ onComposeStory }: StoriesStripProps) {
         ))}
       </div>
     </div>
+    </>
   );
 }

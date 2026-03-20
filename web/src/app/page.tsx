@@ -79,7 +79,7 @@ export default function Home() {
     setMobileTopicOpen(false);
   };
 
-  // Handle mobile nav tab changes — bookmarks and profile route to dedicated pages
+  // Handle mobile nav tab changes — bookmarks, profile, search route to dedicated pages
   const handleMobileNavChange = (tab: "live" | "map" | "search" | "bookmarks" | "profile") => {
     if (tab === "bookmarks") {
       router.push("/bookmarks");
@@ -87,6 +87,10 @@ export default function Home() {
     }
     if (tab === "profile") {
       router.push("/profile");
+      return;
+    }
+    if (tab === "search") {
+      router.push("/search");
       return;
     }
     setMobileNavTab(tab);
