@@ -942,7 +942,7 @@ export function searchCommunities(query: string): Community[] {
 
 export function getCommunitiesForTopic(topicSlug: string): Community[] {
   const perspectives = getPerspectivesByTopic(topicSlug);
-  const communityIds = [...new Set(perspectives.map((p) => p.community_id))];
+  const communityIds = Array.from(new Set(perspectives.map((p) => p.community_id)));
   return communityIds
     .map((id) => getCommunityById(id))
     .filter((c): c is Community => c !== undefined);

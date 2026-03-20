@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { SEED_USER, SEED_COMMUNITIES, SEED_BOOKMARKED_PERSPECTIVE_IDS, SEED_BOOKMARKED_TOPIC_IDS } from "@/lib/seed-data";
 import { COMMUNITY_COLORS } from "@/lib/constants";
-import type { CommunityType } from "@shared/types";
 
 type ProfileTab = "activity" | "communities" | "connections";
 

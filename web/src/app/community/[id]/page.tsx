@@ -35,7 +35,7 @@ export default function CommunityPage({ params }: CommunityPageProps) {
     (p) => p.community_id === community.id
   );
 
-  const topicSlugs = [...new Set(communityPerspectives.map((p) => p.topic_slug))];
+  const topicSlugs = Array.from(new Set(communityPerspectives.map((p) => p.topic_slug)));
   const activeTopics = SEED_TOPICS.filter((t) => topicSlugs.includes(t.slug));
 
   const color = COMMUNITY_COLORS[community.community_type as CommunityType];
