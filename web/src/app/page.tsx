@@ -10,6 +10,7 @@ import { PerspectiveDetail } from "@/components/perspective-detail";
 import { StoriesBar } from "@/components/stories-bar";
 import { CommunityPulse } from "@/components/community-pulse";
 import { MobileNav } from "@/components/mobile-nav";
+import { useGhostMode } from "@/lib/use-ghost-mode";
 import {
   SEED_TOPICS,
   SEED_PERSPECTIVES,
@@ -33,6 +34,7 @@ export default function Home() {
   >(null);
   const [mobileTopicOpen, setMobileTopicOpen] = useState(false);
   const [pulseOpen, setPulseOpen] = useState(false);
+  const { ghostMode, toggleGhostMode } = useGhostMode();
 
   const currentTopic = getTopicBySlug(selectedTopicSlug);
   const topicPerspectives = getPerspectivesByTopic(selectedTopicSlug);
@@ -105,6 +107,36 @@ export default function Home() {
             </span>
           </div>
           <div className="flex items-center gap-2">
+            {/* Ghost mode toggle */}
+            <button
+              onClick={toggleGhostMode}
+              className={`p-2 rounded-lg transition-colors ${
+                ghostMode
+                  ? "text-prism-accent-active bg-prism-accent-active/10"
+                  : "text-prism-text-dim hover:text-prism-text-primary hover:bg-prism-bg-elevated"
+              }`}
+              aria-label={`Ghost mode ${ghostMode ? "on" : "off"}`}
+              title={ghostMode ? "Ghost mode on" : "Visible mode"}
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={1.7}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3 3l18 18M10.73 5.08A10.477 10.477 0 0112 5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M9.88 9.88a3 3 0 104.24 4.24"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498A10.523 10.523 0 0112 19.5a10.45 10.45 0 01-5.772-1.728M3 3l18 18"
+                />
+              </svg>
+            </button>
             {/* Pulse bell */}
             <button
               onClick={() => setPulseOpen(true)}
@@ -180,7 +212,10 @@ export default function Home() {
 
         {/* Map area — 40% viewport */}
         <div className="h-[35vh] md:h-[40vh] p-2 md:p-3">
-          <MapPlaceholder highlightedCommunityIds={topicCommunityIds} />
+          <MapPlaceholder
+            highlightedCommunityIds={topicCommunityIds}
+            ghostMode={ghostMode}
+          />
         </div>
 
         {/* Stories bar */}
@@ -212,6 +247,23 @@ export default function Home() {
                 {feedPerspectives.length + topicPosts.length} items
               </span>
             )}
+            {/* Desktop ghost mode toggle */}
+            <button
+              onClick={toggleGhostMode}
+              className={`hidden md:flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors ${
+                ghostMode
+                  ? "bg-prism-accent-active/10 text-prism-accent-active"
+                  : "text-prism-text-dim hover:text-prism-text-primary hover:bg-prism-bg-elevated"
+              }`}
+              aria-label={`Ghost mode ${ghostMode ? "on" : "off"}`}
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  ghostMode ? "bg-prism-accent-active" : "bg-prism-text-dim"
+                }`}
+              />
+              Ghost
+            </button>
             {/* Desktop pulse bell */}
             <button
               onClick={() => setPulseOpen(true)}
@@ -239,7 +291,10 @@ export default function Home() {
         {/* Feed: perspectives + personal posts */}
         <div className="flex-1 overflow-y-auto p-3 md:p-4 pb-20 md:pb-4">
           {feedPerspectives.length > 0 || topicPosts.length > 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4">
+            <div
+              key={`${activeTab}-${selectedTopicSlug}`}
+              className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4 animate-fade-in"
+            >
               {/* Interleave perspectives and personal posts */}
               {feedPerspectives.map((p, i) => (
                 <PerspectiveCard

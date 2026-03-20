@@ -3,11 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { SEED_USER } from "@/lib/seed-data";
+import { useGhostMode } from "@/lib/use-ghost-mode";
 import type { RadiusMiles } from "@shared/types";
 
 export default function SettingsPage() {
   const user = SEED_USER;
-  const [ghostMode, setGhostMode] = useState(user.ghost_mode);
+  const { ghostMode, toggleGhostMode } = useGhostMode();
   const [defaultRadius, setDefaultRadius] = useState<RadiusMiles>(user.default_radius_miles);
   const [saved, setSaved] = useState(false);
 
@@ -57,7 +58,7 @@ export default function SettingsPage() {
                 <p className="text-xs text-prism-text-dim mt-0.5">Hide your activity from other users</p>
               </div>
               <button
-                onClick={() => setGhostMode(!ghostMode)}
+                onClick={toggleGhostMode}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                   ghostMode ? "bg-prism-accent-active" : "bg-prism-bg-elevated"
                 }`}
