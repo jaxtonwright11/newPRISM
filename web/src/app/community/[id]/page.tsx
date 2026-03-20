@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, use } from "react";
+import { useState } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { PerspectiveCard } from "@/components/perspective-card";
 import { PerspectiveDetail } from "@/components/perspective-detail";
@@ -8,12 +9,9 @@ import { SEED_COMMUNITIES, SEED_PERSPECTIVES, SEED_TOPICS } from "@/lib/seed-dat
 import { COMMUNITY_COLORS } from "@/lib/constants";
 import type { CommunityType } from "@shared/types";
 
-interface CommunityPageProps {
-  params: Promise<{ id: string }>;
-}
-
-export default function CommunityPage({ params }: CommunityPageProps) {
-  const { id } = use(params);
+export default function CommunityPage() {
+  const params = useParams();
+  const id = params.id as string;
   const [selectedPerspectiveId, setSelectedPerspectiveId] = useState<string | null>(null);
 
   const community = SEED_COMMUNITIES.find((c) => c.id === id);
