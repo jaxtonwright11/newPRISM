@@ -13,6 +13,7 @@ import {
   getPerspectivesByTopic,
   getAlignmentsByTopic,
   getTopicBySlug,
+  getCommunitiesForTopic,
 } from "@/lib/seed-data";
 
 type FeedTab = "nearby" | "communities" | "discover";
@@ -25,9 +26,6 @@ export default function Home() {
   const [selectedPerspectiveId, setSelectedPerspectiveId] = useState<
     string | null
   >(null);
-  const [mobileNavTab, setMobileNavTab] = useState<
-    "live" | "map" | "search" | "bookmarks" | "profile"
-  >("live");
   const [mobileTopicOpen, setMobileTopicOpen] = useState(false);
 
   const currentTopic = getTopicBySlug(selectedTopicSlug);
@@ -35,6 +33,8 @@ export default function Home() {
   const topicAlignments = currentTopic
     ? getAlignmentsByTopic(currentTopic.id)
     : [];
+  const topicCommunities = getCommunitiesForTopic(selectedTopicSlug);
+  const topicCommunityIds = topicCommunities.map((c) => c.id);
 
   const getFeedPerspectives = useCallback(() => {
     switch (activeTab) {
@@ -148,7 +148,7 @@ export default function Home() {
 
         {/* Map area — 40% viewport */}
         <div className="h-[35vh] md:h-[40vh] p-2 md:p-3">
-          <MapPlaceholder />
+          <MapPlaceholder highlightedCommunityIds={topicCommunityIds} />
         </div>
 
         {/* Feed tabs */}
@@ -232,7 +232,7 @@ export default function Home() {
       />
 
       {/* Mobile bottom nav */}
-      <MobileNav activeTab={mobileNavTab} onTabChange={setMobileNavTab} />
+      <MobileNav />
 
       {/* Perspective detail modal */}
       {selectedPerspective && (

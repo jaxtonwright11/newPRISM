@@ -2,15 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Community } from "../../../shared/types";
-
-const COMMUNITY_TYPE_COLORS: Record<string, string> = {
-  civic: "#4A9EFF",
-  diaspora: "#F59E0B",
-  rural: "#22C55E",
-  policy: "#A855F7",
-  academic: "#EC4899",
-  cultural: "#F97316",
-};
+import { COMMUNITY_COLORS } from "@/lib/constants";
 
 interface PrismMapProps {
   communities: Community[];
@@ -56,7 +48,7 @@ export function PrismMap({ communities }: PrismMapProps) {
 
           for (const community of communities) {
             if (community.latitude == null || community.longitude == null) continue;
-            const color = COMMUNITY_TYPE_COLORS[community.community_type] ?? "#666";
+            const color = COMMUNITY_COLORS[community.community_type] ?? "#666";
 
             const el = document.createElement("div");
             el.style.width = "16px";
