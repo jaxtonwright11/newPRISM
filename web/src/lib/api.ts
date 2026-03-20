@@ -87,6 +87,15 @@ export function applyRateLimit(
   return null;
 }
 
+export function __resetRateLimitStateForTests(): void {
+  buckets.clear();
+  lastCleanupMs = 0;
+}
+
+export function __getRateLimitBucketCountForTests(): number {
+  return buckets.size;
+}
+
 type ParseQuerySuccess<TSchema extends z.ZodTypeAny> = {
   success: true;
   data: z.infer<TSchema>;
