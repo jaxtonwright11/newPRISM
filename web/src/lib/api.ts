@@ -21,11 +21,11 @@ let lastCleanupMs = 0;
 function cleanupBuckets(nowMs: number): void {
   if (nowMs - lastCleanupMs < RATE_LIMIT_WINDOW_MS) return;
 
-  for (const [key, bucket] of buckets.entries()) {
+  buckets.forEach((bucket, key) => {
     if (bucket.resetAt <= nowMs) {
       buckets.delete(key);
     }
-  }
+  });
 
   lastCleanupMs = nowMs;
 }
