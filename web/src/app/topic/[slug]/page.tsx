@@ -172,6 +172,7 @@ export default function TopicDetailPage() {
           reaction_count={selectedPerspective.reaction_count}
           bookmark_count={selectedPerspective.bookmark_count}
           created_at={selectedPerspective.created_at}
+          topicTitle={selectedPerspective.topic}
           onClose={() => setSelectedPerspectiveId(null)}
         />
       )}

@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import type { CommunityType, ReactionType } from "@shared/types";
 import { REACTION_LABELS } from "@/lib/constants";
 
 interface PerspectiveCardProps {
   id: string;
   community: {
+    id?: string;
     name: string;
     region: string;
     community_type: CommunityType;
@@ -30,7 +32,6 @@ export function PerspectiveCard({
   context,
   category_tag,
   reaction_count,
-  bookmark_count = 0,
   isNew = false,
   onSelect,
   animationDelay = 0,
@@ -81,9 +82,19 @@ export function PerspectiveCard({
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className="text-sm font-medium text-prism-text-primary truncate">
-              {community.name}
-            </span>
+            {community.id ? (
+              <Link
+                href={`/community/${community.id}`}
+                className="text-sm font-medium text-prism-text-primary truncate hover:text-prism-accent-active transition-colors"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {community.name}
+              </Link>
+            ) : (
+              <span className="text-sm font-medium text-prism-text-primary truncate">
+                {community.name}
+              </span>
+            )}
             {community.verified && (
               <svg
                 className="w-3.5 h-3.5 text-prism-accent-verified shrink-0"
@@ -117,7 +128,7 @@ export function PerspectiveCard({
         <span className="text-xs px-2 py-0.5 rounded-full bg-prism-bg-elevated text-prism-text-dim">
           {category_tag}
         </span>
-        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
           {(
             Object.entries(REACTION_LABELS) as [
               ReactionType,
@@ -143,7 +154,7 @@ export function PerspectiveCard({
           ))}
           <button
             onClick={() => setBookmarked(!bookmarked)}
-            className={`ml-1 p-1 rounded transition-all duration-150 ${
+            className={`p-1 rounded transition-all duration-150 ${
               bookmarked
                 ? "text-prism-accent-active"
                 : "text-prism-text-dim hover:text-prism-text-secondary"
@@ -160,11 +171,22 @@ export function PerspectiveCard({
             >
               <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
             </svg>
-            {bookmark_count > 0 && (
-              <span className="font-mono text-[10px] ml-0.5">
-                {bookmark_count + (bookmarked ? 1 : 0)}
-              </span>
-            )}
+          </button>
+          <button
+            onClick={() => {
+              if (navigator.share) {
+                navigator.share({ title: community.name, text: quote, url: window.location.href }).catch(() => {});
+              } else {
+                navigator.clipboard.writeText(`"${quote}" — ${community.name}`).catch(() => {});
+              }
+            }}
+            className="p-1 rounded text-prism-text-dim hover:text-prism-text-secondary transition-all duration-150"
+            title="Share"
+            aria-label="Share perspective"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
+            </svg>
           </button>
         </div>
       </div>

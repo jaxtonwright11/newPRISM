@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { TopicSidebar } from "@/components/topic-sidebar";
 import { MapPlaceholder } from "@/components/map-placeholder";
 import { PerspectiveCard } from "@/components/perspective-card";
@@ -23,6 +24,7 @@ import {
 type FeedTab = "nearby" | "communities" | "discover";
 
 export default function Home() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<FeedTab>("nearby");
   const [selectedTopicSlug, setSelectedTopicSlug] = useState(
     SEED_TOPICS[0].slug
@@ -80,11 +82,11 @@ export default function Home() {
   // Handle mobile nav tab changes — bookmarks and profile route to dedicated pages
   const handleMobileNavChange = (tab: "live" | "map" | "search" | "bookmarks" | "profile") => {
     if (tab === "bookmarks") {
-      window.location.href = "/bookmarks";
+      router.push("/bookmarks");
       return;
     }
     if (tab === "profile") {
-      window.location.href = "/profile";
+      router.push("/profile");
       return;
     }
     setMobileNavTab(tab);

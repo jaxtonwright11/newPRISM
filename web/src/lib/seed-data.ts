@@ -185,7 +185,7 @@ export const SEED_TOPICS: Topic[] = [
     summary:
       "How different communities experience shifts in immigration enforcement and cross-border life.",
     status: "hot",
-    perspective_count: 12,
+    perspective_count: 5,
     community_count: 5,
     created_at: "2026-03-10T00:00:00Z",
     updated_at: "2026-03-19T00:00:00Z",
@@ -197,8 +197,8 @@ export const SEED_TOPICS: Topic[] = [
     summary:
       "The ripple effects of urban workers relocating to small towns — opportunity, displacement, and cultural shift.",
     status: "trending",
-    perspective_count: 8,
-    community_count: 4,
+    perspective_count: 5,
+    community_count: 5,
     created_at: "2026-03-08T00:00:00Z",
     updated_at: "2026-03-18T00:00:00Z",
   },
@@ -209,8 +209,8 @@ export const SEED_TOPICS: Topic[] = [
     summary:
       "Campus communities wrestle with the boundaries of expression, protest, and institutional responses.",
     status: "active",
-    perspective_count: 6,
-    community_count: 3,
+    perspective_count: 2,
+    community_count: 2,
     created_at: "2026-03-05T00:00:00Z",
     updated_at: "2026-03-17T00:00:00Z",
   },
@@ -221,8 +221,8 @@ export const SEED_TOPICS: Topic[] = [
     summary:
       "Auto workers, rural drivers, and policy makers see the EV shift through very different lenses.",
     status: "trending",
-    perspective_count: 9,
-    community_count: 4,
+    perspective_count: 5,
+    community_count: 5,
     created_at: "2026-03-12T00:00:00Z",
     updated_at: "2026-03-19T00:00:00Z",
   },
@@ -233,7 +233,7 @@ export const SEED_TOPICS: Topic[] = [
     summary:
       "Farmers, tribal nations, and cities compete for a shrinking resource in the American West.",
     status: "hot",
-    perspective_count: 11,
+    perspective_count: 5,
     community_count: 5,
     created_at: "2026-03-01T00:00:00Z",
     updated_at: "2026-03-19T00:00:00Z",
@@ -245,7 +245,7 @@ export const SEED_TOPICS: Topic[] = [
     summary:
       "Communities facing rising seas debate whether to adapt, relocate, or fight for federal support.",
     status: "active",
-    perspective_count: 7,
+    perspective_count: 3,
     community_count: 3,
     created_at: "2026-03-06T00:00:00Z",
     updated_at: "2026-03-16T00:00:00Z",
@@ -257,6 +257,7 @@ interface SeedPerspective {
   community_id: string;
   topic_slug: string;
   community: {
+    id: string;
     name: string;
     region: string;
     community_type: CommunityType;
@@ -279,6 +280,7 @@ export const SEED_PERSPECTIVES: SeedPerspective[] = [
     community_id: "comm-mexican-american",
     topic_slug: "us-mexico-border-policy",
     community: {
+      id: "comm-mexican-american",
       name: "Mexican-American Diaspora",
       region: "El Paso, TX",
       community_type: "diaspora",
@@ -300,6 +302,7 @@ export const SEED_PERSPECTIVES: SeedPerspective[] = [
     community_id: "comm-rural-border",
     topic_slug: "us-mexico-border-policy",
     community: {
+      id: "comm-rural-border",
       name: "Rural Border Towns",
       region: "Nogales, AZ",
       community_type: "rural",
@@ -321,6 +324,7 @@ export const SEED_PERSPECTIVES: SeedPerspective[] = [
     community_id: "comm-policy-dc",
     topic_slug: "us-mexico-border-policy",
     community: {
+      id: "comm-policy-dc",
       name: "Policy Wonks DC",
       region: "Washington, DC",
       community_type: "policy",
@@ -342,6 +346,7 @@ export const SEED_PERSPECTIVES: SeedPerspective[] = [
     community_id: "comm-farm-workers",
     topic_slug: "us-mexico-border-policy",
     community: {
+      id: "comm-farm-workers",
       name: "Central Valley Farm Workers",
       region: "Fresno, CA",
       community_type: "rural",
@@ -365,6 +370,7 @@ export const SEED_PERSPECTIVES: SeedPerspective[] = [
     community_id: "comm-rural-appalachia",
     topic_slug: "remote-work-rural",
     community: {
+      id: "comm-rural-appalachia",
       name: "Rural Appalachia",
       region: "West Virginia",
       community_type: "rural",
@@ -386,6 +392,7 @@ export const SEED_PERSPECTIVES: SeedPerspective[] = [
     community_id: "comm-bay-area-tech",
     topic_slug: "remote-work-rural",
     community: {
+      id: "comm-bay-area-tech",
       name: "Bay Area Tech Workers",
       region: "San Francisco, CA",
       community_type: "civic",
@@ -407,6 +414,7 @@ export const SEED_PERSPECTIVES: SeedPerspective[] = [
     community_id: "comm-academic-economists",
     topic_slug: "remote-work-rural",
     community: {
+      id: "comm-academic-economists",
       name: "Academic Economists",
       region: "Boston, MA",
       community_type: "academic",
@@ -428,6 +436,7 @@ export const SEED_PERSPECTIVES: SeedPerspective[] = [
     community_id: "comm-native-tribal",
     topic_slug: "remote-work-rural",
     community: {
+      id: "comm-native-tribal",
       name: "Tribal Nations Midwest",
       region: "Pine Ridge, SD",
       community_type: "cultural",
@@ -451,6 +460,7 @@ export const SEED_PERSPECTIVES: SeedPerspective[] = [
     community_id: "comm-hbcu-students",
     topic_slug: "university-free-speech",
     community: {
+      id: "comm-hbcu-students",
       name: "HBCU Student Voices",
       region: "Atlanta, GA",
       community_type: "academic",
@@ -472,6 +482,7 @@ export const SEED_PERSPECTIVES: SeedPerspective[] = [
     community_id: "comm-policy-dc",
     topic_slug: "university-free-speech",
     community: {
+      id: "comm-policy-dc",
       name: "Policy Wonks DC",
       region: "Washington, DC",
       community_type: "policy",
@@ -495,6 +506,7 @@ export const SEED_PERSPECTIVES: SeedPerspective[] = [
     community_id: "comm-detroit-labor",
     topic_slug: "ev-transition",
     community: {
+      id: "comm-detroit-labor",
       name: "Detroit Auto Workers",
       region: "Detroit, MI",
       community_type: "civic",
@@ -516,6 +528,7 @@ export const SEED_PERSPECTIVES: SeedPerspective[] = [
     community_id: "comm-rural-appalachia",
     topic_slug: "ev-transition",
     community: {
+      id: "comm-rural-appalachia",
       name: "Rural Appalachia",
       region: "West Virginia",
       community_type: "rural",
@@ -537,6 +550,7 @@ export const SEED_PERSPECTIVES: SeedPerspective[] = [
     community_id: "comm-academic-economists",
     topic_slug: "ev-transition",
     community: {
+      id: "comm-academic-economists",
       name: "Academic Economists",
       region: "Boston, MA",
       community_type: "academic",
@@ -560,6 +574,7 @@ export const SEED_PERSPECTIVES: SeedPerspective[] = [
     community_id: "comm-native-tribal",
     topic_slug: "water-rights-crisis",
     community: {
+      id: "comm-native-tribal",
       name: "Tribal Nations Midwest",
       region: "Pine Ridge, SD",
       community_type: "cultural",
@@ -581,6 +596,7 @@ export const SEED_PERSPECTIVES: SeedPerspective[] = [
     community_id: "comm-farm-workers",
     topic_slug: "water-rights-crisis",
     community: {
+      id: "comm-farm-workers",
       name: "Central Valley Farm Workers",
       region: "Fresno, CA",
       community_type: "rural",
@@ -602,6 +618,7 @@ export const SEED_PERSPECTIVES: SeedPerspective[] = [
     community_id: "comm-policy-dc",
     topic_slug: "water-rights-crisis",
     community: {
+      id: "comm-policy-dc",
       name: "Policy Wonks DC",
       region: "Washington, DC",
       community_type: "policy",
@@ -625,6 +642,7 @@ export const SEED_PERSPECTIVES: SeedPerspective[] = [
     community_id: "comm-climate-coastal",
     topic_slug: "coastal-flooding-climate",
     community: {
+      id: "comm-climate-coastal",
       name: "Coastal Climate Communities",
       region: "Norfolk, VA",
       community_type: "civic",
@@ -646,6 +664,7 @@ export const SEED_PERSPECTIVES: SeedPerspective[] = [
     community_id: "comm-miami-cuban",
     topic_slug: "coastal-flooding-climate",
     community: {
+      id: "comm-miami-cuban",
       name: "Cuban-American Miami",
       region: "Miami, FL",
       community_type: "diaspora",
@@ -661,6 +680,170 @@ export const SEED_PERSPECTIVES: SeedPerspective[] = [
     reaction_count: 67,
     bookmark_count: 23,
     created_at: "2026-03-15T12:00:00Z",
+  },
+
+  // --- More EV Transition ---
+  {
+    id: "persp-19",
+    community_id: "comm-policy-dc",
+    topic_slug: "ev-transition",
+    community: {
+      id: "comm-policy-dc",
+      name: "Policy Wonks DC",
+      region: "Washington, DC",
+      community_type: "policy",
+      color_hex: "#10B981",
+      verified: true,
+    },
+    topic: "Electric Vehicle Transition",
+    quote:
+      "The IRA battery tax credits only work if the supply chain is domestic. That's a decade-long build. We're subsidizing a future that doesn't exist yet.",
+    context:
+      "Policy analysts highlight the tension between the IRA's domestic content requirements and the current state of U.S. battery manufacturing.",
+    category_tag: "Policy Analysis",
+    reaction_count: 37,
+    bookmark_count: 14,
+    created_at: "2026-03-15T10:00:00Z",
+  },
+  {
+    id: "persp-20",
+    community_id: "comm-native-tribal",
+    topic_slug: "ev-transition",
+    community: {
+      id: "comm-native-tribal",
+      name: "Tribal Nations Midwest",
+      region: "Pine Ridge, SD",
+      community_type: "cultural",
+      color_hex: "#F97316",
+      verified: true,
+    },
+    topic: "Electric Vehicle Transition",
+    quote:
+      "Lithium mining for EV batteries is happening on ancestral lands with minimal consultation. We're being asked to sacrifice our ground for someone else's green future.",
+    context:
+      "Tribal nations raise concerns that the environmental burden of EV battery mineral extraction falls disproportionately on Indigenous communities.",
+    category_tag: "Sovereignty",
+    reaction_count: 81,
+    bookmark_count: 33,
+    created_at: "2026-03-14T09:00:00Z",
+  },
+
+  // --- More Water Rights ---
+  {
+    id: "persp-21",
+    community_id: "comm-academic-economists",
+    topic_slug: "water-rights-crisis",
+    community: {
+      id: "comm-academic-economists",
+      name: "Academic Economists",
+      region: "Boston, MA",
+      community_type: "academic",
+      color_hex: "#06B6D4",
+      verified: true,
+    },
+    topic: "Western Water Rights Crisis",
+    quote:
+      "Prior appropriation — first in time, first in right — made sense in 1870. It's an allocation system designed for a wet era solving a dry problem.",
+    context:
+      "Economists argue that the prior appropriation doctrine creates perverse incentives that prevent efficient water use during shortage.",
+    category_tag: "Research",
+    reaction_count: 39,
+    bookmark_count: 22,
+    created_at: "2026-03-14T11:00:00Z",
+  },
+  {
+    id: "persp-22",
+    community_id: "comm-rural-appalachia",
+    topic_slug: "water-rights-crisis",
+    community: {
+      id: "comm-rural-appalachia",
+      name: "Rural Appalachia",
+      region: "West Virginia",
+      community_type: "rural",
+      color_hex: "#F59E0B",
+      verified: true,
+    },
+    topic: "Western Water Rights Crisis",
+    quote:
+      "We have too much water. They have too little. Nobody in Washington connects those two sentences.",
+    context:
+      "Communities in water-abundant regions observe the paradox of abundant water in the East while Western states face crisis — and see no federal framework connecting the two.",
+    category_tag: "Infrastructure",
+    reaction_count: 44,
+    bookmark_count: 16,
+    created_at: "2026-03-13T08:00:00Z",
+  },
+
+  // --- More Coastal Flooding ---
+  {
+    id: "persp-23",
+    community_id: "comm-policy-dc",
+    topic_slug: "coastal-flooding-climate",
+    community: {
+      id: "comm-policy-dc",
+      name: "Policy Wonks DC",
+      region: "Washington, DC",
+      community_type: "policy",
+      color_hex: "#10B981",
+      verified: true,
+    },
+    topic: "Coastal Flooding and Climate Migration",
+    quote:
+      "Managed retreat is the technically correct answer. It is also politically impossible. So we keep subsidizing flood insurance for homes that should not be rebuilt.",
+    context:
+      "Policy researchers describe the political trap of federal flood insurance that incentivizes rebuilding in areas facing guaranteed future inundation.",
+    category_tag: "Policy Analysis",
+    reaction_count: 61,
+    bookmark_count: 28,
+    created_at: "2026-03-14T14:00:00Z",
+  },
+
+  // --- More Border Policy ---
+  {
+    id: "persp-24",
+    community_id: "comm-academic-economists",
+    topic_slug: "us-mexico-border-policy",
+    community: {
+      id: "comm-academic-economists",
+      name: "Academic Economists",
+      region: "Boston, MA",
+      community_type: "academic",
+      color_hex: "#06B6D4",
+      verified: true,
+    },
+    topic: "US-Mexico Border Policy Changes",
+    quote:
+      "Unauthorized immigration responds more to U.S. labor demand than to enforcement at the border. The economics are clear; the politics ignore them.",
+    context:
+      "Labor economists document that U.S. employer demand for undocumented workers is a primary driver of migration that enforcement-only approaches cannot address.",
+    category_tag: "Research",
+    reaction_count: 48,
+    bookmark_count: 19,
+    created_at: "2026-03-11T10:00:00Z",
+  },
+
+  // --- More Remote Work ---
+  {
+    id: "persp-25",
+    community_id: "comm-policy-dc",
+    topic_slug: "remote-work-rural",
+    community: {
+      id: "comm-policy-dc",
+      name: "Policy Wonks DC",
+      region: "Washington, DC",
+      community_type: "policy",
+      color_hex: "#10B981",
+      verified: true,
+    },
+    topic: "Remote Work and Rural Economies",
+    quote:
+      "Seven states have passed remote worker relocation incentives worth up to $12,000. None of them have measured whether it's working. Policy without data isn't policy — it's hope.",
+    context:
+      "Policy analysts note that remote worker incentive programs have proliferated without rigorous evaluation frameworks.",
+    category_tag: "Policy Analysis",
+    reaction_count: 31,
+    bookmark_count: 11,
+    created_at: "2026-03-12T13:00:00Z",
   },
 ];
 

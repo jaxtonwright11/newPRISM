@@ -19,3 +19,20 @@ export function getSupabase(): SupabaseClient | null {
 
 /** Convenience re-export — returns client or null. */
 export const supabase = typeof window === "undefined" ? null : getSupabase();
+
+/**
+ * Server-side Supabase client for API routes.
+ * Uses the service role key when available, falls back to anon key.
+ * Returns null when Supabase is not configured.
+ */
+export function getSupabaseServerClient(): SupabaseClient | null {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+  const key = serviceKey || anonKey;
+
+  if (!url.startsWith("http") || !key) return null;
+  return createClient(url, key, {
+    auth: { persistSession: false },
+  });
+}
