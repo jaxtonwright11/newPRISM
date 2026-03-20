@@ -1,6 +1,15 @@
 import { NextResponse } from "next/server";
+import { applyRateLimit, parseJsonBody, slugSchema } from "@/lib/api";
+import { z } from "zod";
 
-export async function GET() {
+const connectionCreateBodySchema = z.object({
+  target_user_id: slugSchema,
+});
+
+export async function GET(request: Request) {
+  const rateLimitResponse = applyRateLimit(request, "connections-get");
+  if (rateLimitResponse) return rateLimitResponse;
+
   return NextResponse.json({
     data: [],
     meta: { total: 0 },
@@ -9,10 +18,11 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const body = await request.json().catch(() => null);
-  if (!body) {
-    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
-  }
+  const rateLimitResponse = applyRateLimit(request, "connections-post");
+  if (rateLimitResponse) return rateLimitResponse;
+
+  const parsedBody = await parseJsonBody(request, connectionCreateBodySchema);
+  if (!parsedBody.success) return parsedBody.response;
 
   return NextResponse.json(
     { error: "Auth required — Supabase not configured" },

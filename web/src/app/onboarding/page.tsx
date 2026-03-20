@@ -29,7 +29,7 @@ export default function OnboardingPage() {
     <div className="relative h-screen w-screen overflow-hidden bg-prism-bg-primary">
       {/* Full-screen map */}
       <div className="absolute inset-0">
-        <MapPlaceholder />
+        <MapPlaceholder showPersonalPin={false} />
       </div>
 
       {/* Dark gradient overlay from bottom */}

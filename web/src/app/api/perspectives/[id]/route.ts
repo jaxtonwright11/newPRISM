@@ -1,11 +1,23 @@
 import { NextResponse } from "next/server";
+import { applyRateLimit, parseParams, slugSchema } from "@/lib/api";
 import { SEED_PERSPECTIVES } from "@/lib/seed-data";
+import { z } from "zod";
+
+const perspectiveIdParamsSchema = z.object({
+  id: slugSchema,
+});
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
+  const rateLimitResponse = applyRateLimit(request, "perspective-by-id");
+  if (rateLimitResponse) return rateLimitResponse;
+
+  const parsedParams = parseParams(await params, perspectiveIdParamsSchema);
+  if (!parsedParams.success) return parsedParams.response;
+
+  const { id } = parsedParams.data;
   const perspective = SEED_PERSPECTIVES.find((p) => p.id === id);
 
   if (!perspective) {

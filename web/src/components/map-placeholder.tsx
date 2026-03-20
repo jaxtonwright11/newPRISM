@@ -1,7 +1,7 @@
 "use client";
 
 import { COMMUNITY_COLORS } from "@/lib/constants";
-import { SEED_COMMUNITIES } from "@/lib/seed-data";
+import { SEED_COMMUNITIES, SEED_USER } from "@/lib/seed-data";
 import type { CommunityType } from "@shared/types";
 
 function latLngToXY(lat: number, lng: number): { x: number; y: number } {
@@ -21,9 +21,15 @@ const ACTIVITY_SIZE: Record<string, number> = {
 
 interface MapPlaceholderProps {
   highlightedCommunityIds?: string[];
+  ghostMode?: boolean;
+  showPersonalPin?: boolean;
 }
 
-export function MapPlaceholder({ highlightedCommunityIds }: MapPlaceholderProps) {
+export function MapPlaceholder({
+  highlightedCommunityIds,
+  ghostMode = false,
+  showPersonalPin = true,
+}: MapPlaceholderProps) {
   const pins = SEED_COMMUNITIES.filter(
     (c) => c.latitude !== null && c.longitude !== null
   ).map((c, i) => {
@@ -40,6 +46,16 @@ export function MapPlaceholder({ highlightedCommunityIds }: MapPlaceholderProps)
       dimmed: highlightedCommunityIds ? !isHighlighted : false,
     };
   });
+  const homeCommunity = SEED_COMMUNITIES.find(
+    (community) => community.id === SEED_USER.home_community_id
+  );
+  const personalPin =
+    showPersonalPin &&
+    homeCommunity &&
+    homeCommunity.latitude !== null &&
+    homeCommunity.longitude !== null
+      ? latLngToXY(homeCommunity.latitude, homeCommunity.longitude)
+      : null;
 
   return (
     <div className="relative w-full h-full rounded-xl overflow-hidden bg-prism-map-ocean border border-prism-border shadow-inner">
@@ -97,6 +113,17 @@ export function MapPlaceholder({ highlightedCommunityIds }: MapPlaceholderProps)
         <span className="w-2 h-2 rounded-full bg-prism-accent-live animate-pulse-slow" />
         <span className="text-[10px] font-semibold tracking-widest text-prism-accent-live uppercase">
           Live
+        </span>
+      </div>
+
+      {/* Privacy status */}
+      <div className="absolute top-11 right-3 bg-prism-bg-primary/80 backdrop-blur-sm px-2.5 py-1 rounded-full z-10 border border-prism-border/60">
+        <span
+          className={`text-[10px] font-medium ${
+            ghostMode ? "text-prism-accent-active" : "text-prism-text-secondary"
+          }`}
+        >
+          {ghostMode ? "Ghost mode on" : "Visible mode"}
         </span>
       </div>
 
@@ -169,6 +196,26 @@ export function MapPlaceholder({ highlightedCommunityIds }: MapPlaceholderProps)
           </div>
         );
       })}
+
+      {/* Personal pin (hidden in ghost mode) */}
+      {personalPin && !ghostMode && (
+        <div
+          className="absolute group/personal z-[5]"
+          style={{
+            left: `${personalPin.x}%`,
+            top: `${personalPin.y}%`,
+            transform: "translate(-50%, -50%)",
+          }}
+        >
+          <div className="absolute -inset-[3px] rounded-full border border-prism-accent-active/80 animate-story-ring" />
+          <div className="relative w-2.5 h-2.5 rounded-full bg-prism-accent-active shadow-[0_0_8px_rgba(74,158,255,0.7)]" />
+          <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 opacity-0 group-hover/personal:opacity-100 transition-opacity pointer-events-none z-20">
+            <div className="bg-prism-bg-primary/95 backdrop-blur-sm px-2 py-1 rounded text-[10px] text-prism-text-primary whitespace-nowrap border border-prism-border">
+              You ({homeCommunity?.region})
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Mapbox token prompt */}
       <div className="absolute bottom-3 left-3 bg-prism-bg-primary/80 backdrop-blur-sm px-3 py-2 rounded-lg z-10">

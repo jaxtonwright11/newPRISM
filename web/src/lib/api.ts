@@ -97,6 +97,26 @@ type ParseQueryFailure = {
   response: NextResponse;
 };
 
+type ParseParamsSuccess<TSchema extends z.ZodTypeAny> = {
+  success: true;
+  data: z.infer<TSchema>;
+};
+
+type ParseParamsFailure = {
+  success: false;
+  response: NextResponse;
+};
+
+type ParseJsonSuccess<TSchema extends z.ZodTypeAny> = {
+  success: true;
+  data: z.infer<TSchema>;
+};
+
+type ParseJsonFailure = {
+  success: false;
+  response: NextResponse;
+};
+
 export function parseQuery<
   TSchema extends z.ZodObject<Record<string, z.ZodTypeAny>>,
 >(request: Request, schema: TSchema): ParseQuerySuccess<TSchema> | ParseQueryFailure {
@@ -114,6 +134,67 @@ export function parseQuery<
       response: NextResponse.json(
         {
           error: "Invalid query parameters",
+          issues,
+        },
+        { status: 400 }
+      ),
+    };
+  }
+
+  return { success: true, data: parsed.data };
+}
+
+export function parseParams<TSchema extends z.ZodTypeAny>(
+  params: unknown,
+  schema: TSchema
+): ParseParamsSuccess<TSchema> | ParseParamsFailure {
+  const parsed = schema.safeParse(params);
+
+  if (!parsed.success) {
+    const issues = parsed.error.issues.map((issue) => ({
+      path: issue.path.join("."),
+      message: issue.message,
+    }));
+
+    return {
+      success: false,
+      response: NextResponse.json(
+        {
+          error: "Invalid route parameters",
+          issues,
+        },
+        { status: 400 }
+      ),
+    };
+  }
+
+  return { success: true, data: parsed.data };
+}
+
+export async function parseJsonBody<TSchema extends z.ZodTypeAny>(
+  request: Request,
+  schema: TSchema
+): Promise<ParseJsonSuccess<TSchema> | ParseJsonFailure> {
+  const raw = await request.json().catch(() => null);
+  if (raw === null) {
+    return {
+      success: false,
+      response: NextResponse.json({ error: "Invalid request body" }, { status: 400 }),
+    };
+  }
+
+  const parsed = schema.safeParse(raw);
+  if (!parsed.success) {
+    const issues = parsed.error.issues.map((issue) => ({
+      path: issue.path.join("."),
+      message: issue.message,
+    }));
+
+    return {
+      success: false,
+      response: NextResponse.json(
+        {
+          error: "Invalid request body",
           issues,
         },
         { status: 400 }
