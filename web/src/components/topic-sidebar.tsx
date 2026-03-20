@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { SEED_TOPICS } from "@/lib/seed-data";
-import type { TopicStatus } from "@shared/types";
+import { SEED_TOPICS, SEED_COMMUNITIES } from "@/lib/seed-data";
+import { COMMUNITY_COLORS } from "@/lib/constants";
+import type { TopicStatus, CommunityType } from "@shared/types";
 
 const STATUS_BADGE: Record<TopicStatus, { label: string; color: string }> = {
   hot: {
@@ -94,6 +95,9 @@ export function TopicSidebar({
         </div>
       </div>
 
+      {/* Community Pulse */}
+      <CommunityPulse />
+
       {/* Topic lists */}
       <div className="flex-1 overflow-y-auto px-2 pb-4">
         {/* Hot / Trending */}
@@ -144,6 +148,42 @@ export function TopicSidebar({
         )}
       </div>
     </aside>
+  );
+}
+
+function CommunityPulse() {
+  const topCommunity = SEED_COMMUNITIES[3]; // Policy Wonks DC - policy type
+  const trendingTopic = SEED_TOPICS.find((t) => t.status === "hot") ?? SEED_TOPICS[0];
+  const color = COMMUNITY_COLORS[topCommunity.community_type as CommunityType];
+
+  return (
+    <div className="mx-3 mb-2 rounded-xl bg-prism-bg-elevated border border-prism-border p-3">
+      <div className="flex items-center gap-1.5 mb-2">
+        <span className="w-1.5 h-1.5 rounded-full bg-prism-accent-verified animate-pulse-slow" />
+        <span className="text-[9px] font-bold uppercase tracking-wider text-prism-accent-verified">
+          Community Pulse
+        </span>
+      </div>
+      <p className="text-[11px] text-prism-text-secondary leading-snug mb-2">
+        Most active today:
+      </p>
+      <div className="flex items-center gap-2">
+        <div
+          className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold shrink-0"
+          style={{ backgroundColor: color + "20", color }}
+        >
+          {topCommunity.name.split(" ").map((w) => w[0]).slice(0, 2).join("")}
+        </div>
+        <span className="text-[11px] text-prism-text-primary font-medium truncate">
+          {topCommunity.name}
+        </span>
+      </div>
+      <div className="mt-2 pt-2 border-t border-prism-border/60">
+        <p className="text-[10px] text-prism-text-dim">
+          Top topic: <span className="text-prism-text-secondary">{trendingTopic.title}</span>
+        </p>
+      </div>
+    </div>
   );
 }
 
