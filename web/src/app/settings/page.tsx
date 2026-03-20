@@ -59,14 +59,16 @@ export default function SettingsPage() {
               </div>
               <button
                 onClick={toggleGhostMode}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  ghostMode ? "bg-prism-accent-active" : "bg-prism-bg-elevated"
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-200 ${
+                  ghostMode
+                    ? "bg-prism-accent-active shadow-[0_0_14px_rgba(74,158,255,0.45)]"
+                    : "bg-prism-bg-elevated"
                 }`}
                 role="switch"
                 aria-checked={ghostMode}
               >
                 <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white border border-prism-border/60 transition-transform ${
                     ghostMode ? "translate-x-6" : "translate-x-1"
                   }`}
                 />
