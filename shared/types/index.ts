@@ -122,3 +122,24 @@ export interface ConnectionRequest {
   intro_message: string;
   created_at: string;
 }
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  type: 'reaction' | 'connection_request' | 'connection_accepted' | 'new_perspective' | 'community_milestone';
+  title: string;
+  body: string;
+  read: boolean;
+  created_at: string;
+  metadata?: Record<string, string>;
+}
+
+export interface BookmarkedPerspective {
+  perspective_id: string;
+  bookmarked_at: string;
+}
+
+export interface BookmarkedTopic {
+  topic_id: string;
+  bookmarked_at: string;
+}

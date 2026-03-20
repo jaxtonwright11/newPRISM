@@ -16,6 +16,7 @@ import {
   getPerspectivesByTopic,
   getAlignmentsByTopic,
   getTopicBySlug,
+  getCommunitiesForTopic,
   getStoryGroups,
   getPostsByTopic,
 } from "@/lib/seed-data";
@@ -30,9 +31,6 @@ export default function Home() {
   const [selectedPerspectiveId, setSelectedPerspectiveId] = useState<
     string | null
   >(null);
-  const [mobileNavTab, setMobileNavTab] = useState<
-    "live" | "map" | "search" | "bookmarks" | "profile"
-  >("live");
   const [mobileTopicOpen, setMobileTopicOpen] = useState(false);
   const [pulseOpen, setPulseOpen] = useState(false);
 
@@ -42,6 +40,8 @@ export default function Home() {
   const topicAlignments = currentTopic
     ? getAlignmentsByTopic(currentTopic.id)
     : [];
+  const topicCommunities = getCommunitiesForTopic(selectedTopicSlug);
+  const topicCommunityIds = topicCommunities.map((c) => c.id);
   const storyGroups = getStoryGroups();
 
   const getFeedPerspectives = useCallback(() => {
@@ -180,7 +180,7 @@ export default function Home() {
 
         {/* Map area — 40% viewport */}
         <div className="h-[35vh] md:h-[40vh] p-2 md:p-3">
-          <MapPlaceholder />
+          <MapPlaceholder highlightedCommunityIds={topicCommunityIds} />
         </div>
 
         {/* Stories bar */}
@@ -299,7 +299,7 @@ export default function Home() {
       />
 
       {/* Mobile bottom nav */}
-      <MobileNav activeTab={mobileNavTab} onTabChange={setMobileNavTab} />
+      <MobileNav />
 
       {/* Community Pulse panel */}
       <CommunityPulse isOpen={pulseOpen} onClose={() => setPulseOpen(false)} />

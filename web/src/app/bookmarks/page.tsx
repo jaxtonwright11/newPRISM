@@ -1,0 +1,142 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { PerspectiveCard } from "@/components/perspective-card";
+import { PerspectiveDetail } from "@/components/perspective-detail";
+import { getBookmarkedPerspectives, getBookmarkedTopics, SEED_PERSPECTIVES } from "@/lib/seed-data";
+
+type BookmarkTab = "perspectives" | "topics";
+
+export default function BookmarksPage() {
+  const [activeTab, setActiveTab] = useState<BookmarkTab>("perspectives");
+  const [selectedPerspectiveId, setSelectedPerspectiveId] = useState<string | null>(null);
+
+  const bookmarkedPerspectives = getBookmarkedPerspectives();
+  const bookmarkedTopics = getBookmarkedTopics();
+
+  const selectedPerspective = selectedPerspectiveId
+    ? SEED_PERSPECTIVES.find((p) => p.id === selectedPerspectiveId)
+    : null;
+
+  const tabs: { id: BookmarkTab; label: string; count: number }[] = [
+    { id: "perspectives", label: "Perspectives", count: bookmarkedPerspectives.length },
+    { id: "topics", label: "Topics", count: bookmarkedTopics.length },
+  ];
+
+  return (
+    <div className="min-h-screen bg-prism-bg-primary">
+      {/* Header */}
+      <header className="border-b border-prism-border bg-prism-bg-secondary/95 backdrop-blur-md sticky top-0 z-30">
+        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
+          <Link href="/" className="text-prism-text-dim hover:text-prism-text-primary transition-colors">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+          </Link>
+          <h1 className="text-base font-semibold text-prism-text-primary">Saved</h1>
+        </div>
+      </header>
+
+      <div className="max-w-2xl mx-auto px-4 py-4">
+        {/* Tabs */}
+        <div className="flex gap-1 bg-prism-bg-elevated rounded-full p-1 mb-4">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-150 ${
+                activeTab === tab.id
+                  ? "bg-prism-accent-active text-white shadow-sm"
+                  : "text-prism-text-secondary hover:text-prism-text-primary"
+              }`}
+            >
+              {tab.label}
+              <span className="font-mono text-xs opacity-70">{tab.count}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Bookmarked perspectives */}
+        {activeTab === "perspectives" && (
+          <div className="space-y-3">
+            {bookmarkedPerspectives.length > 0 ? (
+              bookmarkedPerspectives.map((p, i) => (
+                <PerspectiveCard
+                  key={p.id}
+                  id={p.id}
+                  community={p.community}
+                  quote={p.quote}
+                  context={p.context}
+                  category_tag={p.category_tag}
+                  reaction_count={p.reaction_count}
+                  bookmark_count={p.bookmark_count}
+                  onSelect={setSelectedPerspectiveId}
+                  animationDelay={i * 50}
+                />
+              ))
+            ) : (
+              <EmptyState message="No bookmarked perspectives yet." sub="Tap the bookmark icon on any perspective to save it here." />
+            )}
+          </div>
+        )}
+
+        {/* Bookmarked topics */}
+        {activeTab === "topics" && (
+          <div className="space-y-2">
+            {bookmarkedTopics.length > 0 ? (
+              bookmarkedTopics.map((topic) => (
+                <Link
+                  key={topic.id}
+                  href={`/topic/${topic.slug}`}
+                  className="block bg-prism-bg-secondary rounded-xl border border-prism-border p-4 hover:bg-prism-bg-elevated transition-colors"
+                >
+                  <h3 className="text-sm font-medium text-prism-text-primary mb-1">{topic.title}</h3>
+                  {topic.summary && (
+                    <p className="text-xs text-prism-text-secondary line-clamp-2 mb-2">{topic.summary}</p>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-mono text-prism-text-dim">
+                      {topic.perspective_count} perspectives · {topic.community_count} communities
+                    </span>
+                  </div>
+                </Link>
+              ))
+            ) : (
+              <EmptyState message="No bookmarked topics yet." sub="Topics you save will appear here." />
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Perspective detail modal */}
+      {selectedPerspective && (
+        <PerspectiveDetail
+          id={selectedPerspective.id}
+          community={selectedPerspective.community}
+          quote={selectedPerspective.quote}
+          context={selectedPerspective.context}
+          category_tag={selectedPerspective.category_tag}
+          reaction_count={selectedPerspective.reaction_count}
+          bookmark_count={selectedPerspective.bookmark_count}
+          created_at={selectedPerspective.created_at}
+          onClose={() => setSelectedPerspectiveId(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+function EmptyState({ message, sub }: { message: string; sub: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <div className="w-12 h-12 rounded-full bg-prism-bg-elevated flex items-center justify-center mb-3">
+        <svg className="w-6 h-6 text-prism-text-dim" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+        </svg>
+      </div>
+      <p className="text-sm text-prism-text-dim mb-1">{message}</p>
+      <p className="text-xs text-prism-text-dim/60">{sub}</p>
+    </div>
+  );
+}

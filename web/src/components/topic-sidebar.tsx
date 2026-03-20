@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { SEED_TOPICS } from "@/lib/seed-data";
+import Link from "next/link";
+import { SEED_TOPICS, getCommunitiesForTopic } from "@/lib/seed-data";
+import { COMMUNITY_COLORS } from "@/lib/constants";
 import type { TopicStatus } from "@shared/types";
 
 const STATUS_BADGE: Record<TopicStatus, { label: string; color: string }> = {
@@ -142,6 +144,9 @@ export function TopicSidebar({
             ))}
           </div>
         )}
+
+        {/* Communities active on selected topic */}
+        <ActiveCommunities topicSlug={selectedTopic} />
       </div>
     </aside>
   );
@@ -190,5 +195,36 @@ function TopicItem({
         </span>
       </div>
     </button>
+  );
+}
+
+function ActiveCommunities({ topicSlug }: { topicSlug: string }) {
+  const communities = getCommunitiesForTopic(topicSlug);
+
+  if (communities.length === 0) return null;
+
+  return (
+    <div className="mt-4 pt-3 border-t border-prism-border">
+      <div className="px-2 py-1.5">
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-prism-text-dim">
+          Communities on this topic
+        </span>
+      </div>
+      <div className="space-y-0.5">
+        {communities.map((community) => (
+          <Link
+            key={community.id}
+            href={`/community/${community.id}`}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-prism-bg-elevated transition-colors"
+          >
+            <span
+              className="w-2 h-2 rounded-full shrink-0"
+              style={{ backgroundColor: COMMUNITY_COLORS[community.community_type] }}
+            />
+            <span className="text-xs text-prism-text-secondary truncate">{community.name}</span>
+          </Link>
+        ))}
+      </div>
+    </div>
   );
 }

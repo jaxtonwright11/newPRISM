@@ -8,6 +8,7 @@ import type {
   UserProfile,
   PostType,
   RadiusMiles,
+  Notification,
 } from "@shared/types";
 
 export const SEED_COMMUNITIES: Community[] = [
@@ -822,6 +823,132 @@ export function getCommunityById(id: string): Community | undefined {
 
 export function getCommunityByName(name: string): Community | undefined {
   return SEED_COMMUNITIES.find((c) => c.name === name);
+}
+
+export const SEED_USER: UserProfile = {
+  id: "user-demo",
+  email: "demo@prism.community",
+  username: "prism_explorer",
+  display_name: "Demo Explorer",
+  avatar_url: null,
+  home_community_id: "comm-bay-area-tech",
+  verification_level: 1,
+  ghost_mode: false,
+  default_radius_miles: 20,
+  created_at: "2026-03-01T00:00:00Z",
+  perspectives_read: 47,
+  communities_engaged: 8,
+  connections_made: 3,
+};
+
+export const SEED_BOOKMARKED_PERSPECTIVE_IDS: string[] = [
+  "persp-1",
+  "persp-9",
+  "persp-11",
+  "persp-14",
+];
+
+export const SEED_BOOKMARKED_TOPIC_IDS: string[] = [
+  "topic-border-policy",
+  "topic-ev-transition",
+];
+
+export const SEED_NOTIFICATIONS: Notification[] = [
+  {
+    id: "notif-1",
+    user_id: "user-demo",
+    type: "reaction",
+    title: "New reaction",
+    body: "Someone from Rural Appalachia reacted 💡 to a perspective you bookmarked.",
+    read: false,
+    created_at: "2026-03-19T14:30:00Z",
+  },
+  {
+    id: "notif-2",
+    user_id: "user-demo",
+    type: "new_perspective",
+    title: "New perspective",
+    body: "Detroit Auto Workers shared a new perspective on Electric Vehicle Transition.",
+    read: false,
+    created_at: "2026-03-19T12:00:00Z",
+  },
+  {
+    id: "notif-3",
+    user_id: "user-demo",
+    type: "community_milestone",
+    title: "Community milestone",
+    body: "Bay Area Tech Workers reached 500 members! You're part of a growing community.",
+    read: true,
+    created_at: "2026-03-18T09:00:00Z",
+  },
+  {
+    id: "notif-4",
+    user_id: "user-demo",
+    type: "connection_request",
+    title: "Connection request",
+    body: "A member from Mexican-American Diaspora wants to connect over US-Mexico Border Policy.",
+    read: true,
+    created_at: "2026-03-17T16:00:00Z",
+  },
+  {
+    id: "notif-5",
+    user_id: "user-demo",
+    type: "connection_accepted",
+    title: "Connection accepted",
+    body: "Your connection request to a member of Tribal Nations Midwest was accepted.",
+    read: true,
+    created_at: "2026-03-16T10:00:00Z",
+  },
+];
+
+export function getBookmarkedPerspectives(): SeedPerspective[] {
+  return SEED_PERSPECTIVES.filter((p) =>
+    SEED_BOOKMARKED_PERSPECTIVE_IDS.includes(p.id)
+  );
+}
+
+export function getBookmarkedTopics(): Topic[] {
+  return SEED_TOPICS.filter((t) =>
+    SEED_BOOKMARKED_TOPIC_IDS.includes(t.id)
+  );
+}
+
+export function searchPerspectives(query: string): SeedPerspective[] {
+  const lower = query.toLowerCase();
+  return SEED_PERSPECTIVES.filter(
+    (p) =>
+      p.quote.toLowerCase().includes(lower) ||
+      p.context.toLowerCase().includes(lower) ||
+      p.community.name.toLowerCase().includes(lower) ||
+      p.category_tag.toLowerCase().includes(lower)
+  );
+}
+
+export function searchTopics(query: string): Topic[] {
+  const lower = query.toLowerCase();
+  return SEED_TOPICS.filter(
+    (t) =>
+      t.title.toLowerCase().includes(lower) ||
+      (t.summary?.toLowerCase().includes(lower) ?? false)
+  );
+}
+
+export function searchCommunities(query: string): Community[] {
+  const lower = query.toLowerCase();
+  return SEED_COMMUNITIES.filter(
+    (c) =>
+      c.name.toLowerCase().includes(lower) ||
+      c.region.toLowerCase().includes(lower) ||
+      (c.description?.toLowerCase().includes(lower) ?? false)
+  );
+}
+
+export function getCommunitiesForTopic(topicSlug: string): Community[] {
+  const perspectives = getPerspectivesByTopic(topicSlug);
+  const communityIds = Array.from(new Set(perspectives.map((p) => p.community_id)));
+  return communityIds
+    .map((id) => getCommunityById(id))
+    .filter((c): c is Community => c !== undefined);
 }
 
 export const SEED_USERS: UserProfile[] = [

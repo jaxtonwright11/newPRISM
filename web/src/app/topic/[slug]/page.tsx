@@ -6,12 +6,15 @@ import Link from "next/link";
 import { PerspectiveCard } from "@/components/perspective-card";
 import { PerspectiveDetail } from "@/components/perspective-detail";
 import { AlignmentPanel } from "@/components/alignment-panel";
+import { MobileNav } from "@/components/mobile-nav";
 import {
   getTopicBySlug,
   getPerspectivesByTopic,
   getAlignmentsByTopic,
+  getCommunitiesForTopic,
   SEED_PERSPECTIVES,
 } from "@/lib/seed-data";
+import { COMMUNITY_COLORS } from "@/lib/constants";
 import type { TopicStatus } from "@shared/types";
 
 const STATUS_BADGE: Record<TopicStatus, { label: string; color: string }> = {
@@ -43,6 +46,7 @@ export default function TopicDetailPage() {
   const topic = getTopicBySlug(slug);
   const perspectives = getPerspectivesByTopic(slug);
   const alignments = topic ? getAlignmentsByTopic(topic.id) : [];
+  const activeCommunities = getCommunitiesForTopic(slug);
 
   const [selectedPerspectiveId, setSelectedPerspectiveId] = useState<
     string | null
@@ -127,6 +131,29 @@ export default function TopicDetailPage() {
               {topic.community_count} communities
             </span>
           </div>
+
+          {/* Active communities */}
+          {activeCommunities.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-3">
+              {activeCommunities.map((community) => (
+                <Link
+                  key={community.id}
+                  href={`/community/${community.id}`}
+                  className="inline-flex items-center gap-1.5 text-[11px] px-2 py-1 rounded-full hover:opacity-80 transition-opacity"
+                  style={{
+                    backgroundColor: COMMUNITY_COLORS[community.community_type] + "15",
+                    color: COMMUNITY_COLORS[community.community_type],
+                  }}
+                >
+                  <span
+                    className="w-1.5 h-1.5 rounded-full"
+                    style={{ backgroundColor: COMMUNITY_COLORS[community.community_type] }}
+                  />
+                  {community.name}
+                </Link>
+              ))}
+            </div>
+          )}
         </header>
 
         {/* Perspectives */}
@@ -160,6 +187,9 @@ export default function TopicDetailPage() {
 
       {/* Alignment panel */}
       <AlignmentPanel alignments={alignments} topicTitle={topic.title} />
+
+      {/* Mobile bottom nav */}
+      <MobileNav />
 
       {/* Perspective detail modal */}
       {selectedPerspective && (

@@ -19,17 +19,25 @@ const ACTIVITY_SIZE: Record<string, number> = {
   low: 6,
 };
 
-export function MapPlaceholder() {
+interface MapPlaceholderProps {
+  highlightedCommunityIds?: string[];
+}
+
+export function MapPlaceholder({ highlightedCommunityIds }: MapPlaceholderProps) {
   const pins = SEED_COMMUNITIES.filter(
     (c) => c.latitude !== null && c.longitude !== null
   ).map((c, i) => {
     const pos = latLngToXY(c.latitude as number, c.longitude as number);
-    const activity = (["high", "medium", "low"] as const)[i % 3];
+    const isHighlighted = !highlightedCommunityIds || highlightedCommunityIds.includes(c.id);
+    const activity = isHighlighted
+      ? (["high", "medium"] as const)[i % 2]
+      : "low";
     return {
       ...pos,
       type: c.community_type,
       size: activity,
       name: c.name,
+      dimmed: highlightedCommunityIds ? !isHighlighted : false,
     };
   });
 
@@ -106,7 +114,7 @@ export function MapPlaceholder() {
         return (
           <div
             key={i}
-            className="absolute group/pin"
+            className={`absolute group/pin transition-opacity duration-300 ${pin.dimmed ? "opacity-20" : "opacity-100"}`}
             style={{
               left: `${pin.x}%`,
               top: `${pin.y}%`,

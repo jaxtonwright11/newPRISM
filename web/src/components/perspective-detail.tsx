@@ -167,28 +167,46 @@ export function PerspectiveDetail({
                 </button>
               ))}
             </div>
-            <button
-              onClick={() => setBookmarked(!bookmarked)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all duration-150 ${
-                bookmarked
-                  ? "text-prism-accent-active bg-prism-accent-active/10"
-                  : "text-prism-text-dim hover:text-prism-text-secondary hover:bg-prism-bg-elevated"
-              }`}
-              title={bookmarked ? "Remove bookmark" : "Bookmark"}
-            >
-              <svg
-                className="w-4 h-4"
-                viewBox="0 0 20 20"
-                fill={bookmarked ? "currentColor" : "none"}
-                stroke="currentColor"
-                strokeWidth="1.5"
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setBookmarked(!bookmarked)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all duration-150 ${
+                  bookmarked
+                    ? "text-prism-accent-active bg-prism-accent-active/10"
+                    : "text-prism-text-dim hover:text-prism-text-secondary hover:bg-prism-bg-elevated"
+                }`}
+                title={bookmarked ? "Remove bookmark" : "Bookmark"}
               >
-                <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
-              </svg>
-              <span className="font-mono text-xs">
-                {bookmark_count + (bookmarked ? 1 : 0)}
-              </span>
-            </button>
+                <svg
+                  className="w-4 h-4"
+                  viewBox="0 0 20 20"
+                  fill={bookmarked ? "currentColor" : "none"}
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                >
+                  <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
+                </svg>
+                <span className="font-mono text-xs">
+                  {bookmark_count + (bookmarked ? 1 : 0)}
+                </span>
+              </button>
+              <button
+                onClick={() => {
+                  if (navigator.share) {
+                    navigator.share({ title: `${community.name} perspective`, text: quote }).catch(() => {});
+                  } else {
+                    navigator.clipboard.writeText(quote).catch(() => {});
+                  }
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-prism-text-dim hover:text-prism-text-secondary hover:bg-prism-bg-elevated transition-all duration-150"
+                title="Share"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
+                </svg>
+                <span className="text-xs">Share</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
