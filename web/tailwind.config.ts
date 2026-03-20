@@ -53,6 +53,8 @@ const config: Config = {
         "pulse-slow": "pulse 3s ease-in-out infinite",
         "pulse-glow": "pulse-glow 2s ease-in-out infinite",
         "fade-in": "fadeIn 200ms ease-out",
+        "story-ring": "storyRing 6s linear infinite",
+        "map-pin": "mapPinPulse 2s ease-in-out infinite",
       },
       keyframes: {
         "pulse-glow": {
@@ -60,8 +62,16 @@ const config: Config = {
           "50%": { opacity: "1" },
         },
         fadeIn: {
-          "0%": { opacity: "0" },
-          "100%": { opacity: "1" },
+          "0%": { opacity: "0", transform: "translateY(4px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        storyRing: {
+          "0%": { transform: "rotate(0deg)" },
+          "100%": { transform: "rotate(360deg)" },
+        },
+        mapPinPulse: {
+          "0%, 100%": { opacity: "0.8", transform: "translate(-50%, -50%) scale(1)" },
+          "50%": { opacity: "0.4", transform: "translate(-50%, -50%) scale(1.3)" },
         },
       },
     },
