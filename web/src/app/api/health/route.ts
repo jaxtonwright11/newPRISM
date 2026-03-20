@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
+import { applyRateLimit } from "@/lib/api";
 import { getSupabase } from "@/lib/supabase";
 
-export async function GET() {
+export async function GET(request: Request) {
+  const rateLimitResponse = applyRateLimit(request, "health");
+  if (rateLimitResponse) return rateLimitResponse;
+
   const checks: Record<string, { status: string; detail?: string }> = {};
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
