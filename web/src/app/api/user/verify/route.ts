@@ -83,7 +83,7 @@ export async function POST(request: Request) {
 
     if (updateError) {
       return NextResponse.json(
-        { error: "Failed to upgrade", details: updateError.message },
+        { error: "Failed to upgrade"},
         { status: 500 }
       );
     }
@@ -131,7 +131,7 @@ export async function POST(request: Request) {
 
     if (insertError) {
       return NextResponse.json(
-        { error: "Failed to submit application", details: insertError.message },
+        { error: "Failed to submit application"},
         { status: 500 }
       );
     }

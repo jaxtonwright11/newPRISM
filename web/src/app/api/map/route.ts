@@ -13,7 +13,7 @@ export async function GET(request: Request) {
       // Community pins — always visible (public data, uses anon key + RLS)
       const { data: communities, error: commError } = await supabase
         .from("communities")
-        .select("*")
+        .select("id, name, region, latitude, longitude, color_hex, community_type")
         .eq("active", true)
         .not("latitude", "is", null)
         .not("longitude", "is", null);

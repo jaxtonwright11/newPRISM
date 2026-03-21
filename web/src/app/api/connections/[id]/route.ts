@@ -91,7 +91,7 @@ export async function PATCH(
 
   if (updateError) {
     return NextResponse.json(
-      { error: "Failed to update connection", details: updateError.message },
+      { error: "Failed to update connection" },
       { status: 500 }
     );
   }

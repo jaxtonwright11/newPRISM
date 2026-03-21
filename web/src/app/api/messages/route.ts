@@ -72,14 +72,15 @@ export async function GET(request: NextRequest) {
       .from("direct_messages")
       .select(`*, sender:users!sender_id(id, username, display_name)`)
       .eq("connection_id", connectionId)
-      .order("created_at", { ascending: true });
+      .order("created_at", { ascending: true })
+      .limit(200);
 
     if (error) throw error;
 
     return NextResponse.json({ messages: messages ?? [] });
-  } catch (err) {
+  } catch {
     return NextResponse.json(
-      { error: "Failed to fetch messages", detail: String(err) },
+      { error: "Failed to fetch messages" },
       { status: 500 }
     );
   }
@@ -150,9 +151,9 @@ export async function POST(request: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ message }, { status: 201 });
-  } catch (err) {
+  } catch {
     return NextResponse.json(
-      { error: "Failed to send message", detail: String(err) },
+      { error: "Failed to send message" },
       { status: 500 }
     );
   }
