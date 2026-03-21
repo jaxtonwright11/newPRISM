@@ -1,89 +1,155 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useAuth } from "@/lib/auth-context";
 import { COMMUNITY_COLORS } from "@/lib/constants";
 import type { CommunityType } from "@shared/types";
 
-interface MockConnection {
+interface Connection {
   id: string;
-  person: {
-    initials: string;
-    community: string;
-    communityType: CommunityType;
-    region: string;
-  };
-  topic: string;
-  lastMessage: string;
-  lastMessageTime: string;
-  unread: boolean;
+  requester_id: string;
+  recipient_id: string;
+  status: string;
+  intro_message: string;
+  created_at: string;
+  topic: { id: string; title: string } | null;
+  requester: { id: string; username: string; display_name: string | null; home_community: { name: string; community_type: CommunityType; region: string } | null } | null;
+  recipient: { id: string; username: string; display_name: string | null; home_community: { name: string; community_type: CommunityType; region: string } | null } | null;
 }
 
-const MOCK_CONNECTIONS: MockConnection[] = [
-  {
-    id: "conn-1",
-    person: {
-      initials: "M.R.",
-      community: "Mexican-American Diaspora",
-      communityType: "diaspora",
-      region: "El Paso, TX",
-    },
-    topic: "US-Mexico Border Policy Changes",
-    lastMessage:
-      "Thanks for reaching out — your perspective on this is really helpful to understand.",
-    lastMessageTime: "2h ago",
-    unread: true,
-  },
-  {
-    id: "conn-2",
-    person: {
-      initials: "T.W.",
-      community: "Detroit Auto Workers",
-      communityType: "civic",
-      region: "Detroit, MI",
-    },
-    topic: "Electric Vehicle Transition",
-    lastMessage: "The retraining programs sound great on paper but...",
-    lastMessageTime: "1d ago",
-    unread: false,
-  },
-];
+interface Message {
+  id: string;
+  connection_id: string;
+  sender_id: string;
+  content: string;
+  created_at: string;
+  sender?: { id: string; username: string; display_name: string | null };
+}
 
-function MessageThread({ connection }: { connection: MockConnection }) {
-  const [messages, setMessages] = useState([
-    {
-      id: "m1",
-      sender: "them",
-      content: `Hi — thanks for connecting about "${connection.topic}". I read your intro and wanted to respond.`,
-      time: "3d ago",
-    },
-    {
-      id: "m2",
-      sender: "me",
-      content:
-        "Thanks for accepting! I'm really curious about your day-to-day experience with this issue.",
-      time: "2d ago",
-    },
-    {
-      id: "m3",
-      sender: "them",
-      content: connection.lastMessage,
-      time: connection.lastMessageTime,
-    },
-  ]);
+function MessageThread({
+  connection,
+  currentUserId,
+}: {
+  connection: Connection;
+  currentUserId: string;
+}) {
+  const { session, supabase } = useAuth();
+  const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState("");
+  const [loading, setLoading] = useState(true);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const color =
-    COMMUNITY_COLORS[connection.person.communityType as CommunityType];
+  const otherPerson = connection.requester_id === currentUserId
+    ? connection.recipient
+    : connection.requester;
 
-  const send = () => {
-    if (!draft.trim()) return;
+  const communityType = otherPerson?.home_community?.community_type ?? "civic";
+  const color = COMMUNITY_COLORS[communityType];
+
+  // Fetch messages
+  useEffect(() => {
+    async function fetchMessages() {
+      if (!session?.access_token) return;
+      try {
+        const res = await fetch(
+          `/api/messages?connection_id=${connection.id}`,
+          { headers: { Authorization: `Bearer ${session.access_token}` } }
+        );
+        const data = await res.json();
+        if (data.messages) {
+          setMessages(data.messages);
+        }
+      } catch {
+        // silent
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchMessages();
+  }, [connection.id, session?.access_token]);
+
+  // Subscribe to Realtime for new messages
+  useEffect(() => {
+    const channel = supabase
+      .channel(`messages:${connection.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "direct_messages",
+          filter: `connection_id=eq.${connection.id}`,
+        },
+        (payload) => {
+          const newMsg = payload.new as Message;
+          setMessages((prev) => {
+            // Deduplicate
+            if (prev.some((m) => m.id === newMsg.id)) return prev;
+            return [...prev, newMsg];
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [connection.id, supabase]);
+
+  // Auto-scroll to bottom
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const send = useCallback(async () => {
+    if (!draft.trim() || !session?.access_token) return;
+    const content = draft.trim();
+    setDraft("");
+
+    // Optimistic add
+    const optimisticId = `opt-${Date.now()}`;
     setMessages((prev) => [
       ...prev,
-      { id: `m-${Date.now()}`, sender: "me", content: draft.trim(), time: "now" },
+      {
+        id: optimisticId,
+        connection_id: connection.id,
+        sender_id: currentUserId,
+        content,
+        created_at: new Date().toISOString(),
+      },
     ]);
-    setDraft("");
-  };
+
+    try {
+      const res = await fetch("/api/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ connection_id: connection.id, content }),
+      });
+      if (res.ok) {
+        const { message } = await res.json();
+        // Replace optimistic with real
+        setMessages((prev) =>
+          prev.map((m) => (m.id === optimisticId ? message : m))
+        );
+      }
+    } catch {
+      // Remove optimistic on failure
+      setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
+    }
+  }, [draft, session?.access_token, connection.id, currentUserId]);
+
+  const initials = otherPerson
+    ? (otherPerson.display_name ?? otherPerson.username)
+        .split(" ")
+        .map((w) => w[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase()
+    : "?";
 
   return (
     <div className="flex flex-col h-full">
@@ -93,50 +159,63 @@ function MessageThread({ connection }: { connection: MockConnection }) {
           className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
           style={{ backgroundColor: color + "20", color }}
         >
-          {connection.person.initials}
+          {initials}
         </div>
         <div>
           <p className="text-sm font-medium text-prism-text-primary">
-            {connection.person.community}
+            {otherPerson?.home_community?.name ?? otherPerson?.username ?? "Unknown"}
           </p>
-          <p className="text-[10px] text-prism-text-dim">
-            Connected about: {connection.topic}
-          </p>
+          {connection.topic && (
+            <p className="text-[10px] text-prism-text-dim">
+              Connected about: {connection.topic.title}
+            </p>
+          )}
         </div>
       </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        <div className="text-center">
-          <span className="text-[10px] text-prism-text-dim px-3 py-1 rounded-full bg-prism-bg-elevated">
-            Connected via {connection.topic}
-          </span>
-        </div>
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex ${msg.sender === "me" ? "justify-end" : "justify-start"}`}
-          >
-            <div
-              className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm leading-relaxed ${
-                msg.sender === "me"
-                  ? "bg-prism-accent-active text-white rounded-br-sm"
-                  : "bg-prism-bg-elevated text-prism-text-primary border border-prism-border rounded-bl-sm"
-              }`}
-            >
-              {msg.content}
-              <p
-                className={`text-[10px] mt-1 ${
-                  msg.sender === "me"
-                    ? "text-white/60"
-                    : "text-prism-text-dim"
-                }`}
-              >
-                {msg.time}
-              </p>
-            </div>
+        {connection.topic && (
+          <div className="text-center">
+            <span className="text-[10px] text-prism-text-dim px-3 py-1 rounded-full bg-prism-bg-elevated">
+              Connected via {connection.topic.title}
+            </span>
           </div>
-        ))}
+        )}
+
+        {loading ? (
+          <div className="flex justify-center py-8">
+            <div className="w-4 h-4 border-2 border-prism-text-dim/30 border-t-prism-text-dim rounded-full animate-spin" />
+          </div>
+        ) : (
+          messages.map((msg) => {
+            const isMe = msg.sender_id === currentUserId;
+            return (
+              <div
+                key={msg.id}
+                className={`flex ${isMe ? "justify-end" : "justify-start"}`}
+              >
+                <div
+                  className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm leading-relaxed ${
+                    isMe
+                      ? "bg-prism-accent-active text-white rounded-br-sm"
+                      : "bg-prism-bg-elevated text-prism-text-primary border border-prism-border rounded-bl-sm"
+                  }`}
+                >
+                  {msg.content}
+                  <p
+                    className={`text-[10px] mt-1 ${
+                      isMe ? "text-white/60" : "text-prism-text-dim"
+                    }`}
+                  >
+                    {formatTime(msg.created_at)}
+                  </p>
+                </div>
+              </div>
+            );
+          })
+        )}
+        <div ref={messagesEndRef} />
       </div>
 
       {/* Compose */}
@@ -181,13 +260,59 @@ function MessageThread({ connection }: { connection: MockConnection }) {
   );
 }
 
+function formatTime(iso: string): string {
+  const d = new Date(iso);
+  const now = new Date();
+  const diffMs = now.getTime() - d.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  if (diffMins < 1) return "now";
+  if (diffMins < 60) return `${diffMins}m ago`;
+  const diffHrs = Math.floor(diffMins / 60);
+  if (diffHrs < 24) return `${diffHrs}h ago`;
+  const diffDays = Math.floor(diffHrs / 24);
+  return `${diffDays}d ago`;
+}
+
 export default function MessagesPage() {
-  const [activeConnectionId, setActiveConnectionId] = useState<string | null>(
-    null
-  );
-  const activeConnection = MOCK_CONNECTIONS.find(
-    (c) => c.id === activeConnectionId
-  );
+  const { session, user, supabase } = useAuth();
+  const [connections, setConnections] = useState<Connection[]>([]);
+  const [activeConnectionId, setActiveConnectionId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch accepted connections
+  useEffect(() => {
+    async function fetchConnections() {
+      if (!session?.access_token || !user) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("community_connections")
+          .select(`
+            id, requester_id, recipient_id, status, intro_message, created_at,
+            topic:topics(id, title),
+            requester:users!requester_id(id, username, display_name, home_community:communities(name, community_type, region)),
+            recipient:users!recipient_id(id, username, display_name, home_community:communities(name, community_type, region))
+          `)
+          .eq("status", "accepted")
+          .or(`requester_id.eq.${user.id},recipient_id.eq.${user.id}`)
+          .order("created_at", { ascending: false });
+
+        if (!error && data) {
+          setConnections(data as unknown as Connection[]);
+        }
+      } catch {
+        // silent
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchConnections();
+  }, [session?.access_token, user, supabase]);
+
+  const activeConnection = connections.find((c) => c.id === activeConnectionId);
 
   return (
     <div className="min-h-screen bg-prism-bg-primary flex flex-col">
@@ -207,7 +332,7 @@ export default function MessagesPage() {
             Messages
           </h1>
           <span className="text-xs text-prism-text-dim ml-auto">
-            {MOCK_CONNECTIONS.filter((c) => c.unread).length} unread
+            {connections.length} conversation{connections.length !== 1 ? "s" : ""}
           </span>
         </div>
       </header>
@@ -223,67 +348,84 @@ export default function MessagesPage() {
             <p className="text-xs text-prism-text-dim mb-4">
               Topic-anchored connections only. Conversations begin with shared context.
             </p>
-            <div className="space-y-1">
-              {MOCK_CONNECTIONS.map((conn) => {
-                const color = COMMUNITY_COLORS[conn.person.communityType];
-                return (
-                  <button
-                    key={conn.id}
-                    onClick={() => setActiveConnectionId(conn.id)}
-                    className={`w-full text-left p-3 rounded-xl transition-colors ${
-                      activeConnectionId === conn.id
-                        ? "bg-prism-accent-active/10 border border-prism-accent-active/30"
-                        : "hover:bg-prism-bg-elevated border border-transparent"
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div
-                        className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5"
-                        style={{ backgroundColor: color + "20", color }}
-                      >
-                        {conn.person.initials}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium text-prism-text-primary truncate">
-                            {conn.person.community}
-                          </p>
-                          {conn.unread && (
-                            <span className="w-2 h-2 rounded-full bg-prism-accent-active shrink-0 ml-2" />
-                          )}
-                        </div>
-                        <p className="text-[10px] text-prism-text-dim truncate mb-1">
-                          {conn.topic}
-                        </p>
-                        <p className="text-xs text-prism-text-secondary truncate">
-                          {conn.lastMessage}
-                        </p>
-                        <p className="text-[10px] text-prism-text-dim mt-1">{conn.lastMessageTime}</p>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
 
-          {MOCK_CONNECTIONS.length === 0 && (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-              <div className="w-12 h-12 rounded-full bg-prism-bg-elevated flex items-center justify-center mb-3">
-                <svg className="w-6 h-6 text-prism-text-dim" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
-                </svg>
+            {loading ? (
+              <div className="flex justify-center py-8">
+                <div className="w-4 h-4 border-2 border-prism-text-dim/30 border-t-prism-text-dim rounded-full animate-spin" />
               </div>
-              <p className="text-sm text-prism-text-dim mb-1">No messages yet</p>
-              <p className="text-xs text-prism-text-dim/70">
-                Connect with someone from a community you read about to start a conversation.
-              </p>
-            </div>
-          )}
+            ) : connections.length > 0 ? (
+              <div className="space-y-1">
+                {connections.map((conn) => {
+                  const other = conn.requester_id === user?.id
+                    ? conn.recipient
+                    : conn.requester;
+                  const communityType = other?.home_community?.community_type ?? "civic";
+                  const color = COMMUNITY_COLORS[communityType];
+                  const initials = other
+                    ? (other.display_name ?? other.username)
+                        .split(" ")
+                        .map((w) => w[0])
+                        .slice(0, 2)
+                        .join("")
+                        .toUpperCase()
+                    : "?";
+
+                  return (
+                    <button
+                      key={conn.id}
+                      onClick={() => setActiveConnectionId(conn.id)}
+                      className={`w-full text-left p-3 rounded-xl transition-colors ${
+                        activeConnectionId === conn.id
+                          ? "bg-prism-accent-active/10 border border-prism-accent-active/30"
+                          : "hover:bg-prism-bg-elevated border border-transparent"
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div
+                          className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5"
+                          style={{ backgroundColor: color + "20", color }}
+                        >
+                          {initials}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-prism-text-primary truncate">
+                            {other?.home_community?.name ?? other?.username ?? "Unknown"}
+                          </p>
+                          {conn.topic && (
+                            <p className="text-[10px] text-prism-text-dim truncate mb-1">
+                              {conn.topic.title}
+                            </p>
+                          )}
+                          <p className="text-xs text-prism-text-secondary truncate">
+                            {conn.intro_message}
+                          </p>
+                          <p className="text-[10px] text-prism-text-dim mt-1">
+                            {formatTime(conn.created_at)}
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+                <div className="w-12 h-12 rounded-full bg-prism-bg-elevated flex items-center justify-center mb-3">
+                  <svg className="w-6 h-6 text-prism-text-dim" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+                  </svg>
+                </div>
+                <p className="text-sm text-prism-text-dim mb-1">No messages yet</p>
+                <p className="text-xs text-prism-text-dim/70">
+                  Connect with someone from a community you read about to start a conversation.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Message thread */}
-        {activeConnection ? (
+        {activeConnection && user ? (
           <div className="flex-1 flex flex-col h-[calc(100vh-57px)]">
             <button
               onClick={() => setActiveConnectionId(null)}
@@ -294,7 +436,10 @@ export default function MessagesPage() {
               </svg>
               All messages
             </button>
-            <MessageThread connection={activeConnection} />
+            <MessageThread
+              connection={activeConnection}
+              currentUserId={user.id}
+            />
           </div>
         ) : (
           <div className="hidden md:flex flex-1 items-center justify-center">
