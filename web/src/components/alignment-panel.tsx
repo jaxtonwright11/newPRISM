@@ -59,7 +59,7 @@ export function AlignmentPanel({ alignments, topicTitle }: AlignmentPanelProps) 
               key={item.id}
               className="p-3 rounded-lg bg-prism-bg-elevated border border-prism-border"
             >
-              <p className="text-sm text-prism-text-primary leading-snug mb-3">
+              <p className="text-sm font-display italic text-prism-text-primary leading-snug mb-3">
                 &ldquo;{item.alignment_statement}&rdquo;
               </p>
 
