@@ -574,10 +574,14 @@ export default function Home() {
                 </svg>
               </div>
               <p className="text-sm text-prism-text-dim mb-1">
-                No perspectives yet
+                {activeTab === "nearby" && "No nearby perspectives yet"}
+                {activeTab === "communities" && "No perspectives from your communities yet"}
+                {activeTab === "discover" && "No new perspectives to discover right now"}
               </p>
               <p className="text-xs text-prism-text-dim/60">
-                Try switching to a different tab or topic.
+                {activeTab === "nearby" && "Perspectives from communities near you will appear here."}
+                {activeTab === "communities" && "React to perspectives to follow those communities."}
+                {activeTab === "discover" && "Check back soon — new voices are joining every day."}
               </p>
             </div>
           )}
