@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { TopicSidebar } from "@/components/topic-sidebar";
 import { MapPlaceholder } from "@/components/map-placeholder";
 import { PerspectiveCard } from "@/components/perspective-card";
@@ -11,10 +11,13 @@ import { StoriesBar } from "@/components/stories-bar";
 import { CommunityPulse } from "@/components/community-pulse";
 import { MobileNav } from "@/components/mobile-nav";
 import { CreatePostModal } from "@/components/create-post-modal";
+import { HeatPerspectivesPanel } from "@/components/heat-perspectives-panel";
+import type { HeatPoint } from "@/components/map-placeholder";
 import { useGhostMode } from "@/lib/use-ghost-mode";
-import type { Post } from "@shared/types";
+import type { Post, CommunityType } from "@shared/types";
 import {
   SEED_TOPICS,
+  SEED_COMMUNITIES,
   SEED_PERSPECTIVES,
   getPerspectivesByTopic,
   getAlignmentsByTopic,
@@ -38,6 +41,9 @@ export default function Home() {
   const [pulseOpen, setPulseOpen] = useState(false);
   const [composeOpen, setComposeOpen] = useState(false);
   const [userPosts, setUserPosts] = useState<Post[]>([]);
+  const [heatPoints, setHeatPoints] = useState<HeatPoint[]>([]);
+  const [heatPanelOpen, setHeatPanelOpen] = useState(false);
+  const [selectedHeatPoint, setSelectedHeatPoint] = useState<HeatPoint | null>(null);
   const { ghostMode, toggleGhostMode } = useGhostMode();
 
   const currentTopic = getTopicBySlug(selectedTopicSlug);
@@ -49,6 +55,83 @@ export default function Home() {
   const topicCommunities = getCommunitiesForTopic(selectedTopicSlug);
   const topicCommunityIds = topicCommunities.map((c) => c.id);
   const storyGroups = getStoryGroups();
+
+  // Generate heat points from seed data (communities with perspectives on same topic)
+  const seedHeatPoints = useMemo<HeatPoint[]>(() => {
+    const communityMap = new Map<string, { lat: number; lng: number; ids: Set<string>; types: Set<string>; count: number }>();
+    for (const p of topicPerspectives) {
+      // Look up full community data with lat/lng from SEED_COMMUNITIES
+      const fullComm = SEED_COMMUNITIES.find((c) => c.name === p.community.name);
+      if (!fullComm?.latitude || !fullComm?.longitude) continue;
+      const key = `${Math.round(fullComm.latitude)}_${Math.round(fullComm.longitude)}`;
+      if (!communityMap.has(key)) {
+        communityMap.set(key, { lat: fullComm.latitude, lng: fullComm.longitude, ids: new Set(), types: new Set(), count: 0 });
+      }
+      const entry = communityMap.get(key)!;
+      if (!entry.ids.has(fullComm.id)) {
+        entry.ids.add(fullComm.id);
+        entry.types.add(fullComm.community_type);
+        entry.count++;
+      }
+    }
+    return Array.from(communityMap.values())
+      .filter((e) => e.count >= 2)
+      .map((e) => ({
+        latitude: e.lat,
+        longitude: e.lng,
+        intensity: Math.min(e.count / 5, 1),
+        community_count: e.count,
+        community_types: Array.from(e.types),
+        topic_count: 1,
+      }));
+  }, [topicPerspectives]);
+
+  // Use API heat points if available, otherwise seed
+  useEffect(() => {
+    async function fetchHeat() {
+      try {
+        const res = await fetch(`/api/map/heat${currentTopic ? `?topic_id=${currentTopic.id}` : ""}`);
+        const { heat_points } = await res.json();
+        if (heat_points?.length > 0) {
+          setHeatPoints(heat_points);
+          return;
+        }
+      } catch {
+        // fall through
+      }
+      setHeatPoints(seedHeatPoints);
+    }
+    fetchHeat();
+  }, [currentTopic, seedHeatPoints]);
+
+  const handleHeatTap = useCallback((point: HeatPoint) => {
+    setSelectedHeatPoint(point);
+    setHeatPanelOpen(true);
+  }, []);
+
+  // Get perspectives near the selected heat point for the panel
+  const heatPerspectives = useMemo(() => {
+    if (!selectedHeatPoint) return [];
+    return topicPerspectives
+      .filter((p) => {
+        const fullComm = SEED_COMMUNITIES.find((c) => c.name === p.community.name);
+        if (!fullComm?.latitude || !fullComm?.longitude) return false;
+        const dLat = Math.abs(fullComm.latitude - selectedHeatPoint.latitude);
+        const dLng = Math.abs(fullComm.longitude - selectedHeatPoint.longitude);
+        return dLat < 2 && dLng < 2;
+      })
+      .map((p) => ({
+        id: p.id,
+        quote: p.quote,
+        context: p.context,
+        community: {
+          name: p.community.name,
+          region: p.community.region,
+          community_type: p.community.community_type as CommunityType,
+          verified: p.community.verified,
+        },
+      }));
+  }, [selectedHeatPoint, topicPerspectives]);
 
   const getFeedPerspectives = useCallback(() => {
     switch (activeTab) {
@@ -220,6 +303,8 @@ export default function Home() {
             highlightedCommunityIds={topicCommunityIds}
             ghostMode={ghostMode}
             userPosts={userPosts}
+            heatPoints={heatPoints}
+            onHeatTap={handleHeatTap}
           />
         </div>
 
@@ -374,6 +459,14 @@ export default function Home() {
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
         </svg>
       </button>
+
+      {/* Heat perspectives panel */}
+      <HeatPerspectivesPanel
+        open={heatPanelOpen}
+        onClose={() => setHeatPanelOpen(false)}
+        communityCount={selectedHeatPoint?.community_count ?? 0}
+        perspectives={heatPerspectives}
+      />
 
       {/* Create post modal */}
       <CreatePostModal

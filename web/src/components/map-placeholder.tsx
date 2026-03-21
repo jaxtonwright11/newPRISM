@@ -19,11 +19,22 @@ const ACTIVITY_SIZE: Record<string, number> = {
   low: 6,
 };
 
+export interface HeatPoint {
+  latitude: number;
+  longitude: number;
+  intensity: number;
+  community_count: number;
+  community_types: string[];
+  topic_count: number;
+}
+
 interface MapPlaceholderProps {
   highlightedCommunityIds?: string[];
   ghostMode?: boolean;
   showPersonalPin?: boolean;
   userPosts?: Post[];
+  heatPoints?: HeatPoint[];
+  onHeatTap?: (point: HeatPoint) => void;
 }
 
 export function MapPlaceholder({
@@ -31,6 +42,8 @@ export function MapPlaceholder({
   ghostMode = false,
   showPersonalPin = true,
   userPosts = [],
+  heatPoints = [],
+  onHeatTap,
 }: MapPlaceholderProps) {
   const pins = SEED_COMMUNITIES.filter(
     (c) => c.latitude !== null && c.longitude !== null
@@ -135,6 +148,55 @@ export function MapPlaceholder({
           {pins.length} communities active
         </span>
       </div>
+
+      {/* Heat overlay — multiple communities on same topic */}
+      {heatPoints.map((hp, i) => {
+        const pos = latLngToXY(hp.latitude, hp.longitude);
+        const size = 40 + hp.intensity * 80; // 40px to 120px based on intensity
+        const opacity = 0.15 + hp.intensity * 0.25;
+        return (
+          <button
+            key={`heat-${i}`}
+            className="absolute z-[2] cursor-pointer group/heat"
+            style={{
+              left: `${pos.x}%`,
+              top: `${pos.y}%`,
+              transform: "translate(-50%, -50%)",
+            }}
+            onClick={() => onHeatTap?.(hp)}
+            aria-label={`${hp.community_count} communities active here`}
+          >
+            {/* Outer glow */}
+            <div
+              className="absolute rounded-full animate-pulse-glow"
+              style={{
+                width: size * 1.5,
+                height: size * 1.5,
+                background: `radial-gradient(circle, rgba(255,107,138,${opacity * 0.3}) 0%, rgba(245,158,11,${opacity * 0.15}) 50%, transparent 70%)`,
+                left: "50%",
+                top: "50%",
+                transform: "translate(-50%, -50%)",
+              }}
+            />
+            {/* Inner heat core */}
+            <div
+              className="relative rounded-full"
+              style={{
+                width: size,
+                height: size,
+                background: `radial-gradient(circle, rgba(255,107,138,${opacity}) 0%, rgba(245,158,11,${opacity * 0.5}) 40%, transparent 70%)`,
+              }}
+            />
+            {/* Hover tooltip */}
+            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 opacity-0 group-hover/heat:opacity-100 transition-opacity pointer-events-none z-20">
+              <div className="bg-prism-bg-primary/95 backdrop-blur-sm px-2.5 py-1.5 rounded-lg text-[10px] text-prism-text-primary whitespace-nowrap border border-prism-border">
+                <span className="font-semibold">{hp.community_count} communities</span>
+                <span className="text-prism-text-dim ml-1">active here</span>
+              </div>
+            </div>
+          </button>
+        );
+      })}
 
       {/* Community pins */}
       {pins.map((pin, i) => {
