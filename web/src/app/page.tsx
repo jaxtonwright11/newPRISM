@@ -6,12 +6,26 @@ import { TopicSidebar } from "@/components/topic-sidebar";
 import { PerspectiveCard } from "@/components/perspective-card";
 import { PersonalPostCard } from "@/components/personal-post-card";
 import { AlignmentPanel } from "@/components/alignment-panel";
-import { PerspectiveDetail } from "@/components/perspective-detail";
 import { StoriesBar } from "@/components/stories-bar";
-import { CommunityPulse } from "@/components/community-pulse";
 import { MobileNav } from "@/components/mobile-nav";
-import { CreatePostModal } from "@/components/create-post-modal";
-import { HeatPerspectivesPanel } from "@/components/heat-perspectives-panel";
+
+// Lazy-load modal/panel components — only rendered when opened
+const PerspectiveDetail = dynamic(
+  () => import("@/components/perspective-detail").then((mod) => mod.PerspectiveDetail),
+  { ssr: false }
+);
+const CommunityPulse = dynamic(
+  () => import("@/components/community-pulse").then((mod) => mod.CommunityPulse),
+  { ssr: false }
+);
+const CreatePostModal = dynamic(
+  () => import("@/components/create-post-modal").then((mod) => mod.CreatePostModal),
+  { ssr: false }
+);
+const HeatPerspectivesPanel = dynamic(
+  () => import("@/components/heat-perspectives-panel").then((mod) => mod.HeatPerspectivesPanel),
+  { ssr: false }
+);
 import { OnboardingAha } from "@/components/onboarding-aha";
 import { FeedSkeleton } from "@/components/skeleton";
 import { EarlyAccessBanner } from "@/components/early-access-banner";
