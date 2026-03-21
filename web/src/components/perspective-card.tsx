@@ -128,8 +128,15 @@ export function PerspectiveCard({
         animationFillMode: "forwards",
       }}
       onClick={() => onSelect?.(id)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect?.(id);
+        }
+      }}
       role="article"
       tabIndex={0}
+      aria-label={`Perspective from ${community.name}: ${quote.slice(0, 80)}`}
     >
       {/* NEW TO YOU indicator for Discover tab */}
       {isNew && (

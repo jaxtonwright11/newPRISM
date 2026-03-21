@@ -46,6 +46,29 @@ body {
   }
 }
 
+/* Focus-visible for keyboard navigation (a11y) */
+*:focus-visible {
+  outline: 2px solid #4A9EFF;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+button:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid #4A9EFF;
+  outline-offset: 2px;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 ::selection {
   background: rgba(74, 158, 255, 0.3);
   color: #F0F0F8;
