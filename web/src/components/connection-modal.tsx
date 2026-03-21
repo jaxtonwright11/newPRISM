@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@/lib/auth-context";
 import { COMMUNITY_COLORS } from "@/lib/constants";
 import type { CommunityType } from "@shared/types";
 
@@ -9,6 +10,10 @@ interface ConnectionModalProps {
   communityType: CommunityType;
   communityRegion: string;
   perspectiveQuote?: string;
+  recipientId?: string;
+  topicId?: string;
+  topicTitle?: string;
+  perspectiveId?: string;
   onClose: () => void;
   onSend?: (message: string) => void;
 }
@@ -18,19 +23,61 @@ export function ConnectionModal({
   communityType,
   communityRegion,
   perspectiveQuote,
+  recipientId,
+  topicId,
+  topicTitle,
+  perspectiveId,
   onClose,
   onSend,
 }: ConnectionModalProps) {
+  const { session } = useAuth();
   const [message, setMessage] = useState("");
   const [sent, setSent] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const color = COMMUNITY_COLORS[communityType];
-  const maxChars = 300;
+  const maxChars = 500;
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (message.trim().length === 0) return;
-    onSend?.(message);
-    setSent(true);
+
+    // If we have a recipientId and auth, use the real API
+    if (recipientId && session?.access_token) {
+      setSubmitting(true);
+      setError(null);
+      try {
+        const res = await fetch("/api/connections", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            recipient_id: recipientId,
+            topic_id: topicId ?? null,
+            perspective_id: perspectiveId ?? null,
+            intro_message: message.trim(),
+          }),
+        });
+
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.error ?? `Failed (${res.status})`);
+        }
+
+        setSent(true);
+        onSend?.(message);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Something went wrong");
+      } finally {
+        setSubmitting(false);
+      }
+    } else {
+      // Fallback for non-API usage
+      onSend?.(message);
+      setSent(true);
+    }
   };
 
   if (sent) {
@@ -114,6 +161,18 @@ export function ConnectionModal({
             </div>
           </div>
 
+          {/* Topic anchor */}
+          {topicTitle && (
+            <div className="bg-prism-bg-elevated rounded-lg p-3 border border-prism-border mb-4">
+              <p className="text-[10px] font-semibold text-prism-text-dim uppercase tracking-wider mb-1">
+                Connected by topic
+              </p>
+              <p className="text-sm font-medium text-prism-text-primary">
+                {topicTitle}
+              </p>
+            </div>
+          )}
+
           {/* Perspective reference */}
           {perspectiveQuote && (
             <div
@@ -143,8 +202,9 @@ export function ConnectionModal({
               onChange={(e) =>
                 setMessage(e.target.value.slice(0, maxChars))
               }
-              placeholder="Share what brought you to this perspective and what you'd like to understand better..."
+              placeholder={`Share what brought you to this perspective${topicTitle ? ` on "${topicTitle}"` : ""} and what you'd like to understand better...`}
               rows={4}
+              autoFocus
               className="w-full px-3 py-2.5 rounded-lg bg-prism-bg-elevated border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:ring-1 focus:ring-prism-accent-active resize-none transition-shadow"
             />
             <div className="flex items-center justify-between mt-1">
@@ -163,6 +223,18 @@ export function ConnectionModal({
             </div>
           </div>
 
+          {error && (
+            <div className="text-xs text-prism-accent-live bg-prism-accent-live/10 px-3 py-2 rounded-lg mb-3">
+              {error}
+            </div>
+          )}
+
+          {!session && (
+            <div className="text-xs text-prism-text-dim bg-prism-bg-elevated px-3 py-2 rounded-lg text-center mb-3">
+              Sign in to send connection requests
+            </div>
+          )}
+
           {/* Actions */}
           <div className="flex gap-2">
             <button
@@ -173,10 +245,17 @@ export function ConnectionModal({
             </button>
             <button
               onClick={handleSend}
-              disabled={message.trim().length === 0}
+              disabled={message.trim().length === 0 || submitting}
               className="flex-1 py-2.5 rounded-lg bg-prism-accent-active text-white text-sm font-medium hover:bg-prism-accent-active/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Send request
+              {submitting ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Sending...
+                </span>
+              ) : (
+                "Send request"
+              )}
             </button>
           </div>
         </div>

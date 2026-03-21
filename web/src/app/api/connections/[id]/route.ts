@@ -86,7 +86,7 @@ export async function PATCH(
     .from("community_connections")
     .update({ status })
     .eq("id", id)
-    .select()
+    .select("*, requester:users!community_connections_requester_id_fkey(id, username)")
     .single();
 
   if (updateError) {
@@ -94,6 +94,22 @@ export async function PATCH(
       { error: "Failed to update connection", details: updateError.message },
       { status: 500 }
     );
+  }
+
+  // Notify the requester when their connection is accepted
+  if (status === "accepted" && updated) {
+    const requesterId = (updated as Record<string, unknown>).requester_id as string;
+    try {
+      await supabase.from("notifications").insert({
+        user_id: requesterId,
+        type: "connection_accepted",
+        title: "Connection accepted",
+        body: "Your connection request has been accepted. You can now message each other.",
+        read: false,
+      });
+    } catch {
+      // notification failure is non-critical
+    }
   }
 
   return NextResponse.json({ data: updated });
