@@ -120,7 +120,7 @@ export function PerspectiveCard({
 
   return (
     <div
-      className="rounded-[10px] border border-prism-border bg-prism-bg-secondary p-5 opacity-0 animate-fade-in cursor-pointer hover:bg-prism-bg-elevated/50 transition-colors duration-200 group relative"
+      className="rounded-[10px] border border-prism-border bg-prism-bg-secondary p-5 opacity-0 animate-fade-in cursor-pointer hover:bg-prism-bg-elevated/50 transition-all duration-200 group relative hover:shadow-lg hover:shadow-black/20 hover:border-prism-border/80 hover:-translate-y-0.5"
       style={{
         borderLeftWidth: "3px",
         borderLeftColor: community.color_hex,
