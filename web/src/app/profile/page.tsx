@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
+import { VerificationGate } from "@/components/verification-gate";
 import { SEED_USER, SEED_COMMUNITIES, SEED_BOOKMARKED_PERSPECTIVE_IDS, SEED_BOOKMARKED_TOPIC_IDS } from "@/lib/seed-data";
 import { COMMUNITY_COLORS } from "@/lib/constants";
 import type { CommunityType } from "@shared/types";
@@ -52,6 +53,8 @@ export default function ProfilePage() {
   const { session } = useAuth();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [verifyGateOpen, setVerifyGateOpen] = useState(false);
+  const [verifyGateLevel, setVerifyGateLevel] = useState<2 | 3>(2);
 
   useEffect(() => {
     async function fetchProfile() {
@@ -183,6 +186,17 @@ export default function ProfilePage() {
                   {verification.label}
                 </span>
                 <span className="text-xs text-prism-text-dim">· {verification.description}</span>
+                {user.verification_level < 3 && (
+                  <button
+                    onClick={() => {
+                      setVerifyGateLevel(user.verification_level < 2 ? 2 : 3);
+                      setVerifyGateOpen(true);
+                    }}
+                    className="text-[10px] font-medium text-prism-accent-active hover:text-prism-accent-active/80 transition-colors"
+                  >
+                    Upgrade
+                  </button>
+                )}
               </div>
               {user.home_community && (
                 <div className="flex items-center gap-1.5 mt-2">
@@ -362,6 +376,17 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
+
+      <VerificationGate
+        open={verifyGateOpen}
+        onClose={() => setVerifyGateOpen(false)}
+        requiredLevel={verifyGateLevel}
+        onVerified={(level) => {
+          if (profile) {
+            setProfile({ ...profile, verification_level: level });
+          }
+        }}
+      />
     </div>
   );
 }

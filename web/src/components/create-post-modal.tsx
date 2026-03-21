@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { VerificationGate } from "@/components/verification-gate";
 import type { PostType, RadiusMiles } from "@shared/types";
 
 interface CreatePostModalProps {
@@ -33,6 +34,23 @@ export function CreatePostModal({
   const [radiusMiles, setRadiusMiles] = useState<RadiusMiles>(40);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [verificationLevel, setVerificationLevel] = useState<number>(1);
+  const [showVerifyGate, setShowVerifyGate] = useState(false);
+
+  // Fetch user's verification level when modal opens
+  useEffect(() => {
+    if (!open || !session?.access_token) return;
+    fetch("/api/user/profile", {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    })
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.data?.verification_level) {
+          setVerificationLevel(res.data.verification_level);
+        }
+      })
+      .catch(() => {});
+  }, [open, session?.access_token]);
 
   const charCount = content.length;
   const maxChars = 1000;
@@ -76,6 +94,50 @@ export function CreatePostModal({
   };
 
   if (!open) return null;
+
+  // Gate: require Level 2+ to create posts
+  if (session && verificationLevel < 2) {
+    return (
+      <>
+        <div className="fixed inset-0 z-50">
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" onClick={() => onOpenChange(false)} />
+          <div className="fixed left-[50%] top-[50%] z-50 w-full max-w-sm translate-x-[-50%] translate-y-[-50%] p-4">
+            <div className="bg-prism-bg-secondary border border-prism-border rounded-2xl shadow-2xl p-6 text-center">
+              <div className="w-12 h-12 rounded-full bg-prism-accent-active/10 flex items-center justify-center mx-auto mb-4">
+                <svg className="w-6 h-6 text-prism-accent-active" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                </svg>
+              </div>
+              <h3 className="text-base font-semibold text-prism-text-primary mb-2">
+                Verification Required
+              </h3>
+              <p className="text-xs text-prism-text-secondary leading-relaxed mb-5">
+                To create posts and appear on the map, you need to verify your community affiliation (Level 2).
+              </p>
+              <button
+                onClick={() => setShowVerifyGate(true)}
+                className="w-full py-2.5 rounded-xl bg-prism-accent-active text-white text-sm font-semibold hover:bg-prism-accent-active/90 transition-colors"
+              >
+                Verify Now
+              </button>
+              <button
+                onClick={() => onOpenChange(false)}
+                className="w-full mt-2 text-center text-xs text-prism-text-dim hover:text-prism-text-secondary transition-colors py-1"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+        <VerificationGate
+          open={showVerifyGate}
+          onClose={() => setShowVerifyGate(false)}
+          requiredLevel={2}
+          onVerified={(level) => setVerificationLevel(level)}
+        />
+      </>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50">
