@@ -31,7 +31,9 @@ export async function GET(request: Request) {
       const { data, error } = await query.limit(200);
 
       if (!error && data) {
-        return NextResponse.json({ alignments: data });
+        return NextResponse.json({ alignments: data }, {
+          headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" },
+        });
       }
     }
   } catch {

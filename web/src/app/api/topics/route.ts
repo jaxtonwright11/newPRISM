@@ -18,12 +18,16 @@ export async function GET(request: Request) {
         .limit(50);
 
       if (!error && data) {
-        return NextResponse.json({ topics: data });
+        return NextResponse.json({ topics: data }, {
+          headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" },
+        });
       }
     }
   } catch {
     // Supabase unavailable — fall through to seed data
   }
 
-  return NextResponse.json({ topics: SEED_TOPICS });
+  return NextResponse.json({ topics: SEED_TOPICS }, {
+    headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" },
+  });
 }

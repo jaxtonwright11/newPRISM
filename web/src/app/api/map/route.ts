@@ -56,7 +56,9 @@ export async function GET(request: Request) {
           }))
         : [];
 
-      return NextResponse.json({ pins: [...communityPins, ...postPins] });
+      return NextResponse.json({ pins: [...communityPins, ...postPins] }, {
+        headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=120" },
+      });
     }
   } catch {
     // Supabase unavailable — fall through to seed data
