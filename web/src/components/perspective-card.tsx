@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import { useAuth } from "@/lib/auth-context";
 import type { CommunityType, ReactionType } from "@shared/types";
 import { REACTION_LABELS } from "@/lib/constants";
 
@@ -35,14 +36,85 @@ export function PerspectiveCard({
   onSelect,
   animationDelay = 0,
 }: PerspectiveCardProps) {
-  const [activeReaction, setActiveReaction] = useState<ReactionType | null>(
-    null
-  );
+  const { session } = useAuth();
+  const [activeReaction, setActiveReaction] = useState<ReactionType | null>(null);
   const [bookmarked, setBookmarked] = useState(false);
+  const [localReactionDelta, setLocalReactionDelta] = useState(0);
 
-  const handleReaction = (type: ReactionType) => {
-    setActiveReaction(activeReaction === type ? null : type);
-  };
+  const handleReaction = useCallback(
+    async (type: ReactionType) => {
+      const wasActive = activeReaction === type;
+
+      // Optimistic update
+      if (wasActive) {
+        setActiveReaction(null);
+        setLocalReactionDelta((d) => d - 1);
+      } else {
+        const hadPrevious = activeReaction !== null;
+        setActiveReaction(type);
+        if (!hadPrevious) setLocalReactionDelta((d) => d + 1);
+      }
+
+      if (!session?.access_token) return;
+
+      try {
+        if (wasActive) {
+          // Remove reaction
+          const res = await fetch(`/api/perspectives/${id}/react`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${session.access_token}` },
+          });
+          if (!res.ok) throw new Error();
+        } else {
+          // Set reaction
+          const res = await fetch(`/api/perspectives/${id}/react`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({ reaction_type: type }),
+          });
+          if (!res.ok) throw new Error();
+        }
+      } catch {
+        // Rollback on failure
+        if (wasActive) {
+          setActiveReaction(type);
+          setLocalReactionDelta((d) => d + 1);
+        } else {
+          setActiveReaction(null);
+          setLocalReactionDelta((d) => d - 1);
+        }
+      }
+    },
+    [activeReaction, id, session?.access_token]
+  );
+
+  const handleBookmark = useCallback(async () => {
+    const wasBookmarked = bookmarked;
+    setBookmarked(!wasBookmarked);
+
+    if (!session?.access_token) return;
+
+    try {
+      if (wasBookmarked) {
+        const res = await fetch(`/api/perspectives/${id}/bookmark`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+        if (!res.ok) throw new Error();
+      } else {
+        const res = await fetch(`/api/perspectives/${id}/bookmark`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+        if (!res.ok) throw new Error();
+      }
+    } catch {
+      setBookmarked(wasBookmarked);
+    }
+  }, [bookmarked, id, session?.access_token]);
 
   return (
     <div
@@ -60,7 +132,7 @@ export function PerspectiveCard({
       {/* NEW TO YOU indicator for Discover tab */}
       {isNew && (
         <div className="absolute -top-2 -right-2 bg-prism-accent-active text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-lg">
-          ✦ NEW TO YOU
+          NEW TO YOU
         </div>
       )}
 
@@ -137,12 +209,12 @@ export function PerspectiveCard({
             >
               <span>{emoji}</span>
               <span className="font-mono text-[10px]">
-                {reaction_count + (activeReaction === type ? 1 : 0)}
+                {reaction_count + localReactionDelta}
               </span>
             </button>
           ))}
           <button
-            onClick={() => setBookmarked(!bookmarked)}
+            onClick={handleBookmark}
             className={`ml-1 p-1 rounded transition-all duration-150 ${
               bookmarked
                 ? "text-prism-accent-active"

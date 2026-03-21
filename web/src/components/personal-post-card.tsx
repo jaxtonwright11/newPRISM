@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import { useAuth } from "@/lib/auth-context";
 import type { Post } from "@shared/types";
 import { COMMUNITY_COLORS } from "@/lib/constants";
 
@@ -13,8 +14,31 @@ export function PersonalPostCard({
   post,
   animationDelay = 0,
 }: PersonalPostCardProps) {
+  const { session } = useAuth();
   const [liked, setLiked] = useState(false);
+  const [likeDelta, setLikeDelta] = useState(0);
   const [bookmarked, setBookmarked] = useState(false);
+
+  const handleLike = useCallback(async () => {
+    const wasLiked = liked;
+    // Optimistic
+    setLiked(!wasLiked);
+    setLikeDelta((d) => d + (wasLiked ? -1 : 1));
+
+    if (!session?.access_token) return;
+
+    try {
+      const res = await fetch(`/api/posts/${post.id}/like`, {
+        method: wasLiked ? "DELETE" : "POST",
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (!res.ok) throw new Error();
+    } catch {
+      // Rollback
+      setLiked(wasLiked);
+      setLikeDelta((d) => d + (wasLiked ? 1 : -1));
+    }
+  }, [liked, post.id, session?.access_token]);
 
   const communityColor = post.community
     ? COMMUNITY_COLORS[post.community.community_type]
@@ -123,7 +147,7 @@ export function PersonalPostCard({
       <div className="flex items-center justify-between pt-2 border-t border-prism-border/50">
         <div className="flex items-center gap-1">
           <button
-            onClick={() => setLiked(!liked)}
+            onClick={handleLike}
             className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-all duration-150 ${
               liked
                 ? "bg-prism-accent-like/15 text-prism-accent-like"
@@ -141,7 +165,7 @@ export function PersonalPostCard({
               <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
             </svg>
             <span className="font-mono text-[10px]">
-              {post.like_count + (liked ? 1 : 0)}
+              {post.like_count + likeDelta}
             </span>
           </button>
 
