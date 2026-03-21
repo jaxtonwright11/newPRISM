@@ -44,7 +44,7 @@ export async function GET(request: Request) {
   const { data, error } = await supabase
     .from("community_connections")
     .select(
-      "*, requester:users!community_connections_requester_id_fkey(*), recipient:users!community_connections_recipient_id_fkey(*)"
+      "*, requester:users!community_connections_requester_id_fkey(id, username, display_name, avatar_url, home_community_id, verification_tier), recipient:users!community_connections_recipient_id_fkey(id, username, display_name, avatar_url, home_community_id, verification_tier)"
     )
     .or(`requester_id.eq.${user.id},recipient_id.eq.${user.id}`)
     .order("created_at", { ascending: false })
