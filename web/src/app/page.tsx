@@ -15,6 +15,7 @@ import { HeatPerspectivesPanel } from "@/components/heat-perspectives-panel";
 import { OnboardingAha } from "@/components/onboarding-aha";
 import type { HeatPoint } from "@/components/map-placeholder";
 import { useGhostMode } from "@/lib/use-ghost-mode";
+import { useRealtime } from "@/lib/use-realtime";
 import { useAuth } from "@/lib/auth-context";
 import type { Post, CommunityType } from "@shared/types";
 import {
@@ -49,7 +50,7 @@ export default function Home() {
   const { ghostMode, toggleGhostMode } = useGhostMode();
   const { session } = useAuth();
   const [feedPerspectives, setFeedPerspectives] = useState<typeof SEED_PERSPECTIVES>([]);
-  const [feedLoading, setFeedLoading] = useState(false);
+  const [_feedLoading, setFeedLoading] = useState(false);
 
   const currentTopic = getTopicBySlug(selectedTopicSlug);
   const topicPerspectives = getPerspectivesByTopic(selectedTopicSlug);
@@ -178,6 +179,37 @@ export default function Home() {
     }
     fetchFeed();
   }, [activeTab, selectedTopicSlug, session?.access_token, topicPerspectives]);
+
+  // Real-time: live new perspectives
+  useRealtime({
+    table: "perspectives",
+    event: "INSERT",
+    onInsert: useCallback((payload: Record<string, unknown>) => {
+      // Append new perspective to feed if it has basic data
+      if (payload.quote && payload.id) {
+        setFeedPerspectives((prev) => {
+          if (prev.some((p) => p.id === payload.id)) return prev;
+          return [payload as unknown as (typeof prev)[0], ...prev];
+        });
+      }
+    }, []),
+    enabled: !!session,
+  });
+
+  // Real-time: live new post pins on map
+  useRealtime({
+    table: "posts",
+    event: "INSERT",
+    onInsert: useCallback((payload: Record<string, unknown>) => {
+      if (payload.id && payload.latitude && payload.longitude) {
+        setUserPosts((prev) => {
+          if (prev.some((p) => p.id === payload.id)) return prev;
+          return [payload as unknown as Post, ...prev];
+        });
+      }
+    }, []),
+    enabled: !!session,
+  });
 
   const selectedPerspective = selectedPerspectiveId
     ? SEED_PERSPECTIVES.find((p) => p.id === selectedPerspectiveId)
