@@ -51,6 +51,58 @@ export async function GET(request: Request) {
   });
 }
 
+const markReadSchema = z.discriminatedUnion("action", [
+  z.object({ action: z.literal("mark_read"), id: z.string().uuid() }),
+  z.object({ action: z.literal("mark_all_read") }),
+]);
+
+export async function PATCH(request: Request) {
+  const rateLimitResponse = applyRateLimit(request, "notifications-patch");
+  if (rateLimitResponse) return rateLimitResponse;
+
+  const parsed = await parseJsonBody(request, markReadSchema);
+  if (!parsed.success) return parsed.response;
+
+  const token = request.headers.get("authorization")?.replace("Bearer ", "");
+  if (!token) {
+    return NextResponse.json({ error: "Missing authorization" }, { status: 401 });
+  }
+
+  const supabase = getSupabaseWithAuth(token);
+  if (!supabase) {
+    return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
+  }
+
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+  }
+
+  if (parsed.data.action === "mark_read") {
+    const { error } = await supabase
+      .from("notifications")
+      .update({ read: true })
+      .eq("id", parsed.data.id)
+      .eq("user_id", user.id);
+
+    if (error) {
+      return NextResponse.json({ error: "Failed to mark notification read" }, { status: 500 });
+    }
+  } else {
+    const { error } = await supabase
+      .from("notifications")
+      .update({ read: true })
+      .eq("user_id", user.id)
+      .eq("read", false);
+
+    if (error) {
+      return NextResponse.json({ error: "Failed to mark all read" }, { status: 500 });
+    }
+  }
+
+  return NextResponse.json({ success: true });
+}
+
 const notificationCreateSchema = z.object({
   recipient_id: z.string().uuid(),
   type: z.enum(["reaction", "connection_request", "connection_accepted", "new_perspective", "community_milestone"]),

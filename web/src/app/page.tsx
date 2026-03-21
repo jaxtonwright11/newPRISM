@@ -51,6 +51,7 @@ export default function Home() {
   const { session } = useAuth();
   const [feedPerspectives, setFeedPerspectives] = useState<typeof SEED_PERSPECTIVES>([]);
   const [_feedLoading, setFeedLoading] = useState(false);
+  const [unreadNotifCount, setUnreadNotifCount] = useState(0);
 
   const currentTopic = getTopicBySlug(selectedTopicSlug);
   const topicPerspectives = getPerspectivesByTopic(selectedTopicSlug);
@@ -211,6 +212,29 @@ export default function Home() {
     enabled: !!session,
   });
 
+  // Fetch unread notification count
+  useEffect(() => {
+    if (!session?.access_token) return;
+    fetch("/api/notifications", {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    })
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.meta?.unread != null) setUnreadNotifCount(json.meta.unread);
+      })
+      .catch(() => {});
+  }, [session?.access_token]);
+
+  // Live notification count via Realtime
+  useRealtime({
+    table: "notifications",
+    event: "INSERT",
+    onInsert: useCallback(() => {
+      setUnreadNotifCount((c) => c + 1);
+    }, []),
+    enabled: !!session,
+  });
+
   const selectedPerspective = selectedPerspectiveId
     ? SEED_PERSPECTIVES.find((p) => p.id === selectedPerspectiveId)
     : null;
@@ -298,7 +322,11 @@ export default function Home() {
                   d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"
                 />
               </svg>
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-prism-accent-live animate-pulse-slow" />
+              {unreadNotifCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-prism-accent-live text-white text-[9px] font-bold font-mono animate-pulse-slow">
+                  {unreadNotifCount > 99 ? "99+" : unreadNotifCount}
+                </span>
+              )}
             </button>
             {/* Topic selector */}
             <button
@@ -446,7 +474,11 @@ export default function Home() {
                   d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"
                 />
               </svg>
-              <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-prism-accent-live animate-pulse-slow" />
+              {unreadNotifCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[14px] h-3.5 px-0.5 flex items-center justify-center rounded-full bg-prism-accent-live text-white text-[8px] font-bold font-mono">
+                  {unreadNotifCount > 99 ? "99+" : unreadNotifCount}
+                </span>
+              )}
             </button>
           </div>
         </div>

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { SEED_NOTIFICATIONS } from "@/lib/seed-data";
+import { useAuth } from "@/lib/auth-context";
+import { useRealtime } from "@/lib/use-realtime";
 import type { Notification } from "@shared/types";
 
 const NOTIF_ICONS: Record<Notification["type"], { emoji: string; color: string }> = {
@@ -14,18 +15,81 @@ const NOTIF_ICONS: Record<Notification["type"], { emoji: string; color: string }
 };
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState(SEED_NOTIFICATIONS);
+  const { session } = useAuth();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch real notifications
+  useEffect(() => {
+    async function fetchNotifications() {
+      const headers: Record<string, string> = {};
+      if (session?.access_token) {
+        headers.Authorization = `Bearer ${session.access_token}`;
+      }
+      try {
+        const res = await fetch("/api/notifications", { headers });
+        const json = await res.json();
+        if (json.data) setNotifications(json.data);
+      } catch {
+        // silent
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchNotifications();
+  }, [session?.access_token]);
+
+  // Live notifications via Realtime
+  useRealtime({
+    table: "notifications",
+    event: "INSERT",
+    onInsert: useCallback((payload: Record<string, unknown>) => {
+      if (payload.id) {
+        setNotifications((prev) => {
+          if (prev.some((n) => n.id === payload.id)) return prev;
+          return [payload as unknown as Notification, ...prev];
+        });
+      }
+    }, []),
+    enabled: !!session,
+  });
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const markAllRead = () => {
+  const markAllRead = async () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    if (!session?.access_token) return;
+    try {
+      await fetch("/api/notifications", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ action: "mark_all_read" }),
+      });
+    } catch {
+      // silent
+    }
   };
 
-  const markRead = (id: string) => {
+  const markRead = async (id: string) => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n))
     );
+    if (!session?.access_token) return;
+    try {
+      await fetch("/api/notifications", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ action: "mark_read", id }),
+      });
+    } catch {
+      // silent
+    }
   };
 
   const formatTime = (dateStr: string): string => {
@@ -69,7 +133,11 @@ export default function NotificationsPage() {
       </header>
 
       <div className="max-w-2xl mx-auto">
-        {notifications.length > 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="w-6 h-6 border-2 border-prism-accent-active/30 border-t-prism-accent-active rounded-full animate-spin" />
+          </div>
+        ) : notifications.length > 0 ? (
           <div className="divide-y divide-prism-border">
             {notifications.map((notif) => {
               const icon = NOTIF_ICONS[notif.type];
