@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useCallback, useEffect, useMemo } from "react";
+import dynamic from "next/dynamic";
 import { TopicSidebar } from "@/components/topic-sidebar";
-import { MapPlaceholder } from "@/components/map-placeholder";
 import { PerspectiveCard } from "@/components/perspective-card";
 import { PersonalPostCard } from "@/components/personal-post-card";
 import { AlignmentPanel } from "@/components/alignment-panel";
@@ -15,6 +15,18 @@ import { HeatPerspectivesPanel } from "@/components/heat-perspectives-panel";
 import { OnboardingAha } from "@/components/onboarding-aha";
 import { FeedSkeleton } from "@/components/skeleton";
 import type { HeatPoint } from "@/components/map-placeholder";
+
+const MapPlaceholder = dynamic(
+  () => import("@/components/map-placeholder").then((mod) => mod.MapPlaceholder),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-full rounded-xl bg-prism-map-ocean border border-prism-border flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-prism-accent-active/30 border-t-prism-accent-active rounded-full animate-spin" />
+      </div>
+    ),
+  }
+);
 import { useGhostMode } from "@/lib/use-ghost-mode";
 import { useRealtime } from "@/lib/use-realtime";
 import { useAuth } from "@/lib/auth-context";
