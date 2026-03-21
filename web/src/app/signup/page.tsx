@@ -114,11 +114,15 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-prism-bg-primary flex items-center justify-center p-4">
-      <div className="w-full max-w-sm">
+    <div className="min-h-screen bg-prism-bg-primary flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Ambient background glow */}
+      <div className="absolute top-1/3 -right-32 w-64 h-64 rounded-full bg-prism-community-diaspora/[0.04] blur-3xl" />
+      <div className="absolute bottom-1/3 -left-32 w-64 h-64 rounded-full bg-prism-accent-active/[0.04] blur-3xl" />
+
+      <div className="w-full max-w-sm relative z-10">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-prism-accent-active to-prism-community-diaspora mb-4">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-prism-accent-active to-prism-community-diaspora mb-4 shadow-lg shadow-prism-accent-active/20">
             <span className="text-white font-display font-bold text-xl">P</span>
           </div>
           <h1 className="font-display text-2xl font-bold text-prism-text-primary">
