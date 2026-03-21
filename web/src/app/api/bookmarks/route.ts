@@ -34,9 +34,10 @@ export async function GET(request: Request) {
           if (type === "topics") {
             const { data, error } = await supabase
               .from("bookmarks")
-              .select("*, topic:topics(*)")
+              .select("id, topic:topics(id, title, slug, summary, status, perspective_count, community_count)")
               .eq("user_id", user.id)
-              .not("topic_id", "is", null);
+              .not("topic_id", "is", null)
+              .limit(100);
 
             if (!error && data) {
               const topics = data
@@ -50,9 +51,10 @@ export async function GET(request: Request) {
           } else {
             const { data, error } = await supabase
               .from("bookmarks")
-              .select("*, perspective:perspectives(*, community:communities(*))")
+              .select("id, perspective:perspectives(id, quote, context, category_tag, reaction_count, bookmark_count, created_at, community:communities(id, name, region, community_type, color_hex, verified))")
               .eq("user_id", user.id)
-              .not("perspective_id", "is", null);
+              .not("perspective_id", "is", null)
+              .limit(100);
 
             if (!error && data) {
               const perspectives = data

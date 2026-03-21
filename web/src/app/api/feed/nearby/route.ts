@@ -67,7 +67,7 @@ export async function GET(request: Request) {
       // Build perspectives query
       let perspQuery = supabase
         .from("perspectives")
-        .select("*, community:communities(*)")
+        .select("*, community:communities(id, name, region, community_type, color_hex, verified)")
         .eq("verified", true)
         .order("created_at", { ascending: false })
         .limit(30);
