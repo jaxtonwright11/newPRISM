@@ -42,7 +42,7 @@ export async function POST(request: Request) {
       expired_ids: deleted?.map((d: { id: string }) => d.id) ?? [],
       checked_at: now,
     });
-  } catch (err) {
+  } catch {
     return NextResponse.json(
       { error: "Internal error" },
       { status: 500 }

@@ -113,7 +113,8 @@ export default function PublicProfilePage() {
           <div className="flex items-start gap-4">
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-prism-accent-active to-prism-community-diaspora flex items-center justify-center shrink-0 overflow-hidden">
               {profile.avatar_url ? (
-                <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={profile.avatar_url} alt={profile.display_name ?? profile.username} className="w-full h-full object-cover" />
               ) : (
                 <span className="text-white font-display font-bold text-xl">
                   {(profile.display_name ?? profile.username).charAt(0).toUpperCase()}

@@ -169,7 +169,8 @@ export default function ProfilePage() {
             {/* Avatar */}
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-prism-accent-active to-prism-community-diaspora flex items-center justify-center shrink-0 overflow-hidden">
               {user.avatar_url ? (
-                <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={user.avatar_url} alt={user.display_name ?? user.username} className="w-full h-full object-cover" />
               ) : (
                 <span className="text-white font-display font-bold text-xl">
                   {(user.display_name ?? user.username).charAt(0).toUpperCase()}
