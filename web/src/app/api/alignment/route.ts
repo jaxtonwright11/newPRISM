@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { SEED_ALIGNMENTS, getAlignmentsByTopic } from "@/lib/seed-data";
 import { applyRateLimit, parseQuery, slugSchema } from "@/lib/api";
+import { getSupabaseServer } from "@/lib/supabase";
 import { z } from "zod";
 
 const alignmentQuerySchema = z
@@ -17,6 +18,25 @@ export async function GET(request: Request) {
   if (!parsedQuery.success) return parsedQuery.response;
 
   const topicId = parsedQuery.data.topic_id;
+
+  try {
+    const supabase = getSupabaseServer();
+    if (supabase) {
+      let query = supabase.from("community_alignments").select("*");
+
+      if (topicId) {
+        query = query.eq("topic_id", topicId);
+      }
+
+      const { data, error } = await query;
+
+      if (!error && data) {
+        return NextResponse.json({ alignments: data });
+      }
+    }
+  } catch {
+    // Supabase unavailable — fall through to seed data
+  }
 
   if (topicId) {
     const alignments = getAlignmentsByTopic(topicId);

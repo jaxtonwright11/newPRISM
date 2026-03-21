@@ -1,19 +1,64 @@
 import { NextResponse } from "next/server";
 import { applyRateLimit, parseJsonBody, slugSchema } from "@/lib/api";
+import { getSupabaseWithAuth } from "@/lib/supabase";
 import { z } from "zod";
 
 const connectionCreateBodySchema = z.object({
-  target_user_id: slugSchema,
+  recipient_id: slugSchema,
+  topic_id: slugSchema.optional().nullable(),
+  perspective_id: slugSchema.optional().nullable(),
+  intro_message: z.string().trim().max(500).optional().nullable(),
 });
 
 export async function GET(request: Request) {
   const rateLimitResponse = applyRateLimit(request, "connections-get");
   if (rateLimitResponse) return rateLimitResponse;
 
+  const token = request.headers.get("authorization")?.replace("Bearer ", "");
+  if (!token) {
+    return NextResponse.json(
+      { error: "Missing authorization token" },
+      { status: 401 }
+    );
+  }
+
+  const supabase = getSupabaseWithAuth(token);
+  if (!supabase) {
+    return NextResponse.json(
+      { error: "Supabase is not configured. Check server environment variables." },
+      { status: 503 }
+    );
+  }
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json(
+      { error: "Invalid or expired token" },
+      { status: 401 }
+    );
+  }
+
+  const { data, error } = await supabase
+    .from("community_connections")
+    .select(
+      "*, requester:users!community_connections_requester_id_fkey(*), recipient:users!community_connections_recipient_id_fkey(*)"
+    )
+    .or(`requester_id.eq.${user.id},recipient_id.eq.${user.id}`)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    return NextResponse.json(
+      { error: "Failed to fetch connections", details: error.message },
+      { status: 500 }
+    );
+  }
+
   return NextResponse.json({
-    data: [],
-    meta: { total: 0 },
-    message: "Connections endpoint ready — will connect to Supabase when configured.",
+    data: data ?? [],
+    meta: { total: data?.length ?? 0 },
   });
 }
 
@@ -24,8 +69,65 @@ export async function POST(request: Request) {
   const parsedBody = await parseJsonBody(request, connectionCreateBodySchema);
   if (!parsedBody.success) return parsedBody.response;
 
-  return NextResponse.json(
-    { error: "Auth required — Supabase not configured" },
-    { status: 401 }
-  );
+  const token = request.headers.get("authorization")?.replace("Bearer ", "");
+  if (!token) {
+    return NextResponse.json(
+      { error: "Missing authorization token" },
+      { status: 401 }
+    );
+  }
+
+  const supabase = getSupabaseWithAuth(token);
+  if (!supabase) {
+    return NextResponse.json(
+      { error: "Supabase is not configured. Check server environment variables." },
+      { status: 503 }
+    );
+  }
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json(
+      { error: "Invalid or expired token" },
+      { status: 401 }
+    );
+  }
+
+  const {
+    recipient_id,
+    topic_id = null,
+    perspective_id = null,
+    intro_message = null,
+  } = parsedBody.data;
+
+  if (recipient_id === user.id) {
+    return NextResponse.json(
+      { error: "Cannot create a connection with yourself" },
+      { status: 400 }
+    );
+  }
+
+  const { data, error } = await supabase
+    .from("community_connections")
+    .insert({
+      requester_id: user.id,
+      recipient_id,
+      topic_id,
+      perspective_id,
+      intro_message,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    return NextResponse.json(
+      { error: "Failed to create connection", details: error.message },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json({ data }, { status: 201 });
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { applyRateLimit, parseParams, slugSchema } from "@/lib/api";
+import { getSupabaseServer } from "@/lib/supabase";
 import { SEED_PERSPECTIVES } from "@/lib/seed-data";
 import { z } from "zod";
 
@@ -18,6 +19,24 @@ export async function GET(
   if (!parsedParams.success) return parsedParams.response;
 
   const { id } = parsedParams.data;
+
+  try {
+    const supabase = getSupabaseServer();
+    if (supabase) {
+      const { data, error } = await supabase
+        .from("perspectives")
+        .select("*, community:communities(*)")
+        .eq("id", id)
+        .single();
+
+      if (!error && data) {
+        return NextResponse.json({ data });
+      }
+    }
+  } catch {
+    // Supabase unavailable — fall through to seed data
+  }
+
   const perspective = SEED_PERSPECTIVES.find((p) => p.id === id);
 
   if (!perspective) {

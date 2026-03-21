@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { applyRateLimit, slugSchema } from "@/lib/api";
+import { getSupabaseServer } from "@/lib/supabase";
 import {
   getTopicBySlug,
   getPerspectivesByTopic,
@@ -24,6 +25,46 @@ export async function GET(
   }
 
   const { slug } = parsedParams.data;
+
+  try {
+    const supabase = getSupabaseServer();
+    if (supabase) {
+      const { data: topic, error: topicError } = await supabase
+        .from("topics")
+        .select("*")
+        .eq("slug", slug)
+        .single();
+
+      if (!topicError && topic) {
+        const [perspectivesResult, alignmentsResult] = await Promise.all([
+          supabase
+            .from("perspectives")
+            .select("*, community:communities(*)")
+            .eq("topic_id", topic.id)
+            .eq("verified", true)
+            .order("created_at", { ascending: false }),
+          supabase
+            .from("community_alignments")
+            .select("*")
+            .eq("topic_id", topic.id),
+        ]);
+
+        const perspectives =
+          !perspectivesResult.error && perspectivesResult.data
+            ? perspectivesResult.data
+            : [];
+        const alignments =
+          !alignmentsResult.error && alignmentsResult.data
+            ? alignmentsResult.data
+            : [];
+
+        return NextResponse.json({ topic, perspectives, alignments });
+      }
+    }
+  } catch {
+    // Supabase unavailable — fall through to seed data
+  }
+
   const topic = getTopicBySlug(slug);
 
   if (!topic) {

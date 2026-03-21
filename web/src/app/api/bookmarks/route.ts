@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { applyRateLimit, parseQuery } from "@/lib/api";
+import { getSupabaseWithAuth } from "@/lib/supabase";
 import { getBookmarkedPerspectives, getBookmarkedTopics } from "@/lib/seed-data";
 import { z } from "zod";
 
@@ -17,6 +18,58 @@ export async function GET(request: Request) {
   if (!parsedQuery.success) return parsedQuery.response;
 
   const type = parsedQuery.data.type ?? "perspectives";
+
+  try {
+    const authHeader = request.headers.get("authorization");
+    const token = authHeader?.replace("Bearer ", "");
+
+    if (token) {
+      const supabase = getSupabaseWithAuth(token);
+      if (supabase) {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (user) {
+          if (type === "topics") {
+            const { data, error } = await supabase
+              .from("bookmarks")
+              .select("*, topic:topics(*)")
+              .eq("user_id", user.id)
+              .not("topic_id", "is", null);
+
+            if (!error && data) {
+              const topics = data
+                .map((b: Record<string, unknown>) => b.topic)
+                .filter(Boolean);
+              return NextResponse.json({
+                data: topics,
+                meta: { total: topics.length },
+              });
+            }
+          } else {
+            const { data, error } = await supabase
+              .from("bookmarks")
+              .select("*, perspective:perspectives(*, community:communities(*))")
+              .eq("user_id", user.id)
+              .not("perspective_id", "is", null);
+
+            if (!error && data) {
+              const perspectives = data
+                .map((b: Record<string, unknown>) => b.perspective)
+                .filter(Boolean);
+              return NextResponse.json({
+                data: perspectives,
+                meta: { total: perspectives.length },
+              });
+            }
+          }
+        }
+      }
+    }
+  } catch {
+    // Supabase unavailable — fall through to seed data
+  }
 
   if (type === "topics") {
     const topics = getBookmarkedTopics();
