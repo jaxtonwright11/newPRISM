@@ -62,7 +62,7 @@ export function MobileNav() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors ${
+              className={`flex flex-col items-center gap-0.5 px-3 py-1.5 min-h-[44px] min-w-[44px] rounded-lg transition-colors ${
                 isActive ? "text-prism-accent-active" : "text-prism-text-dim"
               }`}
               aria-label={item.label}

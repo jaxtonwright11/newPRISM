@@ -380,8 +380,8 @@ export default function Home() {
           </div>
         )}
 
-        {/* Map area — 40% viewport */}
-        <div className="h-[35vh] md:h-[40vh] p-2 md:p-3 relative">
+        {/* Map area — 40% viewport on all devices */}
+        <div className="h-[40vh] p-2 md:p-3 relative">
           <MapPlaceholder
             highlightedCommunityIds={topicCommunityIds}
             ghostMode={ghostMode}

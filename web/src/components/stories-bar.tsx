@@ -42,12 +42,12 @@ export function StoriesBar({ storyGroups, onStorySelect }: StoriesBarProps) {
 
   return (
     <>
-      <div className="flex gap-3 overflow-x-auto px-3 md:px-4 py-3 scrollbar-hide">
+      <div className="flex gap-3 overflow-x-auto px-3 md:px-4 py-3 scrollbar-hide snap-x snap-mandatory">
         {storyGroups.map((group) => (
           <button
             key={group.id}
             onClick={() => handleSelect(group)}
-            className="flex flex-col items-center gap-1.5 shrink-0 group"
+            className="flex flex-col items-center gap-1.5 shrink-0 group snap-start"
           >
             <div
               className={`relative w-14 h-14 rounded-full p-[2.5px] ${
