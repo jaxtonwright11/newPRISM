@@ -75,6 +75,7 @@ export default function Home() {
   const topicCommunities = getCommunitiesForTopic(selectedTopicSlug);
   const topicCommunityIds = topicCommunities.map((c) => c.id);
   const storyGroups = getStoryGroups();
+  const hotTopic = SEED_TOPICS.find((t) => t.status === "hot") ?? null;
 
   // Generate heat points from seed data (communities with perspectives on same topic)
   const seedHeatPoints = useMemo<HeatPoint[]>(() => {
@@ -426,6 +427,23 @@ export default function Home() {
         <div className="border-b border-prism-border">
           <StoriesBar storyGroups={storyGroups} />
         </div>
+
+        {/* ACTIVE NOW banner — retention mechanic */}
+        {hotTopic && selectedTopicSlug !== hotTopic.slug && (
+          <button
+            onClick={() => handleTopicSelect(hotTopic.slug)}
+            className="w-full px-3 md:px-4 py-2 bg-prism-accent-live/[0.06] border-b border-prism-border flex items-center gap-2 hover:bg-prism-accent-live/10 transition-colors group"
+          >
+            <span className="w-2 h-2 rounded-full bg-prism-accent-live animate-pulse-slow shrink-0" />
+            <span className="text-xs font-medium text-prism-accent-live">ACTIVE NOW</span>
+            <span className="text-xs text-prism-text-secondary truncate flex-1 text-left">
+              {hotTopic.title}
+            </span>
+            <span className="text-[10px] font-mono text-prism-text-dim group-hover:text-prism-text-secondary transition-colors">
+              {hotTopic.community_count} communities
+            </span>
+          </button>
+        )}
 
         {/* Feed tabs + pulse bell (desktop) */}
         <div className="px-3 md:px-4 py-2 border-b border-prism-border flex items-center justify-between">
