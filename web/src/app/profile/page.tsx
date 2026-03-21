@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useAuth } from "@/lib/auth-context";
 import { SEED_USER, SEED_COMMUNITIES, SEED_BOOKMARKED_PERSPECTIVE_IDS, SEED_BOOKMARKED_TOPIC_IDS } from "@/lib/seed-data";
 import { COMMUNITY_COLORS } from "@/lib/constants";
+import type { CommunityType } from "@shared/types";
 
 type ProfileTab = "activity" | "communities" | "connections";
 
@@ -13,19 +15,129 @@ const VERIFICATION_LABELS: Record<number, { label: string; description: string; 
   3: { label: "Level 3", description: "Fully verified", color: "text-prism-accent-verified" },
 };
 
+interface ProfileData {
+  id: string;
+  username: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  verification_level: number;
+  ghost_mode: boolean;
+  home_community: {
+    id: string;
+    name: string;
+    region: string;
+    community_type: CommunityType;
+    color_hex: string;
+    verified: boolean;
+  } | null;
+  profile: {
+    perspectives_read: number;
+    communities_engaged: number;
+    connections_made: number;
+  } | null;
+  recent_posts: {
+    id: string;
+    content: string;
+    post_type: string;
+    radius_miles: number;
+    created_at: string;
+    like_count: number;
+    comment_count: number;
+  }[];
+  topics_engaged?: number;
+}
+
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<ProfileTab>("activity");
-  const user = SEED_USER;
-  const homeCommunity = SEED_COMMUNITIES.find((c) => c.id === user.home_community_id);
-  const verification = VERIFICATION_LABELS[user.verification_level];
+  const { session } = useAuth();
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const engagedCommunities = SEED_COMMUNITIES.slice(0, user.communities_engaged);
+  useEffect(() => {
+    async function fetchProfile() {
+      if (session?.access_token) {
+        try {
+          const res = await fetch("/api/user/profile", {
+            headers: { Authorization: `Bearer ${session.access_token}` },
+          });
+          const { data } = await res.json();
+          if (data) {
+            // Normalize the response — API may return nested or flat
+            setProfile({
+              id: data.id,
+              username: data.username,
+              display_name: data.display_name,
+              avatar_url: data.avatar_url,
+              verification_level: data.verification_level ?? 1,
+              ghost_mode: data.ghost_mode ?? false,
+              home_community: data.home_community ?? null,
+              profile: data.profile ?? {
+                perspectives_read: data.perspectives_read ?? 0,
+                communities_engaged: data.communities_engaged ?? 0,
+                connections_made: data.connections_made ?? 0,
+              },
+              recent_posts: data.recent_posts ?? [],
+              topics_engaged: data.topics_engaged ?? 0,
+            });
+            setLoading(false);
+            return;
+          }
+        } catch {
+          // fall through to seed data
+        }
+      }
+      // Fallback to seed data
+      setProfile({
+        id: SEED_USER.id,
+        username: SEED_USER.username,
+        display_name: SEED_USER.display_name,
+        avatar_url: SEED_USER.avatar_url,
+        verification_level: SEED_USER.verification_level,
+        ghost_mode: SEED_USER.ghost_mode,
+        home_community: SEED_COMMUNITIES.find(c => c.id === SEED_USER.home_community_id)
+          ? {
+              id: SEED_COMMUNITIES[0].id,
+              name: SEED_COMMUNITIES[0].name,
+              region: SEED_COMMUNITIES[0].region,
+              community_type: SEED_COMMUNITIES[0].community_type,
+              color_hex: SEED_COMMUNITIES[0].color_hex,
+              verified: SEED_COMMUNITIES[0].verified,
+            }
+          : null,
+        profile: {
+          perspectives_read: SEED_USER.perspectives_read,
+          communities_engaged: SEED_USER.communities_engaged,
+          connections_made: SEED_USER.connections_made,
+        },
+        recent_posts: [],
+      });
+      setLoading(false);
+    }
+    fetchProfile();
+  }, [session?.access_token]);
+
+  const user = profile;
+  const verification = VERIFICATION_LABELS[user?.verification_level ?? 1];
+  const stats = user?.profile ?? { perspectives_read: 0, communities_engaged: 0, connections_made: 0 };
 
   const tabs: { id: ProfileTab; label: string }[] = [
     { id: "activity", label: "Activity" },
     { id: "communities", label: "Communities" },
     { id: "connections", label: "Connections" },
   ];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-prism-bg-primary flex items-center justify-center">
+        <div className="flex items-center gap-2 text-prism-text-dim text-sm">
+          <div className="w-4 h-4 border-2 border-prism-text-dim/30 border-t-prism-text-dim rounded-full animate-spin" />
+          Loading profile...
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) return null;
 
   return (
     <div className="min-h-screen bg-prism-bg-primary">
@@ -52,10 +164,14 @@ export default function ProfilePage() {
         <div className="bg-prism-bg-secondary rounded-2xl border border-prism-border p-6 mb-6">
           <div className="flex items-start gap-4">
             {/* Avatar */}
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-prism-accent-active to-prism-community-diaspora flex items-center justify-center shrink-0">
-              <span className="text-white font-display font-bold text-xl">
-                {(user.display_name ?? user.username).charAt(0).toUpperCase()}
-              </span>
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-prism-accent-active to-prism-community-diaspora flex items-center justify-center shrink-0 overflow-hidden">
+              {user.avatar_url ? (
+                <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-white font-display font-bold text-xl">
+                  {(user.display_name ?? user.username).charAt(0).toUpperCase()}
+                </span>
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="text-lg font-semibold text-prism-text-primary">
@@ -68,14 +184,14 @@ export default function ProfilePage() {
                 </span>
                 <span className="text-xs text-prism-text-dim">· {verification.description}</span>
               </div>
-              {homeCommunity && (
+              {user.home_community && (
                 <div className="flex items-center gap-1.5 mt-2">
                   <span
                     className="w-2 h-2 rounded-full"
-                    style={{ backgroundColor: COMMUNITY_COLORS[homeCommunity.community_type] }}
+                    style={{ backgroundColor: COMMUNITY_COLORS[user.home_community.community_type] }}
                   />
                   <span className="text-xs text-prism-text-secondary">
-                    {homeCommunity.name} · {homeCommunity.region}
+                    {user.home_community.name} · {user.home_community.region}
                   </span>
                 </div>
               )}
@@ -85,15 +201,15 @@ export default function ProfilePage() {
           {/* Stats */}
           <div className="grid grid-cols-3 gap-4 mt-6 pt-5 border-t border-prism-border">
             <div className="text-center">
-              <span className="font-mono text-xl font-bold text-prism-text-primary">{user.perspectives_read}</span>
+              <span className="font-mono text-xl font-bold text-prism-text-primary">{stats.perspectives_read}</span>
               <p className="text-[10px] text-prism-text-dim mt-0.5">Perspectives Read</p>
             </div>
             <div className="text-center">
-              <span className="font-mono text-xl font-bold text-prism-text-primary">{user.communities_engaged}</span>
+              <span className="font-mono text-xl font-bold text-prism-text-primary">{stats.communities_engaged}</span>
               <p className="text-[10px] text-prism-text-dim mt-0.5">Communities Engaged</p>
             </div>
             <div className="text-center">
-              <span className="font-mono text-xl font-bold text-prism-text-primary">{user.connections_made}</span>
+              <span className="font-mono text-xl font-bold text-prism-text-primary">{stats.connections_made}</span>
               <p className="text-[10px] text-prism-text-dim mt-0.5">Connections Made</p>
             </div>
           </div>
@@ -156,70 +272,81 @@ export default function ProfilePage() {
         {/* Tab content */}
         {activeTab === "activity" && (
           <div className="space-y-3 animate-fade-in">
-            <div className="bg-prism-bg-secondary rounded-xl border border-prism-border p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-xs font-semibold text-prism-text-dim uppercase tracking-wider">Recent Activity</span>
-              </div>
-              <div className="space-y-3">
-                {[
-                  { action: "Read perspective", target: "Detroit Auto Workers on EV Transition", time: "2h ago" },
-                  { action: "Reacted 💡", target: "HBCU Students on Free Speech", time: "5h ago" },
-                  { action: "Bookmarked", target: "Tribal Nations on Water Rights", time: "1d ago" },
-                  { action: "Read perspective", target: "Rural Appalachia on Remote Work", time: "1d ago" },
-                  { action: "Connected with", target: "member from Policy Wonks DC", time: "3d ago" },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center justify-between py-1">
-                    <div className="flex-1 min-w-0">
-                      <span className="text-sm text-prism-text-secondary">{item.action}</span>
-                      <span className="text-sm text-prism-text-primary ml-1">{item.target}</span>
+            {user.recent_posts.length > 0 ? (
+              <div className="bg-prism-bg-secondary rounded-xl border border-prism-border p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xs font-semibold text-prism-text-dim uppercase tracking-wider">Recent Posts</span>
+                </div>
+                <div className="space-y-3">
+                  {user.recent_posts.map((post) => (
+                    <div key={post.id} className="py-2 border-b border-prism-border/50 last:border-0">
+                      <p className="text-sm text-prism-text-primary leading-relaxed">{post.content}</p>
+                      <div className="flex items-center gap-3 mt-1.5">
+                        <span className="text-[10px] text-prism-text-dim font-mono">
+                          {new Date(post.created_at).toLocaleDateString()}
+                        </span>
+                        <span className="text-[10px] text-prism-text-dim">
+                          {post.radius_miles} mi
+                        </span>
+                        {post.post_type === "story" && (
+                          <span className="text-[10px] text-amber-400">Story</span>
+                        )}
+                      </div>
                     </div>
-                    <span className="text-[10px] text-prism-text-dim font-mono shrink-0 ml-2">{item.time}</span>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="bg-prism-bg-secondary rounded-xl border border-prism-border p-6 text-center">
+                <p className="text-sm text-prism-text-dim">No recent posts yet</p>
+                <p className="text-xs text-prism-text-dim/60 mt-1">Create your first post from the home page</p>
+              </div>
+            )}
           </div>
         )}
 
         {activeTab === "communities" && (
           <div className="space-y-2 animate-fade-in">
-            {engagedCommunities.map((community) => (
+            {user.home_community ? (
               <Link
-                key={community.id}
-                href={`/community/${community.id}`}
+                href={`/community/${user.home_community.id}`}
                 className="flex items-center gap-3 bg-prism-bg-secondary rounded-xl border border-prism-border p-4 hover:bg-prism-bg-elevated transition-colors"
               >
                 <div
                   className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
                   style={{
-                    backgroundColor: COMMUNITY_COLORS[community.community_type] + "20",
-                    color: COMMUNITY_COLORS[community.community_type],
+                    backgroundColor: COMMUNITY_COLORS[user.home_community.community_type] + "20",
+                    color: COMMUNITY_COLORS[user.home_community.community_type],
                   }}
                 >
-                  {community.name.split(" ").map((w) => w[0]).slice(0, 2).join("")}
+                  {user.home_community.name.split(" ").map((w) => w[0]).slice(0, 2).join("")}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-medium text-prism-text-primary truncate">{community.name}</span>
-                    {community.verified && (
+                    <span className="text-sm font-medium text-prism-text-primary truncate">{user.home_community.name}</span>
+                    {user.home_community.verified && (
                       <svg className="w-3.5 h-3.5 text-prism-accent-verified shrink-0" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M16.403 12.652a3 3 0 010-5.304 3 3 0 00-3.75-3.751 3 3 0 00-5.305 0 3 3 0 00-3.751 3.75 3 3 0 000 5.305 3 3 0 003.75 3.751 3 3 0 005.305 0 3 3 0 003.751-3.75zm-2.546-4.46a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
                       </svg>
                     )}
                   </div>
-                  <span className="text-xs text-prism-text-dim">{community.region}</span>
+                  <span className="text-xs text-prism-text-dim">{user.home_community.region}</span>
                 </div>
                 <span
                   className="text-[10px] px-2 py-0.5 rounded-full capitalize"
                   style={{
-                    backgroundColor: COMMUNITY_COLORS[community.community_type] + "15",
-                    color: COMMUNITY_COLORS[community.community_type],
+                    backgroundColor: COMMUNITY_COLORS[user.home_community.community_type] + "15",
+                    color: COMMUNITY_COLORS[user.home_community.community_type],
                   }}
                 >
-                  {community.community_type}
+                  {user.home_community.community_type}
                 </span>
               </Link>
-            ))}
+            ) : (
+              <div className="bg-prism-bg-secondary rounded-xl border border-prism-border p-6 text-center">
+                <p className="text-sm text-prism-text-dim">No community joined yet</p>
+              </div>
+            )}
           </div>
         )}
 
@@ -230,7 +357,7 @@ export default function ProfilePage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
               </svg>
             </div>
-            <p className="text-sm font-medium text-prism-text-primary mb-1">{user.connections_made} connections</p>
+            <p className="text-sm font-medium text-prism-text-primary mb-1">{stats.connections_made} connections</p>
             <p className="text-xs text-prism-text-dim">Connect with people from different communities who share perspectives on the same topics.</p>
           </div>
         )}
