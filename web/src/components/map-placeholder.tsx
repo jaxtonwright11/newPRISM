@@ -2,7 +2,7 @@
 
 import { COMMUNITY_COLORS } from "@/lib/constants";
 import { SEED_COMMUNITIES, SEED_USER } from "@/lib/seed-data";
-import type { CommunityType } from "@shared/types";
+import type { CommunityType, Post } from "@shared/types";
 
 function latLngToXY(lat: number, lng: number): { x: number; y: number } {
   const x = ((lng + 130) / 60) * 100;
@@ -23,12 +23,14 @@ interface MapPlaceholderProps {
   highlightedCommunityIds?: string[];
   ghostMode?: boolean;
   showPersonalPin?: boolean;
+  userPosts?: Post[];
 }
 
 export function MapPlaceholder({
   highlightedCommunityIds,
   ghostMode = false,
   showPersonalPin = true,
+  userPosts = [],
 }: MapPlaceholderProps) {
   const pins = SEED_COMMUNITIES.filter(
     (c) => c.latitude !== null && c.longitude !== null
@@ -191,6 +193,39 @@ export function MapPlaceholder({
             <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 opacity-0 group-hover/pin:opacity-100 transition-opacity pointer-events-none z-20">
               <div className="bg-prism-bg-primary/95 backdrop-blur-sm px-2 py-1 rounded text-[10px] text-prism-text-primary whitespace-nowrap border border-prism-border">
                 {pin.name}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+
+      {/* User post pins */}
+      {userPosts.map((post) => {
+        const lat = post.latitude ?? homeCommunity?.latitude;
+        const lng = post.longitude ?? homeCommunity?.longitude;
+        if (lat == null || lng == null) return null;
+        const pos = latLngToXY(lat, lng);
+        return (
+          <div
+            key={post.id}
+            className="absolute z-[6] group/post"
+            style={{
+              left: `${pos.x}%`,
+              top: `${pos.y}%`,
+              transform: "translate(-50%, -50%)",
+            }}
+          >
+            {post.post_type === "story" && (
+              <div className="absolute -inset-[4px] rounded-full border-2 border-transparent animate-story-ring"
+                style={{ borderImage: "linear-gradient(135deg, #FF6B8A, #F59E0B) 1", borderRadius: "50%" }}
+              />
+            )}
+            <div
+              className="relative w-2 h-2 rounded-full bg-prism-accent-active shadow-[0_0_10px_rgba(74,158,255,0.8)]"
+            />
+            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 opacity-0 group-hover/post:opacity-100 transition-opacity pointer-events-none z-20">
+              <div className="bg-prism-bg-primary/95 backdrop-blur-sm px-2 py-1 rounded text-[10px] text-prism-text-primary whitespace-nowrap border border-prism-border max-w-[150px] truncate">
+                {post.content.slice(0, 40)}{post.content.length > 40 ? "..." : ""}
               </div>
             </div>
           </div>

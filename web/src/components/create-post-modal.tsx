@@ -1,0 +1,221 @@
+"use client";
+
+import { useState } from "react";
+import { useAuth } from "@/lib/auth-context";
+import type { PostType, RadiusMiles } from "@shared/types";
+
+interface CreatePostModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onPostCreated?: (post: {
+    id: string;
+    content: string;
+    post_type: PostType;
+    radius_miles: RadiusMiles;
+    latitude: number | null;
+    longitude: number | null;
+    created_at: string;
+  }) => void;
+  topicId?: string | null;
+}
+
+const RADIUS_OPTIONS: RadiusMiles[] = [10, 20, 30, 40];
+
+export function CreatePostModal({
+  open,
+  onOpenChange,
+  onPostCreated,
+  topicId,
+}: CreatePostModalProps) {
+  const { session } = useAuth();
+  const [content, setContent] = useState("");
+  const [postType, setPostType] = useState<PostType>("permanent");
+  const [radiusMiles, setRadiusMiles] = useState<RadiusMiles>(40);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const charCount = content.length;
+  const maxChars = 1000;
+
+  const handleSubmit = async () => {
+    if (!content.trim() || !session?.access_token) return;
+    setSubmitting(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/posts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          content: content.trim(),
+          post_type: postType,
+          radius_miles: radiusMiles,
+          topic_id: topicId ?? null,
+        }),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? `Failed (${res.status})`);
+      }
+
+      const { data } = await res.json();
+      onPostCreated?.(data);
+      setContent("");
+      setPostType("permanent");
+      setRadiusMiles(40);
+      onOpenChange(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50">
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+        onClick={() => onOpenChange(false)}
+      />
+
+      {/* Modal */}
+      <div className="fixed left-[50%] top-[50%] z-50 w-full max-w-md translate-x-[-50%] translate-y-[-50%] p-4">
+        <div className="bg-prism-bg-secondary border border-prism-border rounded-2xl shadow-2xl overflow-hidden">
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 py-4 border-b border-prism-border">
+            <h2 className="text-sm font-semibold text-prism-text-primary">
+              Create Post
+            </h2>
+            <button
+              onClick={() => onOpenChange(false)}
+              className="p-1 rounded-lg text-prism-text-dim hover:text-prism-text-primary hover:bg-prism-bg-elevated transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Body */}
+          <div className="p-5 space-y-4">
+            {/* Text area */}
+            <div>
+              <textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value.slice(0, maxChars))}
+                placeholder="Share your perspective..."
+                rows={4}
+                autoFocus
+                className="w-full px-4 py-3 rounded-xl bg-prism-bg-elevated border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:ring-1 focus:ring-prism-accent-active resize-none leading-relaxed"
+              />
+              <div className="flex justify-end mt-1">
+                <span
+                  className={`text-[10px] font-mono ${
+                    charCount > maxChars * 0.9
+                      ? "text-prism-accent-live"
+                      : "text-prism-text-dim"
+                  }`}
+                >
+                  {charCount}/{maxChars}
+                </span>
+              </div>
+            </div>
+
+            {/* Post type toggle */}
+            <div>
+              <label className="text-[11px] font-medium text-prism-text-dim uppercase tracking-wider mb-2 block">
+                Post Type
+              </label>
+              <div className="flex gap-1 bg-prism-bg-elevated rounded-full p-1">
+                <button
+                  onClick={() => setPostType("permanent")}
+                  className={`flex-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-150 ${
+                    postType === "permanent"
+                      ? "bg-prism-accent-active text-white shadow-sm"
+                      : "text-prism-text-secondary hover:text-prism-text-primary"
+                  }`}
+                >
+                  Permanent
+                </button>
+                <button
+                  onClick={() => setPostType("story")}
+                  className={`flex-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-150 flex items-center justify-center gap-1.5 ${
+                    postType === "story"
+                      ? "bg-gradient-to-r from-prism-accent-like to-amber-500 text-white shadow-sm"
+                      : "text-prism-text-secondary hover:text-prism-text-primary"
+                  }`}
+                >
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Story (24h)
+                </button>
+              </div>
+            </div>
+
+            {/* Radius selector */}
+            <div>
+              <label className="text-[11px] font-medium text-prism-text-dim uppercase tracking-wider mb-2 block">
+                Visibility Radius
+              </label>
+              <div className="flex gap-2">
+                {RADIUS_OPTIONS.map((r) => (
+                  <button
+                    key={r}
+                    onClick={() => setRadiusMiles(r)}
+                    className={`flex-1 py-2 rounded-xl text-xs font-mono font-medium transition-all duration-150 border ${
+                      radiusMiles === r
+                        ? "bg-prism-accent-active/10 border-prism-accent-active text-prism-accent-active"
+                        : "bg-prism-bg-elevated border-prism-border text-prism-text-secondary hover:border-prism-text-dim"
+                    }`}
+                  >
+                    {r} mi
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Error */}
+            {error && (
+              <div className="text-xs text-prism-accent-live bg-prism-accent-live/10 px-3 py-2 rounded-lg">
+                {error}
+              </div>
+            )}
+
+            {/* Not logged in warning */}
+            {!session && (
+              <div className="text-xs text-prism-text-dim bg-prism-bg-elevated px-3 py-2 rounded-lg text-center">
+                Sign in to create posts
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="px-5 py-4 border-t border-prism-border">
+            <button
+              onClick={handleSubmit}
+              disabled={!content.trim() || !session || submitting}
+              className="w-full py-2.5 rounded-xl bg-prism-accent-active text-white text-sm font-semibold hover:bg-prism-accent-active/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            >
+              {submitting ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Posting...
+                </span>
+              ) : (
+                `Post ${postType === "story" ? "Story" : ""}`
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

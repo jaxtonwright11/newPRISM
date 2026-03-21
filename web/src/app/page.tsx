@@ -10,7 +10,9 @@ import { PerspectiveDetail } from "@/components/perspective-detail";
 import { StoriesBar } from "@/components/stories-bar";
 import { CommunityPulse } from "@/components/community-pulse";
 import { MobileNav } from "@/components/mobile-nav";
+import { CreatePostModal } from "@/components/create-post-modal";
 import { useGhostMode } from "@/lib/use-ghost-mode";
+import type { Post } from "@shared/types";
 import {
   SEED_TOPICS,
   SEED_PERSPECTIVES,
@@ -34,6 +36,8 @@ export default function Home() {
   >(null);
   const [mobileTopicOpen, setMobileTopicOpen] = useState(false);
   const [pulseOpen, setPulseOpen] = useState(false);
+  const [composeOpen, setComposeOpen] = useState(false);
+  const [userPosts, setUserPosts] = useState<Post[]>([]);
   const { ghostMode, toggleGhostMode } = useGhostMode();
 
   const currentTopic = getTopicBySlug(selectedTopicSlug);
@@ -215,6 +219,7 @@ export default function Home() {
           <MapPlaceholder
             highlightedCommunityIds={topicCommunityIds}
             ghostMode={ghostMode}
+            userPosts={userPosts}
           />
         </div>
 
@@ -311,7 +316,7 @@ export default function Home() {
                   animationDelay={i * 50}
                 />
               ))}
-              {topicPosts.map((post, i) => (
+              {[...userPosts, ...topicPosts].map((post, i) => (
                 <PersonalPostCard
                   key={post.id}
                   post={post}
@@ -358,6 +363,39 @@ export default function Home() {
 
       {/* Community Pulse panel */}
       <CommunityPulse isOpen={pulseOpen} onClose={() => setPulseOpen(false)} />
+
+      {/* Compose FAB */}
+      <button
+        onClick={() => setComposeOpen(true)}
+        className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-40 w-12 h-12 rounded-full bg-prism-accent-active text-white shadow-lg shadow-prism-accent-active/30 hover:bg-prism-accent-active/90 transition-all flex items-center justify-center hover:scale-105 active:scale-95"
+        aria-label="Create post"
+      >
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+      </button>
+
+      {/* Create post modal */}
+      <CreatePostModal
+        open={composeOpen}
+        onOpenChange={setComposeOpen}
+        topicId={currentTopic?.id}
+        onPostCreated={(post) => {
+          setUserPosts((prev) => [{
+            ...post,
+            user_id: "",
+            community_id: null,
+            topic_id: currentTopic?.id ?? null,
+            image_url: null,
+            expires_at: post.post_type === "story"
+              ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+              : null,
+            like_count: 0,
+            comment_count: 0,
+            share_count: 0,
+          }, ...prev]);
+        }}
+      />
 
       {/* Perspective detail modal */}
       {selectedPerspective && (
