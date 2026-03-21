@@ -73,6 +73,23 @@ body {
   100% { background-position: 200% 0; }
 }
 
+/* Mapbox GL overrides */
+.mapboxgl-popup-content {
+  background: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+.mapboxgl-popup-tip {
+  display: none !important;
+}
+.mapboxgl-ctrl-logo {
+  opacity: 0.3 !important;
+}
+.mapboxgl-ctrl-attrib {
+  display: none !important;
+}
+
 .animate-shimmer {
   background: linear-gradient(90deg, transparent, rgba(74, 158, 255, 0.05), transparent);
   background-size: 200% 100%;

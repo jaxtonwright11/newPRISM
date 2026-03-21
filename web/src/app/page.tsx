@@ -13,6 +13,7 @@ import { MobileNav } from "@/components/mobile-nav";
 import { CreatePostModal } from "@/components/create-post-modal";
 import { HeatPerspectivesPanel } from "@/components/heat-perspectives-panel";
 import { OnboardingAha } from "@/components/onboarding-aha";
+import { FeedSkeleton } from "@/components/skeleton";
 import type { HeatPoint } from "@/components/map-placeholder";
 import { useGhostMode } from "@/lib/use-ghost-mode";
 import { useRealtime } from "@/lib/use-realtime";
@@ -50,7 +51,7 @@ export default function Home() {
   const { ghostMode, toggleGhostMode } = useGhostMode();
   const { session } = useAuth();
   const [feedPerspectives, setFeedPerspectives] = useState<typeof SEED_PERSPECTIVES>([]);
-  const [_feedLoading, setFeedLoading] = useState(false);
+  const [feedLoading, setFeedLoading] = useState(false);
   const [unreadNotifCount, setUnreadNotifCount] = useState(0);
 
   const currentTopic = getTopicBySlug(selectedTopicSlug);
@@ -485,7 +486,9 @@ export default function Home() {
 
         {/* Feed: perspectives + personal posts */}
         <div className="flex-1 overflow-y-auto p-3 md:p-4 pb-20 md:pb-4">
-          {feedPerspectives.length > 0 || topicPosts.length > 0 ? (
+          {feedLoading ? (
+            <FeedSkeleton count={4} />
+          ) : feedPerspectives.length > 0 || topicPosts.length > 0 ? (
             <div
               key={`${activeTab}-${selectedTopicSlug}`}
               className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4 animate-fade-in"
