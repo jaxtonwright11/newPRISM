@@ -60,7 +60,9 @@ export async function GET(
             ? alignmentsResult.data
             : [];
 
-        return NextResponse.json({ topic, perspectives, alignments });
+        const res = NextResponse.json({ topic, perspectives, alignments });
+        res.headers.set("Cache-Control", "public, s-maxage=30, stale-while-revalidate=120");
+        return res;
       }
     }
   } catch {
