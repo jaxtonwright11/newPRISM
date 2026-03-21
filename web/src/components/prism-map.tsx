@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { Community } from "../../../shared/types";
+import type { Community } from "@shared/types";
 import { COMMUNITY_COLORS } from "@/lib/constants";
 
 interface PrismMapProps {
