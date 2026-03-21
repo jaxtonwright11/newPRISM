@@ -15,6 +15,7 @@ import { HeatPerspectivesPanel } from "@/components/heat-perspectives-panel";
 import { OnboardingAha } from "@/components/onboarding-aha";
 import type { HeatPoint } from "@/components/map-placeholder";
 import { useGhostMode } from "@/lib/use-ghost-mode";
+import { useAuth } from "@/lib/auth-context";
 import type { Post, CommunityType } from "@shared/types";
 import {
   SEED_TOPICS,
@@ -46,6 +47,9 @@ export default function Home() {
   const [heatPanelOpen, setHeatPanelOpen] = useState(false);
   const [selectedHeatPoint, setSelectedHeatPoint] = useState<HeatPoint | null>(null);
   const { ghostMode, toggleGhostMode } = useGhostMode();
+  const { session } = useAuth();
+  const [feedPerspectives, setFeedPerspectives] = useState<typeof SEED_PERSPECTIVES>([]);
+  const [feedLoading, setFeedLoading] = useState(false);
 
   const currentTopic = getTopicBySlug(selectedTopicSlug);
   const topicPerspectives = getPerspectivesByTopic(selectedTopicSlug);
@@ -134,28 +138,46 @@ export default function Home() {
       }));
   }, [selectedHeatPoint, topicPerspectives]);
 
-  const getFeedPerspectives = useCallback(() => {
-    switch (activeTab) {
-      case "nearby":
-        return topicPerspectives;
-      case "communities":
-        return topicPerspectives.filter(
-          (p) =>
-            p.community.community_type === "civic" ||
-            p.community.community_type === "rural"
-        );
-      case "discover":
-        return topicPerspectives.filter(
-          (p) =>
-            p.community.community_type !== "civic" &&
-            p.community.community_type !== "rural"
-        );
-      default:
-        return topicPerspectives;
+  // Fetch feed perspectives from API based on active tab
+  useEffect(() => {
+    async function fetchFeed() {
+      setFeedLoading(true);
+      const feedEndpoint = `/api/feed/${activeTab}${selectedTopicSlug ? `?topic=${selectedTopicSlug}` : ""}`;
+      const headers: Record<string, string> = {};
+      if (session?.access_token) {
+        headers.Authorization = `Bearer ${session.access_token}`;
+      }
+      try {
+        const res = await fetch(feedEndpoint, { headers });
+        const json = await res.json();
+        // Nearby returns { posts, perspectives }, others return array directly
+        const perspectives = activeTab === "nearby"
+          ? (json.data?.perspectives ?? json.data ?? [])
+          : (json.data ?? []);
+        setFeedPerspectives(perspectives);
+      } catch {
+        // Fall back to seed data
+        switch (activeTab) {
+          case "nearby":
+            setFeedPerspectives(topicPerspectives);
+            break;
+          case "communities":
+            setFeedPerspectives(topicPerspectives.filter(
+              (p) => p.community.community_type === "civic" || p.community.community_type === "rural"
+            ));
+            break;
+          case "discover":
+            setFeedPerspectives(topicPerspectives.filter(
+              (p) => p.community.community_type !== "civic" && p.community.community_type !== "rural"
+            ));
+            break;
+        }
+      } finally {
+        setFeedLoading(false);
+      }
     }
-  }, [activeTab, topicPerspectives]);
-
-  const feedPerspectives = getFeedPerspectives();
+    fetchFeed();
+  }, [activeTab, selectedTopicSlug, session?.access_token, topicPerspectives]);
 
   const selectedPerspective = selectedPerspectiveId
     ? SEED_PERSPECTIVES.find((p) => p.id === selectedPerspectiveId)
