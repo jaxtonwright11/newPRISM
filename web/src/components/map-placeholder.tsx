@@ -1,23 +1,11 @@
 "use client";
 
+import { useEffect, useRef, useState, useCallback } from "react";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
 import { COMMUNITY_COLORS } from "@/lib/constants";
 import { SEED_COMMUNITIES, SEED_USER } from "@/lib/seed-data";
 import type { CommunityType, Post } from "@shared/types";
-
-function latLngToXY(lat: number, lng: number): { x: number; y: number } {
-  const x = ((lng + 130) / 60) * 100;
-  const y = ((50 - lat) / 30) * 100;
-  return {
-    x: Math.max(5, Math.min(95, x)),
-    y: Math.max(5, Math.min(95, y)),
-  };
-}
-
-const ACTIVITY_SIZE: Record<string, number> = {
-  high: 12,
-  medium: 9,
-  low: 6,
-};
 
 export interface HeatPoint {
   latitude: number;
@@ -37,6 +25,182 @@ interface MapPlaceholderProps {
   onHeatTap?: (point: HeatPoint) => void;
 }
 
+const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? "";
+
+// PRISM dark map style
+const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
+  version: 8,
+  name: "PRISM Dark",
+  sources: {
+    "mapbox-streets": {
+      type: "vector",
+      url: "mapbox://mapbox.mapbox-streets-v8",
+    },
+  },
+  layers: [
+    // Ocean background
+    {
+      id: "background",
+      type: "background",
+      paint: { "background-color": "#0D1117" },
+    },
+    // Land fill
+    {
+      id: "land",
+      type: "fill",
+      source: "mapbox-streets",
+      "source-layer": "land",
+      paint: { "fill-color": "#161B22" },
+    },
+    // Water
+    {
+      id: "water",
+      type: "fill",
+      source: "mapbox-streets",
+      "source-layer": "water",
+      paint: { "fill-color": "#0D1117" },
+    },
+    // Admin boundaries — barely visible
+    {
+      id: "admin-borders",
+      type: "line",
+      source: "mapbox-streets",
+      "source-layer": "admin",
+      filter: ["==", ["get", "admin_level"], 0],
+      paint: {
+        "line-color": "#2A3441",
+        "line-width": 0.5,
+        "line-opacity": 0.4,
+      },
+    },
+    // State/province boundaries — even more subtle
+    {
+      id: "admin-state",
+      type: "line",
+      source: "mapbox-streets",
+      "source-layer": "admin",
+      filter: ["==", ["get", "admin_level"], 1],
+      paint: {
+        "line-color": "#1E2530",
+        "line-width": 0.3,
+        "line-opacity": 0.25,
+      },
+    },
+  ],
+  // No text labels anywhere on the map — per CLAUDE.md
+  glyphs: "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
+  sprite: "mapbox://sprites/mapbox/dark-v11",
+};
+
+function createPulseElement(
+  color: string,
+  size: number,
+  isHighActivity: boolean
+): HTMLDivElement {
+  const el = document.createElement("div");
+  el.style.width = `${size}px`;
+  el.style.height = `${size}px`;
+  el.style.position = "relative";
+
+  // Core dot
+  const core = document.createElement("div");
+  core.style.width = `${size}px`;
+  core.style.height = `${size}px`;
+  core.style.borderRadius = "50%";
+  core.style.backgroundColor = color;
+  core.style.boxShadow = `0 0 ${size * 1.5}px ${color}80, 0 0 ${size * 3}px ${color}40`;
+  core.style.position = "absolute";
+  core.style.top = "0";
+  core.style.left = "0";
+  core.style.zIndex = "3";
+  el.appendChild(core);
+
+  if (isHighActivity) {
+    // Pulse ring 1
+    const ring1 = document.createElement("div");
+    ring1.style.width = `${size * 2.5}px`;
+    ring1.style.height = `${size * 2.5}px`;
+    ring1.style.borderRadius = "50%";
+    ring1.style.backgroundColor = `${color}18`;
+    ring1.style.position = "absolute";
+    ring1.style.top = `${-(size * 0.75)}px`;
+    ring1.style.left = `${-(size * 0.75)}px`;
+    ring1.style.animation = "prism-pulse 3s ease-in-out infinite";
+    ring1.style.zIndex = "1";
+    el.appendChild(ring1);
+
+    // Pulse ring 2
+    const ring2 = document.createElement("div");
+    ring2.style.width = `${size * 3.5}px`;
+    ring2.style.height = `${size * 3.5}px`;
+    ring2.style.borderRadius = "50%";
+    ring2.style.backgroundColor = `${color}0A`;
+    ring2.style.position = "absolute";
+    ring2.style.top = `${-(size * 1.25)}px`;
+    ring2.style.left = `${-(size * 1.25)}px`;
+    ring2.style.animation = "prism-pulse 3s ease-in-out infinite 0.5s";
+    ring2.style.zIndex = "1";
+    el.appendChild(ring2);
+  }
+
+  return el;
+}
+
+function createHeatElement(
+  intensity: number,
+  communityCount: number
+): HTMLDivElement {
+  const el = document.createElement("div");
+  const size = 40 + intensity * 80;
+  el.style.width = `${size}px`;
+  el.style.height = `${size}px`;
+  el.style.cursor = "pointer";
+  el.style.position = "relative";
+
+  const opacity = 0.15 + intensity * 0.25;
+
+  // Outer glow
+  const outer = document.createElement("div");
+  outer.style.width = `${size * 1.5}px`;
+  outer.style.height = `${size * 1.5}px`;
+  outer.style.borderRadius = "50%";
+  outer.style.background = `radial-gradient(circle, rgba(255,107,138,${opacity * 0.3}) 0%, rgba(245,158,11,${opacity * 0.15}) 50%, transparent 70%)`;
+  outer.style.position = "absolute";
+  outer.style.top = "50%";
+  outer.style.left = "50%";
+  outer.style.transform = "translate(-50%, -50%)";
+  outer.style.animation = "prism-pulse 4s ease-in-out infinite";
+  el.appendChild(outer);
+
+  // Inner core
+  const inner = document.createElement("div");
+  inner.style.width = `${size}px`;
+  inner.style.height = `${size}px`;
+  inner.style.borderRadius = "50%";
+  inner.style.background = `radial-gradient(circle, rgba(255,107,138,${opacity}) 0%, rgba(245,158,11,${opacity * 0.5}) 40%, transparent 70%)`;
+  inner.style.position = "absolute";
+  inner.style.top = "50%";
+  inner.style.left = "50%";
+  inner.style.transform = "translate(-50%, -50%)";
+  el.appendChild(inner);
+
+  // Count label
+  const label = document.createElement("div");
+  label.style.position = "absolute";
+  label.style.top = "50%";
+  label.style.left = "50%";
+  label.style.transform = "translate(-50%, -50%)";
+  label.style.fontSize = "10px";
+  label.style.fontWeight = "700";
+  label.style.color = "#F0F0F8";
+  label.style.textShadow = "0 1px 4px rgba(0,0,0,0.8)";
+  label.style.zIndex = "5";
+  label.textContent = `${communityCount}`;
+  el.appendChild(label);
+
+  return el;
+}
+
 export function MapPlaceholder({
   highlightedCommunityIds,
   ghostMode = false,
@@ -45,83 +209,228 @@ export function MapPlaceholder({
   heatPoints = [],
   onHeatTap,
 }: MapPlaceholderProps) {
-  const pins = SEED_COMMUNITIES.filter(
-    (c) => c.latitude !== null && c.longitude !== null
-  ).map((c, i) => {
-    const pos = latLngToXY(c.latitude as number, c.longitude as number);
-    const isHighlighted = !highlightedCommunityIds || highlightedCommunityIds.includes(c.id);
-    const activity = isHighlighted
-      ? (["high", "medium"] as const)[i % 2]
-      : "low";
-    return {
-      ...pos,
-      type: c.community_type,
-      size: activity,
-      name: c.name,
-      dimmed: highlightedCommunityIds ? !isHighlighted : false,
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<mapboxgl.Map | null>(null);
+  const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const [mapLoaded, setMapLoaded] = useState(false);
+
+  // Inject pulse animation CSS
+  useEffect(() => {
+    if (document.getElementById("prism-map-pulse-css")) return;
+    const style = document.createElement("style");
+    style.id = "prism-map-pulse-css";
+    style.textContent = `
+      @keyframes prism-pulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.3); opacity: 0.5; }
+      }
+    `;
+    document.head.appendChild(style);
+  }, []);
+
+  // Initialize map
+  useEffect(() => {
+    if (!mapContainer.current || !MAPBOX_TOKEN || mapRef.current) return;
+
+    mapboxgl.accessToken = MAPBOX_TOKEN;
+
+    const map = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: PRISM_MAP_STYLE,
+      center: [-98, 38], // Center US
+      zoom: 3.5,
+      minZoom: 2,
+      maxZoom: 12,
+      attributionControl: false,
+      logoPosition: "bottom-right",
+      fadeDuration: 300,
+      antialias: true,
+    });
+
+    // Disable labels
+    map.on("load", () => {
+      setMapLoaded(true);
+    });
+
+    mapRef.current = map;
+
+    return () => {
+      map.remove();
+      mapRef.current = null;
     };
-  });
-  const homeCommunity = SEED_COMMUNITIES.find(
-    (community) => community.id === SEED_USER.home_community_id
-  );
-  const personalPin =
-    showPersonalPin &&
-    homeCommunity &&
-    homeCommunity.latitude !== null &&
-    homeCommunity.longitude !== null
-      ? latLngToXY(homeCommunity.latitude, homeCommunity.longitude)
-      : null;
+  }, []);
+
+  // Clear and re-add markers whenever data changes
+  const clearMarkers = useCallback(() => {
+    markersRef.current.forEach((m) => m.remove());
+    markersRef.current = [];
+  }, []);
+
+  useEffect(() => {
+    if (!mapRef.current || !mapLoaded) return;
+    clearMarkers();
+
+    const communities = SEED_COMMUNITIES.filter(
+      (c) => c.latitude != null && c.longitude != null
+    );
+
+    // Community pins
+    communities.forEach((c, i) => {
+      const isHighlighted =
+        !highlightedCommunityIds ||
+        highlightedCommunityIds.includes(c.id);
+      const isHighActivity = isHighlighted && i % 2 === 0;
+      const pinSize = isHighlighted ? 10 : 6;
+      const color = COMMUNITY_COLORS[c.community_type as CommunityType];
+
+      const el = createPulseElement(color, pinSize, isHighActivity);
+      if (!isHighlighted) {
+        el.style.opacity = "0.2";
+      }
+
+      const marker = new mapboxgl.Marker({
+        element: el,
+        anchor: "center",
+      })
+        .setLngLat([c.longitude as number, c.latitude as number])
+        .addTo(mapRef.current!);
+
+      // Popup on hover
+      const popup = new mapboxgl.Popup({
+        closeButton: false,
+        closeOnClick: false,
+        offset: 12,
+        className: "prism-popup",
+      }).setHTML(
+        `<div style="background:#0A0A0F;border:1px solid #2A2A3A;border-radius:6px;padding:4px 8px;font-size:10px;color:#F0F0F8;font-family:Inter,sans-serif;">${c.name}</div>`
+      );
+
+      el.addEventListener("mouseenter", () => {
+        marker.setPopup(popup);
+        popup.addTo(mapRef.current!);
+      });
+      el.addEventListener("mouseleave", () => {
+        popup.remove();
+      });
+
+      markersRef.current.push(marker);
+    });
+
+    // Heat points
+    heatPoints.forEach((hp) => {
+      const el = createHeatElement(hp.intensity, hp.community_count);
+      el.addEventListener("click", () => onHeatTap?.(hp));
+
+      const marker = new mapboxgl.Marker({
+        element: el,
+        anchor: "center",
+      })
+        .setLngLat([hp.longitude, hp.latitude])
+        .addTo(mapRef.current!);
+
+      markersRef.current.push(marker);
+    });
+
+    // User post pins
+    const homeCommunity = SEED_COMMUNITIES.find(
+      (c) => c.id === SEED_USER.home_community_id
+    );
+    userPosts.forEach((post) => {
+      const lat = post.latitude ?? homeCommunity?.latitude;
+      const lng = post.longitude ?? homeCommunity?.longitude;
+      if (lat == null || lng == null) return;
+
+      const el = document.createElement("div");
+      el.style.width = "8px";
+      el.style.height = "8px";
+      el.style.borderRadius = "50%";
+      el.style.backgroundColor = "#4A9EFF";
+      el.style.boxShadow = "0 0 10px rgba(74,158,255,0.8)";
+
+      if (post.post_type === "story") {
+        el.style.border = "2px solid transparent";
+        el.style.backgroundImage =
+          "linear-gradient(#4A9EFF, #4A9EFF), linear-gradient(135deg, #FF6B8A, #F59E0B)";
+        el.style.backgroundOrigin = "border-box";
+        el.style.backgroundClip = "padding-box, border-box";
+      }
+
+      const marker = new mapboxgl.Marker({
+        element: el,
+        anchor: "center",
+      })
+        .setLngLat([lng, lat])
+        .addTo(mapRef.current!);
+
+      markersRef.current.push(marker);
+    });
+
+    // Personal pin (hidden in ghost mode)
+    if (
+      showPersonalPin &&
+      !ghostMode &&
+      homeCommunity?.latitude != null &&
+      homeCommunity?.longitude != null
+    ) {
+      const el = document.createElement("div");
+      el.style.width = "12px";
+      el.style.height = "12px";
+      el.style.borderRadius = "50%";
+      el.style.backgroundColor = "#4A9EFF";
+      el.style.boxShadow = "0 0 12px rgba(74,158,255,0.7)";
+      el.style.border = "2px solid rgba(74,158,255,0.8)";
+      el.style.animation = "prism-pulse 3s ease-in-out infinite";
+
+      const popup = new mapboxgl.Popup({
+        closeButton: false,
+        closeOnClick: false,
+        offset: 10,
+        className: "prism-popup",
+      }).setHTML(
+        `<div style="background:#0A0A0F;border:1px solid #2A2A3A;border-radius:6px;padding:4px 8px;font-size:10px;color:#F0F0F8;font-family:Inter,sans-serif;">You (${homeCommunity.region})</div>`
+      );
+
+      el.addEventListener("mouseenter", () => {
+        popup.addTo(mapRef.current!);
+        personalMarker.setPopup(popup);
+      });
+      el.addEventListener("mouseleave", () => popup.remove());
+
+      const personalMarker = new mapboxgl.Marker({
+        element: el,
+        anchor: "center",
+      })
+        .setLngLat([homeCommunity.longitude, homeCommunity.latitude])
+        .addTo(mapRef.current!);
+
+      markersRef.current.push(personalMarker);
+    }
+  }, [
+    mapLoaded,
+    highlightedCommunityIds,
+    ghostMode,
+    showPersonalPin,
+    userPosts,
+    heatPoints,
+    onHeatTap,
+    clearMarkers,
+  ]);
+
+  // Fallback if no Mapbox token
+  if (!MAPBOX_TOKEN) {
+    return (
+      <div className="relative w-full h-full rounded-xl overflow-hidden bg-prism-map-ocean border border-prism-border shadow-inner flex items-center justify-center">
+        <p className="text-sm text-prism-text-dim">
+          Add NEXT_PUBLIC_MAPBOX_TOKEN for live map
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <div className="relative w-full h-full rounded-xl overflow-hidden bg-prism-map-ocean border border-prism-border shadow-inner">
-      {/* Background land mass */}
-      <div className="absolute inset-0 bg-prism-map-land/20" />
-
-      {/* US outline SVG */}
-      <svg
-        className="absolute inset-0 w-full h-full opacity-[0.15]"
-        viewBox="0 0 100 70"
-        preserveAspectRatio="xMidYMid meet"
-      >
-        <path
-          d="M8 20 Q12 14 20 16 L28 15 Q35 14 42 16 L50 18 Q55 17 60 15 L68 14 Q75 15 80 18 L85 22 Q87 28 85 35 L82 40 Q78 42 75 38 L70 35 Q65 38 60 42 L55 45 Q48 48 40 46 L35 43 Q28 40 22 38 L18 35 Q12 32 10 28 L8 24 Z"
-          fill="#161B22"
-          stroke="#2A3441"
-          strokeWidth="0.5"
-        />
-        <path
-          d="M25 45 Q28 42 32 44 L38 48 Q35 55 30 58 L25 56 Q22 52 25 45"
-          fill="#161B22"
-          stroke="#2A3441"
-          strokeWidth="0.3"
-        />
-      </svg>
-
-      {/* Grid lines for subtle depth */}
-      <svg className="absolute inset-0 w-full h-full opacity-[0.03]" viewBox="0 0 100 70">
-        {Array.from({ length: 10 }, (_, i) => (
-          <line
-            key={`h-${i}`}
-            x1="0"
-            y1={i * 7}
-            x2="100"
-            y2={i * 7}
-            stroke="#4A9EFF"
-            strokeWidth="0.2"
-          />
-        ))}
-        {Array.from({ length: 14 }, (_, i) => (
-          <line
-            key={`v-${i}`}
-            x1={i * 7.14}
-            y1="0"
-            x2={i * 7.14}
-            y2="70"
-            stroke="#4A9EFF"
-            strokeWidth="0.2"
-          />
-        ))}
-      </svg>
+    <div className="relative w-full h-full rounded-xl overflow-hidden border border-prism-border shadow-inner">
+      {/* Map container */}
+      <div ref={mapContainer} className="absolute inset-0" />
 
       {/* LIVE indicator */}
       <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-prism-bg-primary/80 backdrop-blur-sm px-2.5 py-1 rounded-full z-10">
@@ -145,183 +454,20 @@ export function MapPlaceholder({
       {/* Community count */}
       <div className="absolute top-3 left-3 bg-prism-bg-primary/80 backdrop-blur-sm px-2.5 py-1 rounded-full z-10">
         <span className="text-[10px] font-mono text-prism-text-secondary">
-          {pins.length} communities active
+          {SEED_COMMUNITIES.filter((c) => c.latitude != null).length} communities
+          active
         </span>
       </div>
 
-      {/* Heat overlay — multiple communities on same topic */}
-      {heatPoints.map((hp, i) => {
-        const pos = latLngToXY(hp.latitude, hp.longitude);
-        const size = 40 + hp.intensity * 80; // 40px to 120px based on intensity
-        const opacity = 0.15 + hp.intensity * 0.25;
-        return (
-          <button
-            key={`heat-${i}`}
-            className="absolute z-[2] cursor-pointer group/heat"
-            style={{
-              left: `${pos.x}%`,
-              top: `${pos.y}%`,
-              transform: "translate(-50%, -50%)",
-            }}
-            onClick={() => onHeatTap?.(hp)}
-            aria-label={`${hp.community_count} communities active here`}
-          >
-            {/* Outer glow */}
-            <div
-              className="absolute rounded-full animate-pulse-glow"
-              style={{
-                width: size * 1.5,
-                height: size * 1.5,
-                background: `radial-gradient(circle, rgba(255,107,138,${opacity * 0.3}) 0%, rgba(245,158,11,${opacity * 0.15}) 50%, transparent 70%)`,
-                left: "50%",
-                top: "50%",
-                transform: "translate(-50%, -50%)",
-              }}
-            />
-            {/* Inner heat core */}
-            <div
-              className="relative rounded-full"
-              style={{
-                width: size,
-                height: size,
-                background: `radial-gradient(circle, rgba(255,107,138,${opacity}) 0%, rgba(245,158,11,${opacity * 0.5}) 40%, transparent 70%)`,
-              }}
-            />
-            {/* Hover tooltip */}
-            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 opacity-0 group-hover/heat:opacity-100 transition-opacity pointer-events-none z-20">
-              <div className="bg-prism-bg-primary/95 backdrop-blur-sm px-2.5 py-1.5 rounded-lg text-[10px] text-prism-text-primary whitespace-nowrap border border-prism-border">
-                <span className="font-semibold">{hp.community_count} communities</span>
-                <span className="text-prism-text-dim ml-1">active here</span>
-              </div>
-            </div>
-          </button>
-        );
-      })}
-
-      {/* Community pins */}
-      {pins.map((pin, i) => {
-        const size = ACTIVITY_SIZE[pin.size];
-        const color = COMMUNITY_COLORS[pin.type as CommunityType];
-        return (
-          <div
-            key={i}
-            className={`absolute group/pin transition-opacity duration-300 ${pin.dimmed ? "opacity-20" : "opacity-100"}`}
-            style={{
-              left: `${pin.x}%`,
-              top: `${pin.y}%`,
-              transform: "translate(-50%, -50%)",
-            }}
-          >
-            {/* Outer glow ring */}
-            {pin.size !== "low" && (
-              <>
-                <div
-                  className="absolute rounded-full animate-pulse-glow"
-                  style={{
-                    width: size * 3.5,
-                    height: size * 3.5,
-                    backgroundColor: color,
-                    opacity: 0.1,
-                    left: "50%",
-                    top: "50%",
-                    transform: "translate(-50%, -50%)",
-                  }}
-                />
-                <div
-                  className="absolute rounded-full"
-                  style={{
-                    width: size * 2.2,
-                    height: size * 2.2,
-                    backgroundColor: color,
-                    opacity: 0.25,
-                    left: "50%",
-                    top: "50%",
-                    transform: "translate(-50%, -50%)",
-                  }}
-                />
-              </>
-            )}
-            {/* Core dot */}
-            <div
-              className="relative rounded-full"
-              style={{
-                width: size,
-                height: size,
-                backgroundColor: color,
-                boxShadow: `0 0 ${size}px ${color}80`,
-              }}
-            />
-            {/* Hover tooltip */}
-            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 opacity-0 group-hover/pin:opacity-100 transition-opacity pointer-events-none z-20">
-              <div className="bg-prism-bg-primary/95 backdrop-blur-sm px-2 py-1 rounded text-[10px] text-prism-text-primary whitespace-nowrap border border-prism-border">
-                {pin.name}
-              </div>
-            </div>
-          </div>
-        );
-      })}
-
-      {/* User post pins */}
-      {userPosts.map((post) => {
-        const lat = post.latitude ?? homeCommunity?.latitude;
-        const lng = post.longitude ?? homeCommunity?.longitude;
-        if (lat == null || lng == null) return null;
-        const pos = latLngToXY(lat, lng);
-        return (
-          <div
-            key={post.id}
-            className="absolute z-[6] group/post"
-            style={{
-              left: `${pos.x}%`,
-              top: `${pos.y}%`,
-              transform: "translate(-50%, -50%)",
-            }}
-          >
-            {post.post_type === "story" && (
-              <div className="absolute -inset-[4px] rounded-full border-2 border-transparent animate-story-ring"
-                style={{ borderImage: "linear-gradient(135deg, #FF6B8A, #F59E0B) 1", borderRadius: "50%" }}
-              />
-            )}
-            <div
-              className="relative w-2 h-2 rounded-full bg-prism-accent-active shadow-[0_0_10px_rgba(74,158,255,0.8)]"
-            />
-            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 opacity-0 group-hover/post:opacity-100 transition-opacity pointer-events-none z-20">
-              <div className="bg-prism-bg-primary/95 backdrop-blur-sm px-2 py-1 rounded text-[10px] text-prism-text-primary whitespace-nowrap border border-prism-border max-w-[150px] truncate">
-                {post.content.slice(0, 40)}{post.content.length > 40 ? "..." : ""}
-              </div>
-            </div>
-          </div>
-        );
-      })}
-
-      {/* Personal pin (hidden in ghost mode) */}
-      {personalPin && !ghostMode && (
-        <div
-          className="absolute group/personal z-[5]"
-          style={{
-            left: `${personalPin.x}%`,
-            top: `${personalPin.y}%`,
-            transform: "translate(-50%, -50%)",
-          }}
-        >
-          <div className="absolute -inset-[3px] rounded-full border border-prism-accent-active/80 animate-story-ring" />
-          <div className="relative w-2.5 h-2.5 rounded-full bg-prism-accent-active shadow-[0_0_8px_rgba(74,158,255,0.7)]" />
-          <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 opacity-0 group-hover/personal:opacity-100 transition-opacity pointer-events-none z-20">
-            <div className="bg-prism-bg-primary/95 backdrop-blur-sm px-2 py-1 rounded text-[10px] text-prism-text-primary whitespace-nowrap border border-prism-border">
-              You ({homeCommunity?.region})
-            </div>
+      {/* Loading state */}
+      {!mapLoaded && (
+        <div className="absolute inset-0 bg-prism-map-ocean flex items-center justify-center z-20">
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-6 h-6 border-2 border-prism-accent-active/30 border-t-prism-accent-active rounded-full animate-spin" />
+            <span className="text-[10px] text-prism-text-dim">Loading map...</span>
           </div>
         </div>
       )}
-
-      {/* Mapbox token prompt */}
-      <div className="absolute bottom-3 left-3 bg-prism-bg-primary/80 backdrop-blur-sm px-3 py-2 rounded-lg z-10">
-        <p className="text-[11px] text-prism-text-dim">
-          {process.env.NEXT_PUBLIC_MAPBOX_TOKEN
-            ? "Mapbox connected"
-            : "Add NEXT_PUBLIC_MAPBOX_TOKEN for live map"}
-        </p>
-      </div>
     </div>
   );
 }
