@@ -14,7 +14,8 @@ export async function GET(request: Request) {
         .from("topics")
         .select("*")
         .neq("status", "archived")
-        .order("updated_at", { ascending: false });
+        .order("updated_at", { ascending: false })
+        .limit(50);
 
       if (!error && data) {
         return NextResponse.json({ topics: data });

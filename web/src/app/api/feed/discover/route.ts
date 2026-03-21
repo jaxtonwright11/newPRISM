@@ -78,7 +78,7 @@ export async function GET(request: Request) {
       // Prioritize viewpoint diversity — NOT engagement metrics
       let query = supabase
         .from("perspectives")
-        .select("*, community:communities!inner(*)")
+        .select("*, community:communities!inner(id, name, region, community_type, color_hex, verified)")
         .eq("verified", true)
         .order("created_at", { ascending: false })
         .limit(30);

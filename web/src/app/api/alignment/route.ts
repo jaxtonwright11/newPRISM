@@ -28,7 +28,7 @@ export async function GET(request: Request) {
         query = query.eq("topic_id", topicId);
       }
 
-      const { data, error } = await query;
+      const { data, error } = await query.limit(200);
 
       if (!error && data) {
         return NextResponse.json({ alignments: data });

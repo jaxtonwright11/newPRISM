@@ -32,10 +32,11 @@ export async function GET(request: Request) {
         if (topic) {
           const { data, error } = await supabase
             .from("perspectives")
-            .select("*, community:communities(*)")
+            .select("*, community:communities(id, name, region, community_type, color_hex, verified)")
             .eq("topic_id", topic.id)
             .eq("verified", true)
-            .order("created_at", { ascending: false });
+            .order("created_at", { ascending: false })
+            .limit(50);
 
           if (!error && data) {
             return NextResponse.json({ perspectives: data });
@@ -44,9 +45,10 @@ export async function GET(request: Request) {
       } else {
         const { data, error } = await supabase
           .from("perspectives")
-          .select("*, community:communities(*)")
+          .select("*, community:communities(id, name, region, community_type, color_hex, verified)")
           .eq("verified", true)
-          .order("created_at", { ascending: false });
+          .order("created_at", { ascending: false })
+          .limit(50);
 
         if (!error && data) {
           return NextResponse.json({ perspectives: data });

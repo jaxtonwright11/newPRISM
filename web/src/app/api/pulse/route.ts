@@ -17,7 +17,8 @@ export async function GET(request: Request) {
       const { data: recentPerspectives } = await supabase
         .from("perspectives")
         .select("topic_id, topic:topics(id, title, slug, perspective_count, community_count)")
-        .gte("created_at", oneDayAgo);
+        .gte("created_at", oneDayAgo)
+        .limit(500);
 
       let topTopic = null;
       if (recentPerspectives && recentPerspectives.length > 0) {

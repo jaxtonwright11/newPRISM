@@ -13,7 +13,8 @@ export async function GET(request: Request) {
       const { data, error } = await supabase
         .from("communities")
         .select("*")
-        .eq("active", true);
+        .eq("active", true)
+        .limit(200);
 
       if (!error && data) {
         return NextResponse.json({ communities: data });

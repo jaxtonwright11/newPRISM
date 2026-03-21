@@ -39,7 +39,7 @@ export async function GET(
         const [perspectivesResult, alignmentsResult] = await Promise.all([
           supabase
             .from("perspectives")
-            .select("*, community:communities(*)")
+            .select("*, community:communities(id, name, region, community_type, color_hex, verified)")
             .eq("topic_id", topic.id)
             .eq("verified", true)
             .order("created_at", { ascending: false }),
