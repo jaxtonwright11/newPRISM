@@ -1,0 +1,29 @@
+{
+  "name": "PRISM — Community Perspectives",
+  "subtitle": "See how communities experience the world",
+  "description": "PRISM is a geographic community perspective platform that helps you understand how different communities experience the same events.\n\nOpen the app and see a live map of the world lit up with community activity. Tap a topic, and instantly see how communities from completely different backgrounds are experiencing the same event.\n\nA perspective from Chicago's South Side sits next to one from Rural Appalachia, next to one from a Somali-Canadian neighborhood in Toronto. Same event. Completely different worlds.\n\nKey Features:\n• Live map with real-time community perspectives\n• Multi-community viewpoint comparison on the same topic\n• Personal social layer within community context\n• Discover feed that surfaces viewpoints you've never encountered\n• Ghost mode for private browsing\n• Community Pulse daily digest\n• Cross-community connections\n\nPRISM is not a news aggregator, a debate platform, or a political tool. It's a place where real people from real communities share real perspectives.",
+  "keywords": "perspectives, community, social, geographic, map, viewpoints, diversity, understanding, local, neighborhoods",
+  "category": "Social Networking",
+  "privacy_url": "https://prism-app.vercel.app/privacy",
+  "support_url": "https://prism-app.vercel.app/support",
+  "marketing_url": "https://prism-app.vercel.app",
+  "screenshots": {
+    "iphone_6_7": {
+      "required_size": "1290x2796",
+      "count": 5,
+      "descriptions": [
+        "Live map with glowing community pins",
+        "Perspective cards from different communities on the same topic",
+        "Discover feed showing diverse viewpoints",
+        "Community profile with connections",
+        "Cross-community connection flow"
+      ]
+    },
+    "iphone_5_5": {
+      "required_size": "1242x2208",
+      "count": 5
+    }
+  },
+  "age_rating": "12+",
+  "review_notes": "Test account: test@prism.app / TestPassword123"
+}

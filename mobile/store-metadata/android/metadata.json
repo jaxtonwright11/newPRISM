@@ -1,0 +1,20 @@
+{
+  "title": "PRISM — Community Perspectives",
+  "short_description": "See how different communities experience the same events. Geographic perspectives, visualized.",
+  "full_description": "PRISM is a geographic community perspective platform that helps you understand how different communities experience the same events.\n\nOpen the app and see a live map of the world lit up with community activity. Tap a topic, and instantly see how communities from completely different backgrounds are experiencing the same event.\n\nA perspective from Chicago's South Side sits next to one from Rural Appalachia, next to one from a Somali-Canadian neighborhood in Toronto. Same event. Completely different worlds.\n\nKey Features:\n★ Live map with real-time community perspectives\n★ Multi-community viewpoint comparison on the same topic\n★ Personal social layer within community context\n★ Discover feed that surfaces viewpoints you've never encountered\n★ Ghost mode for private browsing\n★ Community Pulse daily digest\n★ Cross-community connections\n\nPRISM is not a news aggregator, a debate platform, or a political tool. It's a place where real people from real communities share real perspectives.",
+  "category": "Social",
+  "content_rating": "Everyone 10+",
+  "privacy_policy_url": "https://prism-app.vercel.app/privacy",
+  "screenshots": {
+    "phone": {
+      "required": "1080x1920 minimum",
+      "count": "4-8",
+      "descriptions": [
+        "Live map with glowing community pins",
+        "Perspective cards — same topic, different communities",
+        "Discover feed with diverse viewpoints",
+        "Community connections"
+      ]
+    }
+  }
+}

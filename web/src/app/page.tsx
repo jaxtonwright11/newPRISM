@@ -14,6 +14,7 @@ import { CreatePostModal } from "@/components/create-post-modal";
 import { HeatPerspectivesPanel } from "@/components/heat-perspectives-panel";
 import { OnboardingAha } from "@/components/onboarding-aha";
 import { FeedSkeleton } from "@/components/skeleton";
+import { EarlyAccessBanner } from "@/components/early-access-banner";
 import type { HeatPoint } from "@/components/map-placeholder";
 
 const MapPlaceholder = dynamic(
@@ -265,7 +266,9 @@ export default function Home() {
   ];
 
   return (
-    <div className="flex h-screen overflow-hidden bg-prism-bg-primary">
+    <div className="flex flex-col h-screen overflow-hidden bg-prism-bg-primary">
+      <EarlyAccessBanner />
+      <div className="flex flex-1 min-h-0">
       {/* Desktop sidebar */}
       <TopicSidebar
         selectedTopic={selectedTopicSlug}
@@ -642,6 +645,7 @@ export default function Home() {
           onClose={() => setSelectedPerspectiveId(null)}
         />
       )}
+      </div>
     </div>
   );
 }
