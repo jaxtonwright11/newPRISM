@@ -17,16 +17,16 @@ export async function GET(request: Request) {
         .limit(200);
 
       if (!error && data) {
-        return NextResponse.json({ communities: data }, {
-          headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" },
-        });
+        const res = NextResponse.json({ communities: data });
+        res.headers.set("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
+        return res;
       }
     }
   } catch {
     // Supabase unavailable — fall through to seed data
   }
 
-  return NextResponse.json({ communities: SEED_COMMUNITIES }, {
-    headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" },
-  });
+  const res = NextResponse.json({ communities: SEED_COMMUNITIES });
+  res.headers.set("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
+  return res;
 }
