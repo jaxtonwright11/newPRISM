@@ -20,11 +20,13 @@ export async function GET(request: Request) {
       request.headers.get("authorization")?.replace("Bearer ", "") ?? ""
     );
     if (supabase) {
-      // Filter out posts from ghost mode users at DB level
+      // Filter out posts from ghost mode users and expired stories at DB level
+      const now = new Date().toISOString();
       const { data, error } = await supabase
         .from("posts")
         .select("*, users!inner(ghost_mode, username, display_name)")
         .eq("users.ghost_mode", false)
+        .or(`expires_at.is.null,expires_at.gt.${now}`)
         .order("created_at", { ascending: false })
         .limit(20);
 
