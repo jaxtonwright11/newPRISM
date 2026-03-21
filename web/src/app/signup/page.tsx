@@ -1,23 +1,42 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useAuth } from "@/lib/auth-context";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [step, setStep] = useState<"create" | "community">("create");
+  const router = useRouter();
+  const { signUp, signInWithGoogle } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // Supabase auth will be wired here when env vars are configured
-    setTimeout(() => {
+    setError(null);
+
+    const { error } = await signUp(email, password, username);
+
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+    } else {
       setLoading(false);
       setStep("community");
-    }, 1500);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError(null);
+    const { error } = await signInWithGoogle();
+    if (error) {
+      setError(error.message);
+    }
   };
 
   if (step === "community") {
@@ -54,7 +73,7 @@ export default function SignupPage() {
             <ul className="space-y-2">
               {[
                 "Browse all topics and perspectives",
-                "React to perspectives (👁 💡 🤝)",
+                "React to perspectives",
                 "Bookmark and share content",
                 "Discover how communities see events",
               ].map((item) => (
@@ -82,10 +101,10 @@ export default function SignupPage() {
           </div>
 
           <Link
-            href="/"
+            href="/onboarding"
             className="inline-flex px-6 py-2.5 rounded-lg bg-prism-accent-active text-white text-sm font-medium hover:bg-prism-accent-active/90 transition-colors"
           >
-            Start Exploring
+            Continue to Onboarding
           </Link>
 
           <p className="text-xs text-prism-text-dim mt-4">
@@ -111,6 +130,13 @@ export default function SignupPage() {
             See the world through every community&apos;s eyes
           </p>
         </div>
+
+        {/* Error message */}
+        {error && (
+          <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-400">
+            {error}
+          </div>
+        )}
 
         {/* Signup form */}
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -194,6 +220,7 @@ export default function SignupPage() {
         {/* Google OAuth */}
         <button
           type="button"
+          onClick={handleGoogleSignIn}
           className="w-full py-2.5 rounded-lg bg-prism-bg-secondary border border-prism-border text-sm text-prism-text-primary hover:bg-prism-bg-elevated transition-colors flex items-center justify-center gap-2"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -234,7 +261,7 @@ export default function SignupPage() {
             href="/"
             className="text-xs text-prism-text-dim hover:text-prism-text-secondary transition-colors"
           >
-            ← Back to exploring
+            &larr; Back to exploring
           </Link>
         </p>
       </div>

@@ -1,18 +1,39 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useAuth } from "@/lib/auth-context";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const { signIn, signInWithGoogle } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // Supabase auth will be wired here when env vars are configured
-    setTimeout(() => setLoading(false), 1500);
+    setError(null);
+
+    const { error } = await signIn(email, password);
+
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+    } else {
+      router.push("/");
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError(null);
+    const { error } = await signInWithGoogle();
+    if (error) {
+      setError(error.message);
+    }
   };
 
   return (
@@ -30,6 +51,13 @@ export default function LoginPage() {
             Sign in to continue exploring perspectives
           </p>
         </div>
+
+        {/* Error message */}
+        {error && (
+          <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-400">
+            {error}
+          </div>
+        )}
 
         {/* Login form */}
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -92,6 +120,7 @@ export default function LoginPage() {
         {/* Google OAuth */}
         <button
           type="button"
+          onClick={handleGoogleSignIn}
           className="w-full py-2.5 rounded-lg bg-prism-bg-secondary border border-prism-border text-sm text-prism-text-primary hover:bg-prism-bg-elevated transition-colors flex items-center justify-center gap-2"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -132,7 +161,7 @@ export default function LoginPage() {
             href="/"
             className="text-xs text-prism-text-dim hover:text-prism-text-secondary transition-colors"
           >
-            ← Back to exploring
+            &larr; Back to exploring
           </Link>
         </p>
       </div>

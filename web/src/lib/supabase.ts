@@ -17,5 +17,32 @@ export function getSupabase(): SupabaseClient | null {
   return _client;
 }
 
+/**
+ * Returns a Supabase client using the service role key for server-side
+ * operations that don't need user auth context (e.g. admin tasks).
+ */
+export function getSupabaseServer() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !serviceKey) return null;
+  return createClient(url, serviceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+}
+
+/**
+ * Returns a Supabase client scoped to a specific user's access token.
+ * Use this in API routes where you need to act on behalf of the user.
+ */
+export function getSupabaseWithAuth(accessToken: string) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !anonKey) return null;
+  return createClient(url, anonKey, {
+    global: { headers: { Authorization: `Bearer ${accessToken}` } },
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+}
+
 /** Convenience re-export — returns client or null. */
 export const supabase = typeof window === "undefined" ? null : getSupabase();
