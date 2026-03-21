@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { applyRateLimit } from "@/lib/api";
-import { getSupabaseServer } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 import { SEED_COMMUNITIES } from "@/lib/seed-data";
 
 export async function GET(request: Request) {
@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   if (rateLimitResponse) return rateLimitResponse;
 
   try {
-    const supabase = getSupabaseServer();
+    const supabase = getSupabase();
     if (supabase) {
       const { data, error } = await supabase
         .from("communities")

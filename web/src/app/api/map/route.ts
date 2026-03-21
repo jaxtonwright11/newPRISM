@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { applyRateLimit } from "@/lib/api";
-import { getSupabaseServer } from "@/lib/supabase";
+import { getSupabase, getSupabaseServer } from "@/lib/supabase";
 import { SEED_MAP_PINS } from "@/lib/seed-data";
 
 export async function GET(request: Request) {
@@ -8,9 +8,9 @@ export async function GET(request: Request) {
   if (rateLimitResponse) return rateLimitResponse;
 
   try {
-    const supabase = getSupabaseServer();
+    const supabase = getSupabase();
     if (supabase) {
-      // Community pins — always visible
+      // Community pins — always visible (public data, uses anon key + RLS)
       const { data: communities, error: commError } = await supabase
         .from("communities")
         .select("*")
@@ -33,15 +33,16 @@ export async function GET(request: Request) {
           }))
         : [];
 
-      // User post pins — EXCLUDE ghost mode users
-      const { data: posts } = await supabase
+      // User post pins — EXCLUDE ghost mode users (needs service-role for users join)
+      const serverClient = getSupabaseServer();
+      const { data: posts } = serverClient ? await serverClient
         .from("posts")
         .select("id, latitude, longitude, post_type, content, created_at, user_id, users!inner(ghost_mode)")
         .eq("users.ghost_mode", false)
         .not("latitude", "is", null)
         .not("longitude", "is", null)
         .order("created_at", { ascending: false })
-        .limit(100);
+        .limit(100) : { data: null };
 
       const postPins = posts
         ? posts.map((p) => ({

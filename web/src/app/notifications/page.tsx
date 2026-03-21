@@ -134,8 +134,16 @@ export default function NotificationsPage() {
 
       <div className="max-w-2xl mx-auto">
         {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="w-6 h-6 border-2 border-prism-accent-active/30 border-t-prism-accent-active rounded-full animate-spin" />
+          <div className="space-y-1 py-2">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="px-4 py-4 flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-prism-bg-elevated animate-shimmer shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 bg-prism-bg-elevated rounded-full w-3/4 animate-shimmer" />
+                  <div className="h-2.5 bg-prism-bg-elevated rounded-full w-1/2 animate-shimmer" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : notifications.length > 0 ? (
           <div className="divide-y divide-prism-border">

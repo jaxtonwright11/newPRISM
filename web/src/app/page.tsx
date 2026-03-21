@@ -23,7 +23,12 @@ const MapPlaceholder = dynamic(
     ssr: false,
     loading: () => (
       <div className="w-full h-full rounded-xl bg-prism-map-ocean border border-prism-border flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-prism-accent-active/30 border-t-prism-accent-active rounded-full animate-spin" />
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-full max-w-[200px] h-2 bg-prism-bg-elevated rounded-full overflow-hidden">
+            <div className="h-full bg-prism-accent-active/30 rounded-full animate-shimmer" style={{ width: "60%" }} />
+          </div>
+          <span className="text-[10px] text-prism-text-dim">Loading map</span>
+        </div>
       </div>
     ),
   }

@@ -184,8 +184,12 @@ function MessageThread({
         )}
 
         {loading ? (
-          <div className="flex justify-center py-8">
-            <div className="w-4 h-4 border-2 border-prism-text-dim/30 border-t-prism-text-dim rounded-full animate-spin" />
+          <div className="space-y-3 py-4 px-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className={`flex ${i % 2 === 0 ? "justify-end" : "justify-start"}`}>
+                <div className={`h-8 rounded-2xl bg-prism-bg-elevated animate-shimmer ${i % 2 === 0 ? "w-2/3" : "w-1/2"}`} />
+              </div>
+            ))}
           </div>
         ) : (
           messages.map((msg) => {
@@ -350,8 +354,16 @@ export default function MessagesPage() {
             </p>
 
             {loading ? (
-              <div className="flex justify-center py-8">
-                <div className="w-4 h-4 border-2 border-prism-text-dim/30 border-t-prism-text-dim rounded-full animate-spin" />
+              <div className="space-y-2">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center gap-3 p-2 rounded-lg">
+                    <div className="w-9 h-9 rounded-full bg-prism-bg-elevated animate-shimmer shrink-0" />
+                    <div className="flex-1 space-y-1.5">
+                      <div className="h-3 bg-prism-bg-elevated rounded-full w-2/3 animate-shimmer" />
+                      <div className="h-2.5 bg-prism-bg-elevated rounded-full w-1/3 animate-shimmer" />
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : connections.length > 0 ? (
               <div className="space-y-1">

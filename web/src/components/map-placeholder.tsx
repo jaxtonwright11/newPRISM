@@ -341,11 +341,11 @@ export function MapPlaceholder({
       if (lat == null || lng == null) return;
 
       const el = document.createElement("div");
-      el.style.width = "8px";
-      el.style.height = "8px";
+      el.style.width = "6px";
+      el.style.height = "6px";
       el.style.borderRadius = "50%";
       el.style.backgroundColor = "#4A9EFF";
-      el.style.boxShadow = "0 0 10px rgba(74,158,255,0.8)";
+      el.style.boxShadow = "0 1px 4px rgba(74,158,255,0.5)";
 
       if (post.post_type === "story") {
         el.style.border = "2px solid transparent";
@@ -373,13 +373,11 @@ export function MapPlaceholder({
       homeCommunity?.longitude != null
     ) {
       const el = document.createElement("div");
-      el.style.width = "12px";
-      el.style.height = "12px";
+      el.style.width = "6px";
+      el.style.height = "6px";
       el.style.borderRadius = "50%";
       el.style.backgroundColor = "#4A9EFF";
-      el.style.boxShadow = "0 0 12px rgba(74,158,255,0.7)";
-      el.style.border = "2px solid rgba(74,158,255,0.8)";
-      el.style.animation = "prism-pulse 3s ease-in-out infinite";
+      el.style.boxShadow = "0 1px 4px rgba(74,158,255,0.5)";
 
       const popup = new mapboxgl.Popup({
         closeButton: false,
@@ -462,9 +460,11 @@ export function MapPlaceholder({
       {/* Loading state */}
       {!mapLoaded && (
         <div className="absolute inset-0 bg-prism-map-ocean flex items-center justify-center z-20">
-          <div className="flex flex-col items-center gap-2">
-            <div className="w-6 h-6 border-2 border-prism-accent-active/30 border-t-prism-accent-active rounded-full animate-spin" />
-            <span className="text-[10px] text-prism-text-dim">Loading map...</span>
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-full max-w-[200px] h-2 bg-prism-bg-elevated rounded-full overflow-hidden">
+              <div className="h-full bg-prism-accent-active/30 rounded-full animate-shimmer" style={{ width: "60%" }} />
+            </div>
+            <span className="text-[10px] text-prism-text-dim">Loading map</span>
           </div>
         </div>
       )}

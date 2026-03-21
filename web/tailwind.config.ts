@@ -57,6 +57,7 @@ const config: Config = {
         "story-progress": "storyProgress 5s linear",
         "slide-in-right": "slideInRight 300ms ease-out",
         "slide-up": "slideUp 300ms ease-out",
+        shimmer: "shimmer 1.5s ease-in-out infinite",
       },
       keyframes: {
         "pulse-glow": {
@@ -82,6 +83,10 @@ const config: Config = {
         slideUp: {
           "0%": { opacity: "0", transform: "translateY(16px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        shimmer: {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(200%)" },
         },
       },
     },

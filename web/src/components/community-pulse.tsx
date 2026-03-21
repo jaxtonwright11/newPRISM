@@ -157,8 +157,14 @@ export function CommunityPulse({ isOpen, onClose }: CommunityPulseProps) {
 
         <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           {!pulse ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="w-4 h-4 border-2 border-prism-text-dim/30 border-t-prism-text-dim rounded-full animate-spin" />
+            <div className="space-y-4 py-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-prism-bg-elevated rounded-xl p-4 space-y-2">
+                  <div className="h-3 bg-prism-bg-secondary rounded-full w-1/3 animate-shimmer" />
+                  <div className="h-4 bg-prism-bg-secondary rounded-full w-2/3 animate-shimmer" />
+                  <div className="h-3 bg-prism-bg-secondary rounded-full w-1/2 animate-shimmer" />
+                </div>
+              ))}
             </div>
           ) : (
             <>

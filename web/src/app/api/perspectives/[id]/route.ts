@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { applyRateLimit, parseParams, slugSchema } from "@/lib/api";
-import { getSupabaseServer } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 import { SEED_PERSPECTIVES } from "@/lib/seed-data";
 import { z } from "zod";
 
@@ -21,7 +21,7 @@ export async function GET(
   const { id } = parsedParams.data;
 
   try {
-    const supabase = getSupabaseServer();
+    const supabase = getSupabase();
     if (supabase) {
       const { data, error } = await supabase
         .from("perspectives")

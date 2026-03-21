@@ -131,10 +131,20 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-prism-bg-primary flex items-center justify-center">
-        <div className="flex items-center gap-2 text-prism-text-dim text-sm">
-          <div className="w-4 h-4 border-2 border-prism-text-dim/30 border-t-prism-text-dim rounded-full animate-spin" />
-          Loading profile...
+      <div className="min-h-screen bg-prism-bg-primary p-6">
+        <div className="max-w-2xl mx-auto space-y-6">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-prism-bg-elevated animate-shimmer" />
+            <div className="space-y-2 flex-1">
+              <div className="h-4 bg-prism-bg-elevated rounded-full w-1/3 animate-shimmer" />
+              <div className="h-3 bg-prism-bg-elevated rounded-full w-1/4 animate-shimmer" />
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-16 bg-prism-bg-elevated rounded-xl animate-shimmer" />
+            ))}
+          </div>
         </div>
       </div>
     );

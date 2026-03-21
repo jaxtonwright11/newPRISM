@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { applyRateLimit } from "@/lib/api";
-import { getSupabaseServer } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 import { z } from "zod";
 
 const querySchema = z.object({
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
   }
   const topicId = parsed.data.topic_id ?? null;
 
-  const supabase = getSupabaseServer();
+  const supabase = getSupabase();
   if (!supabase) {
     return NextResponse.json({ heat_points: [] });
   }

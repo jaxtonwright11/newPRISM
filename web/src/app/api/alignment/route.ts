@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { SEED_ALIGNMENTS, getAlignmentsByTopic } from "@/lib/seed-data";
 import { applyRateLimit, parseQuery, slugSchema } from "@/lib/api";
-import { getSupabaseServer } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 import { z } from "zod";
 
 const alignmentQuerySchema = z
@@ -20,7 +20,7 @@ export async function GET(request: Request) {
   const topicId = parsedQuery.data.topic_id;
 
   try {
-    const supabase = getSupabaseServer();
+    const supabase = getSupabase();
     if (supabase) {
       let query = supabase.from("community_alignments").select("*");
 

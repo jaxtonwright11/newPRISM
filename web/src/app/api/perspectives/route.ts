@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { SEED_PERSPECTIVES, getPerspectivesByTopic } from "@/lib/seed-data";
 import { applyRateLimit, parseQuery, slugSchema } from "@/lib/api";
-import { getSupabaseServer } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 import { z } from "zod";
 
 const perspectivesQuerySchema = z
@@ -20,7 +20,7 @@ export async function GET(request: Request) {
   const topicSlug = parsedQuery.data.topic;
 
   try {
-    const supabase = getSupabaseServer();
+    const supabase = getSupabase();
     if (supabase) {
       if (topicSlug) {
         const { data: topic } = await supabase

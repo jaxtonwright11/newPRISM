@@ -27,10 +27,10 @@ CREATE INDEX IF NOT EXISTS idx_notifications_unread ON notifications (user_id, r
 
 -- Messages: conversation lookups
 CREATE INDEX IF NOT EXISTS idx_messages_sender ON direct_messages (sender_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_messages_recipient ON direct_messages (recipient_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_messages_connection ON direct_messages (connection_id, created_at DESC);
 
 -- Community alignments: topic lookups
 CREATE INDEX IF NOT EXISTS idx_alignments_topic_id ON community_alignments (topic_id);
 
--- User profiles: ghost mode filtering
-CREATE INDEX IF NOT EXISTS idx_users_ghost_mode ON user_profiles (ghost_mode) WHERE ghost_mode = false;
+-- Users: ghost mode filtering
+CREATE INDEX IF NOT EXISTS idx_users_ghost_mode ON users (ghost_mode) WHERE ghost_mode = false;

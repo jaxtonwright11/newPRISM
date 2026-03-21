@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { applyRateLimit, slugSchema } from "@/lib/api";
-import { getSupabaseServer } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 import {
   getTopicBySlug,
   getPerspectivesByTopic,
@@ -27,7 +27,7 @@ export async function GET(
   const { slug } = parsedParams.data;
 
   try {
-    const supabase = getSupabaseServer();
+    const supabase = getSupabase();
     if (supabase) {
       const { data: topic, error: topicError } = await supabase
         .from("topics")
