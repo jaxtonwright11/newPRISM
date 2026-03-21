@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { prismEvents } from "@/lib/posthog";
 import type { CommunityType, ReactionType } from "@shared/types";
 import { REACTION_LABELS } from "@/lib/constants";
 
@@ -53,6 +54,7 @@ export function PerspectiveCard({
         const hadPrevious = activeReaction !== null;
         setActiveReaction(type);
         if (!hadPrevious) setLocalReactionDelta((d) => d + 1);
+        prismEvents.perspectiveCardReaction(type, id);
       }
 
       if (!session?.access_token) return;

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { prismEvents } from "@/lib/posthog";
 import { VerificationGate } from "@/components/verification-gate";
 import type { PostType, RadiusMiles } from "@shared/types";
 
@@ -81,6 +82,7 @@ export function CreatePostModal({
       }
 
       const { data } = await res.json();
+      prismEvents.postCreated(postType, radiusMiles, false);
       onPostCreated?.(data);
       setContent("");
       setPostType("permanent");
