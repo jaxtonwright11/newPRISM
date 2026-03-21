@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { applyRateLimit, parseQuery, slugSchema } from "@/lib/api";
-import { getSupabaseServer, getSupabaseWithAuth } from "@/lib/supabase";
+import { getSupabase, getSupabaseWithAuth } from "@/lib/supabase";
 import { SEED_PERSPECTIVES } from "@/lib/seed-data";
 import { z } from "zod";
 
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
   try {
     // Try authenticated client first for user-specific radius filtering
     const token = request.headers.get("authorization")?.replace("Bearer ", "");
-    const supabase = token ? getSupabaseWithAuth(token) : getSupabaseServer();
+    const supabase = token ? getSupabaseWithAuth(token) : getSupabase();
 
     if (supabase) {
       // Get user location and radius for proximity filter

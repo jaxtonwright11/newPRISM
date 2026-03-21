@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { applyRateLimit } from "@/lib/api";
-import { getSupabaseServer, getSupabaseWithAuth } from "@/lib/supabase";
+import { getSupabase, getSupabaseWithAuth } from "@/lib/supabase";
 
 export async function GET(request: Request) {
   const rateLimitResponse = applyRateLimit(request, "pulse-daily");
@@ -8,7 +8,7 @@ export async function GET(request: Request) {
 
   try {
     const token = request.headers.get("authorization")?.replace("Bearer ", "");
-    const supabase = token ? getSupabaseWithAuth(token) : getSupabaseServer();
+    const supabase = token ? getSupabaseWithAuth(token) : getSupabase();
 
     if (supabase) {
       // 1. Top topic of the day — most perspectives added in last 24h
