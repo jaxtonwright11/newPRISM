@@ -12,6 +12,7 @@ import { CommunityPulse } from "@/components/community-pulse";
 import { MobileNav } from "@/components/mobile-nav";
 import { CreatePostModal } from "@/components/create-post-modal";
 import { HeatPerspectivesPanel } from "@/components/heat-perspectives-panel";
+import { OnboardingAha } from "@/components/onboarding-aha";
 import type { HeatPoint } from "@/components/map-placeholder";
 import { useGhostMode } from "@/lib/use-ghost-mode";
 import type { Post, CommunityType } from "@shared/types";
@@ -298,13 +299,31 @@ export default function Home() {
         )}
 
         {/* Map area — 40% viewport */}
-        <div className="h-[35vh] md:h-[40vh] p-2 md:p-3">
+        <div className="h-[35vh] md:h-[40vh] p-2 md:p-3 relative">
           <MapPlaceholder
             highlightedCommunityIds={topicCommunityIds}
             ghostMode={ghostMode}
             userPosts={userPosts}
             heatPoints={heatPoints}
             onHeatTap={handleHeatTap}
+          />
+          {/* Onboarding AHA overlay — shows on first visit, no signup gate */}
+          <OnboardingAha
+            activeTopic={
+              SEED_TOPICS.find((t) => t.status === "hot") ?? SEED_TOPICS[0]
+            }
+            perspectives={topicPerspectives.slice(0, 2).map((p) => ({
+              id: p.id,
+              quote: p.quote,
+              context: p.context,
+              community: {
+                name: p.community.name,
+                region: p.community.region,
+                community_type: p.community.community_type,
+                color_hex: p.community.color_hex,
+                verified: p.community.verified,
+              },
+            }))}
           />
         </div>
 
