@@ -31,9 +31,10 @@ export async function GET(request: Request) {
 
   const { data, error } = await supabase
     .from("notifications")
-    .select("*")
+    .select("id, type, title, body, read, metadata, created_at")
     .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(100);
 
   if (error) {
     return NextResponse.json({ error: "Failed to fetch notifications" }, { status: 500 });
@@ -133,8 +134,21 @@ export async function POST(request: Request) {
   const { recipient_id, type, title, body, metadata } = parsed.data;
 
   // Authorization: verify caller has a relationship with the recipient
-  // (accepted connection, or is notifying about a connection request)
-  if (type !== "connection_request") {
+  if (type === "connection_request") {
+    // Verify caller actually has a pending connection request to this recipient
+    const { data: pending } = await supabase
+      .from("community_connections")
+      .select("id")
+      .eq("status", "pending")
+      .eq("requester_id", user.id)
+      .eq("recipient_id", recipient_id)
+      .limit(1);
+
+    if (!pending || pending.length === 0) {
+      return NextResponse.json({ error: "No pending connection request to this user" }, { status: 403 });
+    }
+  } else {
+    // Other notification types require an accepted connection
     const { data: connection } = await supabase
       .from("community_connections")
       .select("id")

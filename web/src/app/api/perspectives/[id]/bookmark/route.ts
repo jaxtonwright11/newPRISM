@@ -60,7 +60,7 @@ export async function POST(
 
   if (error) {
     return NextResponse.json(
-      { error: "Failed to save bookmark", details: error.message },
+      { error: "Failed to save bookmark"},
       { status: 500 }
     );
   }
@@ -115,7 +115,7 @@ export async function DELETE(
 
   if (error) {
     return NextResponse.json(
-      { error: "Failed to remove bookmark", details: error.message },
+      { error: "Failed to remove bookmark"},
       { status: 500 }
     );
   }

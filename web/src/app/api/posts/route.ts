@@ -138,7 +138,7 @@ export async function POST(request: Request) {
 
   if (error) {
     return NextResponse.json(
-      { error: "Failed to create post", details: error.message },
+      { error: "Failed to create post" },
       { status: 500 }
     );
   }

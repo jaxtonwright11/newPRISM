@@ -74,7 +74,7 @@ export async function POST(
 
   if (error) {
     return NextResponse.json(
-      { error: "Failed to save reaction", details: error.message },
+      { error: "Failed to save reaction"},
       { status: 500 }
     );
   }
@@ -129,7 +129,7 @@ export async function DELETE(
 
   if (error) {
     return NextResponse.json(
-      { error: "Failed to remove reaction", details: error.message },
+      { error: "Failed to remove reaction"},
       { status: 500 }
     );
   }

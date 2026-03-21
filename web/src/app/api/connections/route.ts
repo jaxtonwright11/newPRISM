@@ -47,11 +47,12 @@ export async function GET(request: Request) {
       "*, requester:users!community_connections_requester_id_fkey(*), recipient:users!community_connections_recipient_id_fkey(*)"
     )
     .or(`requester_id.eq.${user.id},recipient_id.eq.${user.id}`)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(100);
 
   if (error) {
     return NextResponse.json(
-      { error: "Failed to fetch connections", details: error.message },
+      { error: "Failed to fetch connections" },
       { status: 500 }
     );
   }
@@ -124,7 +125,7 @@ export async function POST(request: Request) {
 
   if (error) {
     return NextResponse.json(
-      { error: "Failed to create connection", details: error.message },
+      { error: "Failed to create connection" },
       { status: 500 }
     );
   }

@@ -46,7 +46,7 @@ export async function POST(
 
   if (error) {
     return NextResponse.json(
-      { error: "Failed to like post", details: error.message },
+      { error: "Failed to like post"},
       { status: 500 }
     );
   }
@@ -89,7 +89,7 @@ export async function DELETE(
 
   if (error) {
     return NextResponse.json(
-      { error: "Failed to unlike post", details: error.message },
+      { error: "Failed to unlike post"},
       { status: 500 }
     );
   }
