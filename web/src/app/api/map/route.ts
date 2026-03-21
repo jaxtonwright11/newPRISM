@@ -10,29 +10,52 @@ export async function GET(request: Request) {
   try {
     const supabase = getSupabaseServer();
     if (supabase) {
-      const { data, error } = await supabase
+      // Community pins — always visible
+      const { data: communities, error: commError } = await supabase
         .from("communities")
         .select("*")
         .eq("active", true)
         .not("latitude", "is", null)
         .not("longitude", "is", null);
 
-      if (!error && data) {
-        const pins = data.map((c) => ({
-          id: `pin-${c.id}`,
-          type: "community" as const,
-          latitude: c.latitude as number,
-          longitude: c.longitude as number,
-          color_hex: c.color_hex,
-          community_type: c.community_type,
-          activity_level: (["high", "medium", "low"] as const)[
-            Math.floor(Math.abs(c.latitude as number) % 3)
-          ],
-          community: c,
-        }));
+      const communityPins = !commError && communities
+        ? communities.map((c) => ({
+            id: `pin-${c.id}`,
+            type: "community" as const,
+            latitude: c.latitude as number,
+            longitude: c.longitude as number,
+            color_hex: c.color_hex,
+            community_type: c.community_type,
+            activity_level: (["high", "medium", "low"] as const)[
+              Math.floor(Math.abs(c.latitude as number) % 3)
+            ],
+            community: c,
+          }))
+        : [];
 
-        return NextResponse.json({ pins });
-      }
+      // User post pins — EXCLUDE ghost mode users
+      const { data: posts } = await supabase
+        .from("posts")
+        .select("id, latitude, longitude, post_type, content, created_at, user_id, users!inner(ghost_mode)")
+        .eq("users.ghost_mode", false)
+        .not("latitude", "is", null)
+        .not("longitude", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(100);
+
+      const postPins = posts
+        ? posts.map((p) => ({
+            id: `post-${p.id}`,
+            type: (p.post_type === "story" ? "story" : "post") as "post" | "story",
+            latitude: p.latitude as number,
+            longitude: p.longitude as number,
+            color_hex: "#4A9EFF",
+            community_type: "civic" as const,
+            activity_level: "medium" as const,
+          }))
+        : [];
+
+      return NextResponse.json({ pins: [...communityPins, ...postPins] });
     }
   } catch {
     // Supabase unavailable — fall through to seed data

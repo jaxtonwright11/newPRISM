@@ -15,10 +15,33 @@ export async function GET(request: Request) {
   const rateLimitResponse = applyRateLimit(request, "posts-get");
   if (rateLimitResponse) return rateLimitResponse;
 
+  try {
+    const supabase = getSupabaseWithAuth(
+      request.headers.get("authorization")?.replace("Bearer ", "") ?? ""
+    );
+    if (supabase) {
+      // Filter out posts from ghost mode users at DB level
+      const { data, error } = await supabase
+        .from("posts")
+        .select("*, users!inner(ghost_mode, username, display_name)")
+        .eq("users.ghost_mode", false)
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      if (!error && data) {
+        return NextResponse.json({
+          data,
+          meta: { total: data.length, page: 1, limit: 20 },
+        });
+      }
+    }
+  } catch {
+    // fall through
+  }
+
   return NextResponse.json({
     data: [],
     meta: { total: 0, page: 1, limit: 20 },
-    message: "Posts endpoint ready — will connect to Supabase when configured.",
   });
 }
 
