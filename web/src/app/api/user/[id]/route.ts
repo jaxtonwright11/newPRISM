@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { applyRateLimit } from "@/lib/api";
 import { getSupabaseServer } from "@/lib/supabase";
+import { z } from "zod";
+
+const uuidSchema = z.string().uuid();
 
 export async function GET(
   request: NextRequest,
@@ -9,7 +12,12 @@ export async function GET(
   const rateLimited = applyRateLimit(request, "user-public");
   if (rateLimited) return rateLimited;
 
-  const { id } = await params;
+  const { id: rawId } = await params;
+  const parsed = uuidSchema.safeParse(rawId);
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
+  }
+  const id = parsed.data;
 
   const supabase = getSupabaseServer();
   if (!supabase) {

@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { applyRateLimit } from "@/lib/api";
+import { applyRateLimit, parseJsonBody } from "@/lib/api";
 import { getSupabaseWithAuth } from "@/lib/supabase";
+import { z } from "zod";
+
+const messageCreateSchema = z.object({
+  connection_id: z.string().uuid(),
+  content: z.string().trim().min(1).max(2000),
+});
 
 function extractToken(request: NextRequest): string | null {
   const auth = request.headers.get("authorization");
@@ -105,26 +111,10 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = (await request.json()) as {
-      connection_id?: string;
-      content?: string;
-    };
+    const parsed = await parseJsonBody(request, messageCreateSchema);
+    if (!parsed.success) return parsed.response;
 
-    const { connection_id, content } = body;
-
-    if (!connection_id || !content) {
-      return NextResponse.json(
-        { error: "connection_id and content are required" },
-        { status: 400 }
-      );
-    }
-
-    if (content.length > 2000) {
-      return NextResponse.json(
-        { error: "Message cannot exceed 2000 characters" },
-        { status: 400 }
-      );
-    }
+    const { connection_id, content } = parsed.data;
 
     // Verify the user is a participant in an accepted connection
     const { data: connection } = await supabase

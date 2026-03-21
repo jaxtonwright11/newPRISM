@@ -208,7 +208,7 @@ export function PerspectiveCard({
             <button
               key={type}
               onClick={() => handleReaction(type)}
-              className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-all duration-150 ${
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs transition-all duration-150 min-h-[36px] ${
                 activeReaction === type
                   ? "bg-prism-accent-active/20 text-prism-accent-active scale-105"
                   : "text-prism-text-dim hover:text-prism-text-secondary hover:bg-prism-bg-elevated"

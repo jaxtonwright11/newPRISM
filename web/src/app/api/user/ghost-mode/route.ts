@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { applyRateLimit } from "@/lib/api";
+import { applyRateLimit, parseJsonBody } from "@/lib/api";
 import { getSupabaseWithAuth } from "@/lib/supabase";
+import { z } from "zod";
+
+const ghostModeSchema = z.object({
+  ghost_mode: z.boolean(),
+});
 
 export async function PATCH(request: NextRequest) {
   const rateLimited = applyRateLimit(request, "ghost-mode");
@@ -25,29 +30,17 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  try {
-    const body = (await request.json()) as { ghost_mode?: boolean };
-    if (typeof body.ghost_mode !== "boolean") {
-      return NextResponse.json(
-        { error: "ghost_mode must be a boolean" },
-        { status: 400 }
-      );
-    }
+  const parsed = await parseJsonBody(request, ghostModeSchema);
+  if (!parsed.success) return parsed.response;
 
-    const { error } = await supabase
-      .from("users")
-      .update({ ghost_mode: body.ghost_mode, updated_at: new Date().toISOString() })
-      .eq("id", user.id);
+  const { error } = await supabase
+    .from("users")
+    .update({ ghost_mode: parsed.data.ghost_mode, updated_at: new Date().toISOString() })
+    .eq("id", user.id);
 
-    if (error) {
-      return NextResponse.json(
-        { error: "Failed to update ghost mode", detail: error.message },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({ ghost_mode: body.ghost_mode });
-  } catch {
-    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  if (error) {
+    return NextResponse.json({ error: "Failed to update ghost mode" }, { status: 500 });
   }
+
+  return NextResponse.json({ ghost_mode: parsed.data.ghost_mode });
 }

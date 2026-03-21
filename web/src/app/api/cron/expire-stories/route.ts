@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
 
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
 
     if (error) {
       return NextResponse.json(
-        { error: "Failed to expire stories", details: error.message },
+        { error: "Failed to expire stories" },
         { status: 500 }
       );
     }
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     });
   } catch (err) {
     return NextResponse.json(
-      { error: "Internal error", details: err instanceof Error ? err.message : "Unknown" },
+      { error: "Internal error" },
       { status: 500 }
     );
   }

@@ -1,13 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { applyRateLimit } from "@/lib/api";
 import { getSupabaseServer } from "@/lib/supabase";
+import { z } from "zod";
+
+const querySchema = z.object({
+  topic_id: z.string().uuid().optional(),
+});
 
 export async function GET(request: NextRequest) {
   const rateLimited = applyRateLimit(request, "map-heat");
   if (rateLimited) return rateLimited;
 
   const { searchParams } = new URL(request.url);
-  const topicId = searchParams.get("topic_id");
+  const parsed = querySchema.safeParse({ topic_id: searchParams.get("topic_id") ?? undefined });
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Invalid query parameters" }, { status: 400 });
+  }
+  const topicId = parsed.data.topic_id ?? null;
 
   const supabase = getSupabaseServer();
   if (!supabase) {

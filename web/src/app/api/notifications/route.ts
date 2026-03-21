@@ -1,52 +1,49 @@
 import { NextResponse } from "next/server";
 import { applyRateLimit, parseJsonBody } from "@/lib/api";
 import { getSupabaseWithAuth } from "@/lib/supabase";
-import { SEED_NOTIFICATIONS } from "@/lib/seed-data";
+
 import { z } from "zod";
 
 export async function GET(request: Request) {
   const rateLimitResponse = applyRateLimit(request, "notifications");
   if (rateLimitResponse) return rateLimitResponse;
 
-  try {
-    const authHeader = request.headers.get("authorization");
-    const token = authHeader?.replace("Bearer ", "");
+  const authHeader = request.headers.get("authorization");
+  const token = authHeader?.replace("Bearer ", "");
 
-    if (token) {
-      const supabase = getSupabaseWithAuth(token);
-      if (supabase) {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
+  if (!token) {
+    return NextResponse.json({ error: "Missing authorization" }, { status: 401 });
+  }
 
-        if (user) {
-          const { data, error } = await supabase
-            .from("notifications")
-            .select("*")
-            .eq("user_id", user.id)
-            .order("created_at", { ascending: false });
+  const supabase = getSupabaseWithAuth(token);
+  if (!supabase) {
+    return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
+  }
 
-          if (!error && data) {
-            return NextResponse.json({
-              data,
-              meta: {
-                total: data.length,
-                unread: data.filter((n: { read: boolean }) => !n.read).length,
-              },
-            });
-          }
-        }
-      }
-    }
-  } catch {
-    // Supabase unavailable — fall through to seed data
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+  }
+
+  const { data, error } = await supabase
+    .from("notifications")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    return NextResponse.json({ error: "Failed to fetch notifications" }, { status: 500 });
   }
 
   return NextResponse.json({
-    data: SEED_NOTIFICATIONS,
+    data: data ?? [],
     meta: {
-      total: SEED_NOTIFICATIONS.length,
-      unread: SEED_NOTIFICATIONS.filter((n) => !n.read).length,
+      total: (data ?? []).length,
+      unread: (data ?? []).filter((n: { read: boolean }) => !n.read).length,
     },
   });
 }
@@ -135,6 +132,21 @@ export async function POST(request: Request) {
 
   const { recipient_id, type, title, body, metadata } = parsed.data;
 
+  // Authorization: verify caller has a relationship with the recipient
+  // (accepted connection, or is notifying about a connection request)
+  if (type !== "connection_request") {
+    const { data: connection } = await supabase
+      .from("community_connections")
+      .select("id")
+      .eq("status", "accepted")
+      .or(`and(requester_id.eq.${user.id},recipient_id.eq.${recipient_id}),and(requester_id.eq.${recipient_id},recipient_id.eq.${user.id})`)
+      .limit(1);
+
+    if (!connection || connection.length === 0) {
+      return NextResponse.json({ error: "Not authorized to notify this user" }, { status: 403 });
+    }
+  }
+
   const { data, error } = await supabase
     .from("notifications")
     .insert({
@@ -150,7 +162,7 @@ export async function POST(request: Request) {
 
   if (error) {
     return NextResponse.json(
-      { error: "Failed to create notification", details: error.message },
+      { error: "Failed to create notification" },
       { status: 500 }
     );
   }
