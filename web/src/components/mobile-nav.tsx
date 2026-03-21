@@ -66,6 +66,7 @@ export function MobileNav() {
                 isActive ? "text-prism-accent-active" : "text-prism-text-dim"
               }`}
               aria-label={item.label}
+              aria-current={isActive ? "page" : undefined}
             >
               {item.isLive && !isActive ? (
                 <div className="relative">
