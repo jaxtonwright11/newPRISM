@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
       query = query.eq("topic_id", topicId);
     }
 
-    const { data: perspectives, error } = await query;
+    const { data: perspectives, error } = await query.limit(500);
 
     if (error || !perspectives) {
       return NextResponse.json({ heat_points: [] });

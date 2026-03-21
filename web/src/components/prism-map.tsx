@@ -28,13 +28,37 @@ export function PrismMap({ communities }: PrismMapProps) {
     async function initMap() {
       try {
         const mapboxgl = (await import("mapbox-gl")).default;
-        // CSS imported via link tag below instead of dynamic import
 
         mapboxgl.accessToken = token!;
 
         map = new mapboxgl.Map({
           container: mapContainer.current!,
-          style: "mapbox://styles/mapbox/dark-v11",
+          style: {
+            version: 8,
+            sources: {
+              "carto-dark": {
+                type: "raster",
+                tiles: [
+                  "https://a.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}@2x.png",
+                  "https://b.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}@2x.png",
+                ],
+                tileSize: 256,
+              },
+            },
+            layers: [
+              {
+                id: "background",
+                type: "background",
+                paint: { "background-color": "#0D1117" },
+              },
+              {
+                id: "carto-tiles",
+                type: "raster",
+                source: "carto-dark",
+                paint: { "raster-opacity": 0.6, "raster-saturation": -0.8 },
+              },
+            ],
+          },
           center: [-95.7, 39.8],
           zoom: 3.5,
           attributionControl: false,
@@ -50,29 +74,41 @@ export function PrismMap({ communities }: PrismMapProps) {
             if (community.latitude == null || community.longitude == null) continue;
             const color = COMMUNITY_COLORS[community.community_type] ?? "#666";
 
+            // Glowing dot — 10px, no border, per spec
             const el = document.createElement("div");
-            el.style.width = "16px";
-            el.style.height = "16px";
+            el.style.width = "10px";
+            el.style.height = "10px";
             el.style.borderRadius = "50%";
             el.style.backgroundColor = color;
-            el.style.boxShadow = `0 0 20px ${color}80, 0 0 40px ${color}40`;
+            el.style.boxShadow = `0 0 12px ${color}80, 0 0 24px ${color}40`;
             el.style.cursor = "pointer";
-            el.style.border = `2px solid ${color}`;
+            el.style.position = "relative";
 
+            // Pulse ring 1 (outer)
             const pulseOuter = document.createElement("div");
             pulseOuter.style.position = "absolute";
-            pulseOuter.style.inset = "-8px";
+            pulseOuter.style.inset = "-10px";
             pulseOuter.style.borderRadius = "50%";
-            pulseOuter.style.backgroundColor = color;
-            pulseOuter.style.opacity = "0.2";
-            pulseOuter.style.animation = "ping 2s cubic-bezier(0, 0, 0.2, 1) infinite";
+            pulseOuter.style.border = `1.5px solid ${color}`;
+            pulseOuter.style.opacity = "0.3";
+            pulseOuter.style.animation = "prism-pulse1 2s cubic-bezier(0, 0, 0.2, 1) infinite";
             el.appendChild(pulseOuter);
+
+            // Pulse ring 2 (inner)
+            const pulseInner = document.createElement("div");
+            pulseInner.style.position = "absolute";
+            pulseInner.style.inset = "-6px";
+            pulseInner.style.borderRadius = "50%";
+            pulseInner.style.border = `1px solid ${color}`;
+            pulseInner.style.opacity = "0.2";
+            pulseInner.style.animation = "prism-pulse2 2s cubic-bezier(0, 0, 0.2, 1) infinite 0.4s";
+            el.appendChild(pulseInner);
 
             const popup = new mapboxgl.Popup({ offset: 15, closeButton: false })
               .setHTML(
-                `<div style="padding:4px 8px;font-size:12px;color:#fff;background:#1a1a2e;border-radius:6px;">
+                `<div style="padding:6px 10px;font-size:12px;color:#F0F0F8;background:#1A1A26;border-radius:8px;border:1px solid #2A2A3A;">
                   <strong>${community.name}</strong><br/>
-                  <span style="opacity:0.7">${community.region}</span>
+                  <span style="opacity:0.6;color:#8888A8">${community.region}</span>
                 </div>`
               );
 
@@ -84,14 +120,12 @@ export function PrismMap({ communities }: PrismMapProps) {
         });
 
         map.on("error", (e) => {
-          console.error("Mapbox error:", e);
           const errObj = e.error as unknown as Record<string, unknown> | undefined;
           if (errObj?.status === 401 || errObj?.status === 403) {
             setMapError("Invalid Mapbox token — check NEXT_PUBLIC_MAPBOX_TOKEN");
           }
         });
       } catch (err) {
-        console.error("Failed to initialize Mapbox:", err);
         setMapError(`Map initialization failed: ${err instanceof Error ? err.message : String(err)}`);
       }
     }
@@ -106,13 +140,13 @@ export function PrismMap({ communities }: PrismMapProps) {
 
   if (mapError) {
     return (
-      <div className="absolute inset-0 bg-[#0a0a1a] flex items-center justify-center">
+      <div className="absolute inset-0 bg-prism-bg-primary flex items-center justify-center rounded-xl">
         <div className="text-center max-w-md px-4">
-          <div className="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center mx-auto mb-3">
-            <span className="text-amber-400 text-xl">!</span>
+          <div className="w-12 h-12 rounded-full bg-prism-accent-active/10 flex items-center justify-center mx-auto mb-3">
+            <span className="text-prism-accent-active text-xl">!</span>
           </div>
-          <p className="text-sm text-muted-foreground">{mapError}</p>
-          <p className="text-xs text-muted-foreground/60 mt-2">
+          <p className="text-sm text-prism-text-secondary">{mapError}</p>
+          <p className="text-xs text-prism-text-dim mt-2">
             The map placeholder will show community pins without Mapbox.
           </p>
         </div>
@@ -123,16 +157,21 @@ export function PrismMap({ communities }: PrismMapProps) {
   return (
     <>
       <style jsx global>{`
-        @keyframes ping {
+        @keyframes prism-pulse1 {
           75%, 100% { transform: scale(2.5); opacity: 0; }
         }
+        @keyframes prism-pulse2 {
+          75%, 100% { transform: scale(2); opacity: 0; }
+        }
       `}</style>
-      <div ref={mapContainer} className="absolute inset-0" />
+      <div ref={mapContainer} className="absolute inset-0 rounded-xl overflow-hidden" />
       {!mapLoaded && (
-        <div className="absolute inset-0 bg-[#0a0a1a] flex items-center justify-center">
-          <div className="flex items-center gap-2 text-muted-foreground text-sm">
-            <div className="w-4 h-4 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full animate-spin" />
-            Loading map...
+        <div className="absolute inset-0 bg-prism-bg-primary rounded-xl flex items-center justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-full max-w-[200px] h-2 bg-prism-bg-elevated rounded-full overflow-hidden">
+              <div className="h-full bg-prism-accent-active/30 rounded-full animate-shimmer" style={{ width: "60%" }} />
+            </div>
+            <span className="text-xs text-prism-text-dim">Loading map</span>
           </div>
         </div>
       )}
