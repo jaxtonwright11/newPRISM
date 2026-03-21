@@ -39,7 +39,9 @@ export async function GET(request: Request) {
             .limit(50);
 
           if (!error && data) {
-            return NextResponse.json({ perspectives: data });
+            const res = NextResponse.json({ perspectives: data });
+            res.headers.set("Cache-Control", "public, s-maxage=30, stale-while-revalidate=120");
+            return res;
           }
         }
       } else {
@@ -51,7 +53,9 @@ export async function GET(request: Request) {
           .limit(50);
 
         if (!error && data) {
-          return NextResponse.json({ perspectives: data });
+          const res = NextResponse.json({ perspectives: data });
+          res.headers.set("Cache-Control", "public, s-maxage=30, stale-while-revalidate=120");
+          return res;
         }
       }
     }

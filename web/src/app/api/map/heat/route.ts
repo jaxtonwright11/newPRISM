@@ -88,7 +88,9 @@ export async function GET(request: NextRequest) {
       }))
       .sort((a, b) => b.community_count - a.community_count);
 
-    return NextResponse.json({ heat_points });
+    const res = NextResponse.json({ heat_points });
+    res.headers.set("Cache-Control", "public, s-maxage=30, stale-while-revalidate=120");
+    return res;
   } catch {
     return NextResponse.json({ heat_points: [] });
   }
