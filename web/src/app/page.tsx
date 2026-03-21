@@ -267,6 +267,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-prism-bg-primary">
+      <h1 className="sr-only">PRISM — Community Perspectives</h1>
       <EarlyAccessBanner />
       <div className="flex flex-1 min-h-0">
       {/* Desktop sidebar */}
