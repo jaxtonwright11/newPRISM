@@ -82,6 +82,8 @@ export function LiveScreen() {
               ]}
             />
           ))}
+          {/* Gradient fade at bottom of map */}
+          <View style={styles.mapGradient} />
           {/* Topic overlay */}
           <View style={styles.topicOverlay}>
             <View style={styles.liveBadge}>
@@ -225,6 +227,15 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 0 },
     elevation: 4,
+  },
+  mapGradient: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 40,
+    backgroundColor: colors.bg.primary,
+    opacity: 0.7,
   },
   topicOverlay: {
     position: "absolute",
