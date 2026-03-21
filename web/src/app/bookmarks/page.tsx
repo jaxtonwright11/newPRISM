@@ -91,7 +91,7 @@ export default function BookmarksPage() {
                   href={`/topic/${topic.slug}`}
                   className="block bg-prism-bg-secondary rounded-xl border border-prism-border p-4 hover:bg-prism-bg-elevated transition-colors"
                 >
-                  <h3 className="text-sm font-medium text-prism-text-primary mb-1">{topic.title}</h3>
+                  <h2 className="text-sm font-medium text-prism-text-primary mb-1">{topic.title}</h2>
                   {topic.summary && (
                     <p className="text-xs text-prism-text-secondary line-clamp-2 mb-2">{topic.summary}</p>
                   )}

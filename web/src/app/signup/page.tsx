@@ -56,9 +56,9 @@ export default function SignupPage() {
               />
             </svg>
           </div>
-          <h2 className="font-display text-xl font-bold text-prism-text-primary mb-2">
+          <h1 className="font-display text-xl font-bold text-prism-text-primary mb-2">
             Account Created
-          </h2>
+          </h1>
           <p className="text-sm text-prism-text-secondary mb-6">
             You&apos;re at Verification Level 1. Start exploring
             perspectives from communities across the country.

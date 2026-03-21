@@ -12,7 +12,7 @@ export async function GET(request: Request) {
     if (supabase) {
       const { data, error } = await supabase
         .from("communities")
-        .select("*")
+        .select("id, name, region, latitude, longitude, color_hex, community_type, verified, active")
         .eq("active", true)
         .limit(200);
 

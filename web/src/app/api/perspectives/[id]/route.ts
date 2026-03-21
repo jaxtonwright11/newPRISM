@@ -25,7 +25,7 @@ export async function GET(
     if (supabase) {
       const { data, error } = await supabase
         .from("perspectives")
-        .select("*, community:communities(*)")
+        .select("*, community:communities(id, name, region, community_type, color_hex, verified)")
         .eq("id", id)
         .single();
 

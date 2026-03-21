@@ -42,11 +42,13 @@ export async function GET(
             .select("*, community:communities(id, name, region, community_type, color_hex, verified)")
             .eq("topic_id", topic.id)
             .eq("verified", true)
-            .order("created_at", { ascending: false }),
+            .order("created_at", { ascending: false })
+            .limit(100),
           supabase
             .from("community_alignments")
             .select("*")
-            .eq("topic_id", topic.id),
+            .eq("topic_id", topic.id)
+            .limit(200),
         ]);
 
         const perspectives =

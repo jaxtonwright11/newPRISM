@@ -16,7 +16,8 @@ export async function GET(request: Request) {
         .select("id, name, region, latitude, longitude, color_hex, community_type")
         .eq("active", true)
         .not("latitude", "is", null)
-        .not("longitude", "is", null);
+        .not("longitude", "is", null)
+        .limit(500);
 
       const communityPins = !commError && communities
         ? communities.map((c) => ({
