@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { SEED_PERSPECTIVES, getPerspectivesByTopic } from "@/lib/seed-data";
+
 import { applyRateLimit, parseQuery, slugSchema } from "@/lib/api";
 import { getSupabase } from "@/lib/supabase";
 import { z } from "zod";
@@ -63,10 +63,5 @@ export async function GET(request: Request) {
     // Supabase unavailable — fall through to seed data
   }
 
-  if (topicSlug) {
-    const perspectives = getPerspectivesByTopic(topicSlug);
-    return NextResponse.json({ perspectives });
-  }
-
-  return NextResponse.json({ perspectives: SEED_PERSPECTIVES });
+  return NextResponse.json({ perspectives: [] });
 }

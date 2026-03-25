@@ -14,11 +14,11 @@ interface PerspectiveDetailProps {
     verified: boolean;
   };
   quote: string;
-  context: string;
-  category_tag: string;
+  context: string | null;
+  category_tag: string | null;
   reaction_count: number;
   bookmark_count: number;
-  created_at: string;
+  created_at?: string;
   onClose: () => void;
 }
 
@@ -39,11 +39,13 @@ export function PerspectiveDetail({
     setActiveReaction(activeReaction === type ? null : type);
   };
 
-  const formattedDate = new Date(created_at).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  const formattedDate = created_at
+    ? new Date(created_at).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    : "";
 
   return (
     <div

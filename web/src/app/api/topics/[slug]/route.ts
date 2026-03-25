@@ -1,11 +1,7 @@
 import { NextResponse } from "next/server";
 import { applyRateLimit, slugSchema } from "@/lib/api";
 import { getSupabase } from "@/lib/supabase";
-import {
-  getTopicBySlug,
-  getPerspectivesByTopic,
-  getAlignmentsByTopic,
-} from "@/lib/seed-data";
+
 import { z } from "zod";
 
 const topicParamsSchema = z.object({
@@ -69,14 +65,5 @@ export async function GET(
     // Supabase unavailable — fall through to seed data
   }
 
-  const topic = getTopicBySlug(slug);
-
-  if (!topic) {
-    return NextResponse.json({ error: "Topic not found" }, { status: 404 });
-  }
-
-  const perspectives = getPerspectivesByTopic(slug);
-  const alignments = getAlignmentsByTopic(topic.id);
-
-  return NextResponse.json({ topic, perspectives, alignments });
+  return NextResponse.json({ error: "Topic not found" }, { status: 404 });
 }

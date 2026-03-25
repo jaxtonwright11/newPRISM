@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { applyRateLimit, parseParams, slugSchema } from "@/lib/api";
 import { getSupabase } from "@/lib/supabase";
-import { SEED_PERSPECTIVES } from "@/lib/seed-data";
+
 import { z } from "zod";
 
 const perspectiveIdParamsSchema = z.object({
@@ -37,11 +37,5 @@ export async function GET(
     // Supabase unavailable — fall through to seed data
   }
 
-  const perspective = SEED_PERSPECTIVES.find((p) => p.id === id);
-
-  if (!perspective) {
-    return NextResponse.json({ error: "Perspective not found" }, { status: 404 });
-  }
-
-  return NextResponse.json({ data: perspective });
+  return NextResponse.json({ error: "Perspective not found" }, { status: 404 });
 }

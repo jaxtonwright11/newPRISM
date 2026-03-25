@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { VerificationGate } from "@/components/verification-gate";
-import { SEED_USER, SEED_COMMUNITIES, SEED_BOOKMARKED_PERSPECTIVE_IDS, SEED_BOOKMARKED_TOPIC_IDS } from "@/lib/seed-data";
 import { COMMUNITY_COLORS } from "@/lib/constants";
 import type { CommunityType } from "@shared/types";
 
@@ -86,34 +85,11 @@ export default function ProfilePage() {
             return;
           }
         } catch {
-          // fall through to seed data
+          // API unavailable
         }
       }
-      // Fallback to seed data
-      setProfile({
-        id: SEED_USER.id,
-        username: SEED_USER.username,
-        display_name: SEED_USER.display_name,
-        avatar_url: SEED_USER.avatar_url,
-        verification_level: SEED_USER.verification_level,
-        ghost_mode: SEED_USER.ghost_mode,
-        home_community: SEED_COMMUNITIES.find(c => c.id === SEED_USER.home_community_id)
-          ? {
-              id: SEED_COMMUNITIES[0].id,
-              name: SEED_COMMUNITIES[0].name,
-              region: SEED_COMMUNITIES[0].region,
-              community_type: SEED_COMMUNITIES[0].community_type,
-              color_hex: SEED_COMMUNITIES[0].color_hex,
-              verified: SEED_COMMUNITIES[0].verified,
-            }
-          : null,
-        profile: {
-          perspectives_read: SEED_USER.perspectives_read,
-          communities_engaged: SEED_USER.communities_engaged,
-          connections_made: SEED_USER.connections_made,
-        },
-        recent_posts: [],
-      });
+      // No session or API failed — show empty profile
+      setProfile(null);
       setLoading(false);
     }
     fetchProfile();
@@ -253,7 +229,7 @@ export default function ProfilePage() {
                 </svg>
               </div>
               <div>
-                <span className="text-sm font-medium text-prism-text-primary">{SEED_BOOKMARKED_PERSPECTIVE_IDS.length + SEED_BOOKMARKED_TOPIC_IDS.length} Saved</span>
+                <span className="text-sm font-medium text-prism-text-primary">Saved</span>
                 <p className="text-[10px] text-prism-text-dim">Bookmarks</p>
               </div>
             </div>

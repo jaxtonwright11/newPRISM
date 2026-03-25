@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Playfair_Display, Inter, JetBrains_Mono } from "next/font/google";
+import { Playfair_Display, DM_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
@@ -13,7 +13,7 @@ const playfairDisplay = Playfair_Display({
   display: "swap",
 });
 
-const inter = Inter({
+const dmSans = DM_Sans({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
   variable: "--font-body",
@@ -30,7 +30,7 @@ const jetbrainsMono = JetBrains_Mono({
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://prism-app.vercel.app";
 
 export const viewport: Viewport = {
-  themeColor: "#0A0A0F",
+  themeColor: "#8B1A2E",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -83,7 +83,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`dark ${playfairDisplay.variable} ${inter.variable} ${jetbrainsMono.variable}`}
+      className={`dark ${playfairDisplay.variable} ${dmSans.variable} ${jetbrainsMono.variable}`}
     >
       <head>
         <link rel="apple-touch-icon" sizes="180x180" href="/api/icon?size=180" />

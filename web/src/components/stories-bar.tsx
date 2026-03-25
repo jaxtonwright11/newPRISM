@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type { CommunityType } from "@shared/types";
+import type { CommunityType, StoryGroup } from "@shared/types";
 import { COMMUNITY_COLORS } from "@/lib/constants";
-import type { StoryGroup } from "@/lib/seed-data";
 
 interface StoriesBarProps {
   storyGroups: StoryGroup[];
@@ -55,8 +54,8 @@ export function StoriesBar({ storyGroups, onStorySelect }: StoriesBarProps) {
               }`}
               style={{
                 background: group.hasUnread
-                  ? "linear-gradient(135deg, #FF6B8A, #F59E0B)"
-                  : "#2A2A3A",
+                  ? "linear-gradient(135deg, #8B1A2E, #C23B5A)"
+                  : "#2A1219",
               }}
             >
               <div className="w-full h-full rounded-full bg-prism-bg-primary p-[2px]">

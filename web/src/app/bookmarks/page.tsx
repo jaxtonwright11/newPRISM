@@ -1,28 +1,103 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useAuth } from "@/lib/auth-context";
 import { PerspectiveCard } from "@/components/perspective-card";
 import { PerspectiveDetail } from "@/components/perspective-detail";
-import { getBookmarkedPerspectives, getBookmarkedTopics, SEED_PERSPECTIVES } from "@/lib/seed-data";
+import type { CommunityType } from "@shared/types";
 
 type BookmarkTab = "perspectives" | "topics";
+
+interface BookmarkedPerspective {
+  id: string;
+  community: {
+    name: string;
+    region: string;
+    community_type: CommunityType;
+    color_hex: string;
+    verified: boolean;
+  };
+  quote: string;
+  context: string | null;
+  category_tag: string | null;
+  reaction_count: number;
+  bookmark_count: number;
+  created_at?: string;
+}
+
+interface BookmarkedTopic {
+  id: string;
+  title: string;
+  slug: string;
+  summary: string | null;
+  perspective_count: number;
+  community_count: number;
+}
 
 export default function BookmarksPage() {
   const [activeTab, setActiveTab] = useState<BookmarkTab>("perspectives");
   const [selectedPerspectiveId, setSelectedPerspectiveId] = useState<string | null>(null);
+  const { session } = useAuth();
 
-  const bookmarkedPerspectives = getBookmarkedPerspectives();
-  const bookmarkedTopics = getBookmarkedTopics();
+  const [bookmarkedPerspectives, setBookmarkedPerspectives] = useState<BookmarkedPerspective[]>([]);
+  const [bookmarkedTopics, setBookmarkedTopics] = useState<BookmarkedTopic[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchBookmarks() {
+      try {
+        const headers: Record<string, string> = {};
+        if (session?.access_token) {
+          headers.Authorization = `Bearer ${session.access_token}`;
+        }
+        const [perspRes, topicRes] = await Promise.all([
+          fetch("/api/bookmarks/perspectives", { headers }),
+          fetch("/api/bookmarks/topics", { headers }),
+        ]);
+        const perspData = await perspRes.json();
+        const topicData = await topicRes.json();
+        setBookmarkedPerspectives(perspData.perspectives ?? []);
+        setBookmarkedTopics(topicData.topics ?? []);
+      } catch {
+        // API unavailable — show empty
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchBookmarks();
+  }, [session?.access_token]);
 
   const selectedPerspective = selectedPerspectiveId
-    ? SEED_PERSPECTIVES.find((p) => p.id === selectedPerspectiveId)
+    ? bookmarkedPerspectives.find((p) => p.id === selectedPerspectiveId)
     : null;
 
   const tabs: { id: BookmarkTab; label: string; count: number }[] = [
     { id: "perspectives", label: "Perspectives", count: bookmarkedPerspectives.length },
     { id: "topics", label: "Topics", count: bookmarkedTopics.length },
   ];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-prism-bg-primary">
+        <header className="border-b border-prism-border bg-prism-bg-secondary/95 backdrop-blur-md sticky top-0 z-30">
+          <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
+            <Link href="/" className="text-prism-text-dim hover:text-prism-text-primary transition-colors">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+              </svg>
+            </Link>
+            <h1 className="text-base font-semibold text-prism-text-primary">Saved</h1>
+          </div>
+        </header>
+        <div className="max-w-2xl mx-auto px-4 py-6 space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-24 bg-prism-bg-elevated rounded-xl animate-shimmer" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-prism-bg-primary">

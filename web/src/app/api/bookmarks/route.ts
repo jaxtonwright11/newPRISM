@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { applyRateLimit, parseQuery } from "@/lib/api";
 import { getSupabaseWithAuth } from "@/lib/supabase";
-import { getBookmarkedPerspectives, getBookmarkedTopics } from "@/lib/seed-data";
+
 import { z } from "zod";
 
 const bookmarksQuerySchema = z
@@ -73,11 +73,5 @@ export async function GET(request: Request) {
     // Supabase unavailable — fall through to seed data
   }
 
-  if (type === "topics") {
-    const topics = getBookmarkedTopics();
-    return NextResponse.json({ data: topics, meta: { total: topics.length } });
-  }
-
-  const perspectives = getBookmarkedPerspectives();
-  return NextResponse.json({ data: perspectives, meta: { total: perspectives.length } });
+  return NextResponse.json({ data: [], meta: { total: 0 } });
 }

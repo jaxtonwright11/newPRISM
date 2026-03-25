@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth-context";
 import { prismEvents } from "@/lib/posthog";
 import type { CommunityType, ReactionType } from "@shared/types";
@@ -16,8 +17,8 @@ interface PerspectiveCardProps {
     verified: boolean;
   };
   quote: string;
-  context: string;
-  category_tag: string;
+  context: string | null;
+  category_tag: string | null;
   reaction_count: number;
   bookmark_count?: number;
   isNew?: boolean;
@@ -119,14 +120,16 @@ export function PerspectiveCard({
   }, [bookmarked, id, session?.access_token]);
 
   return (
-    <div
-      className="rounded-[10px] border border-prism-border bg-prism-bg-secondary p-5 opacity-0 animate-fade-in cursor-pointer hover:bg-prism-bg-elevated/50 transition-all duration-200 group relative hover:shadow-lg hover:shadow-black/20 hover:border-prism-border/80 hover:-translate-y-0.5"
+    <motion.div
+      className="rounded-[10px] border border-prism-border bg-prism-bg-secondary p-5 cursor-pointer hover:bg-prism-bg-elevated/50 transition-colors duration-200 group relative hover:shadow-lg hover:shadow-black/20 hover:border-prism-border/80"
       style={{
         borderLeftWidth: "3px",
         borderLeftColor: community.color_hex,
-        animationDelay: `${animationDelay}ms`,
-        animationFillMode: "forwards",
       }}
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: animationDelay / 1000, ease: "easeOut" }}
+      whileHover={{ y: -2 }}
       onClick={() => onSelect?.(id)}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -265,6 +268,6 @@ export function PerspectiveCard({
           </button>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

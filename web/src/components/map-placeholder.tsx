@@ -4,8 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { COMMUNITY_COLORS } from "@/lib/constants";
-import { SEED_COMMUNITIES, SEED_USER } from "@/lib/seed-data";
-import type { CommunityType, Post } from "@shared/types";
+import type { Community, CommunityType, Post } from "@shared/types";
 
 export interface HeatPoint {
   latitude: number;
@@ -17,9 +16,11 @@ export interface HeatPoint {
 }
 
 interface MapPlaceholderProps {
+  communities?: Community[];
   highlightedCommunityIds?: string[];
   ghostMode?: boolean;
   showPersonalPin?: boolean;
+  showPersonalPinCommunity?: Community | null;
   userPosts?: Post[];
   heatPoints?: HeatPoint[];
   onHeatTap?: (point: HeatPoint) => void;
@@ -42,7 +43,7 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
     {
       id: "background",
       type: "background",
-      paint: { "background-color": "#0D1117" },
+      paint: { "background-color": "#0D0809" },
     },
     // Land fill
     {
@@ -50,7 +51,7 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
       type: "fill",
       source: "mapbox-streets",
       "source-layer": "land",
-      paint: { "fill-color": "#161B22" },
+      paint: { "fill-color": "#150D10" },
     },
     // Water
     {
@@ -58,7 +59,7 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
       type: "fill",
       source: "mapbox-streets",
       "source-layer": "water",
-      paint: { "fill-color": "#0D1117" },
+      paint: { "fill-color": "#0D0809" },
     },
     // Admin boundaries — barely visible
     {
@@ -192,7 +193,7 @@ function createHeatElement(
   label.style.transform = "translate(-50%, -50%)";
   label.style.fontSize = "10px";
   label.style.fontWeight = "700";
-  label.style.color = "#F0F0F8";
+  label.style.color = "#F5F0E8";
   label.style.textShadow = "0 1px 4px rgba(0,0,0,0.8)";
   label.style.zIndex = "5";
   label.textContent = `${communityCount}`;
@@ -202,9 +203,11 @@ function createHeatElement(
 }
 
 export function MapPlaceholder({
+  communities: communitiesProp = [],
   highlightedCommunityIds,
   ghostMode = false,
   showPersonalPin = true,
+  showPersonalPinCommunity = null,
   userPosts = [],
   heatPoints = [],
   onHeatTap,
@@ -270,7 +273,7 @@ export function MapPlaceholder({
     if (!mapRef.current || !mapLoaded) return;
     clearMarkers();
 
-    const communities = SEED_COMMUNITIES.filter(
+    const communities = communitiesProp.filter(
       (c) => c.latitude != null && c.longitude != null
     );
 
@@ -302,7 +305,7 @@ export function MapPlaceholder({
         offset: 12,
         className: "prism-popup",
       }).setHTML(
-        `<div style="background:#0A0A0F;border:1px solid #2A2A3A;border-radius:6px;padding:4px 8px;font-size:10px;color:#F0F0F8;font-family:Inter,sans-serif;">${c.name}</div>`
+        `<div style="background:#0F0A0B;border:1px solid #2A1219;border-radius:6px;padding:4px 8px;font-size:10px;color:#F5F0E8;font-family:Inter,sans-serif;">${c.name}</div>`
       );
 
       el.addEventListener("mouseenter", () => {
@@ -332,9 +335,7 @@ export function MapPlaceholder({
     });
 
     // User post pins
-    const homeCommunity = SEED_COMMUNITIES.find(
-      (c) => c.id === SEED_USER.home_community_id
-    );
+    const homeCommunity = showPersonalPinCommunity ?? null;
     userPosts.forEach((post) => {
       const lat = post.latitude ?? homeCommunity?.latitude;
       const lng = post.longitude ?? homeCommunity?.longitude;
@@ -350,7 +351,7 @@ export function MapPlaceholder({
       if (post.post_type === "story") {
         el.style.border = "2px solid transparent";
         el.style.backgroundImage =
-          "linear-gradient(#4A9EFF, #4A9EFF), linear-gradient(135deg, #FF6B8A, #F59E0B)";
+          "linear-gradient(#4A9EFF, #4A9EFF), linear-gradient(135deg, #8B1A2E, #C23B5A)";
         el.style.backgroundOrigin = "border-box";
         el.style.backgroundClip = "padding-box, border-box";
       }
@@ -385,7 +386,7 @@ export function MapPlaceholder({
         offset: 10,
         className: "prism-popup",
       }).setHTML(
-        `<div style="background:#0A0A0F;border:1px solid #2A2A3A;border-radius:6px;padding:4px 8px;font-size:10px;color:#F0F0F8;font-family:Inter,sans-serif;">You (${homeCommunity.region})</div>`
+        `<div style="background:#0F0A0B;border:1px solid #2A1219;border-radius:6px;padding:4px 8px;font-size:10px;color:#F5F0E8;font-family:Inter,sans-serif;">You (${homeCommunity.region})</div>`
       );
 
       el.addEventListener("mouseenter", () => {
@@ -405,9 +406,11 @@ export function MapPlaceholder({
     }
   }, [
     mapLoaded,
+    communitiesProp,
     highlightedCommunityIds,
     ghostMode,
     showPersonalPin,
+    showPersonalPinCommunity,
     userPosts,
     heatPoints,
     onHeatTap,
@@ -452,7 +455,7 @@ export function MapPlaceholder({
       {/* Community count */}
       <div className="absolute top-3 left-3 bg-prism-bg-primary/80 backdrop-blur-sm px-2.5 py-1 rounded-full z-10">
         <span className="text-[10px] font-mono text-prism-text-secondary">
-          {SEED_COMMUNITIES.filter((c) => c.latitude != null).length} communities
+          {communitiesProp.filter((c) => c.latitude != null).length} communities
           active
         </span>
       </div>

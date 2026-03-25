@@ -3,20 +3,65 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { MapPlaceholder } from "@/components/map-placeholder";
-import { SEED_PERSPECTIVES, SEED_TOPICS } from "@/lib/seed-data";
 import { COMMUNITY_COLORS } from "@/lib/constants";
-import type { CommunityType } from "@shared/types";
+import type { Community, CommunityType, Topic } from "@shared/types";
 
 type OnboardingStep = "map" | "perspectives" | "signup";
 
+interface OnboardingPerspective {
+  id: string;
+  community: {
+    name: string;
+    region: string;
+    community_type: CommunityType;
+    color_hex: string;
+    verified: boolean;
+  };
+  quote: string;
+}
+
 export default function OnboardingPage() {
   const [step, setStep] = useState<OnboardingStep>("map");
-  const [activeTopic] = useState(SEED_TOPICS.find((t) => t.status === "hot"));
+  const [activeTopic, setActiveTopic] = useState<Topic | null>(null);
+  const [topicPerspectives, setTopicPerspectives] = useState<OnboardingPerspective[]>([]);
+  const [communities, setCommunities] = useState<Community[]>([]);
   const [showPerspectives, setShowPerspectives] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const topicPerspectives = SEED_PERSPECTIVES.filter(
-    (p) => p.topic_slug === activeTopic?.slug
-  ).slice(0, 2);
+  useEffect(() => {
+    async function fetchOnboardingData() {
+      try {
+        const [topicsRes, communitiesRes] = await Promise.all([
+          fetch("/api/topics"),
+          fetch("/api/communities"),
+        ]);
+        const topicsData = await topicsRes.json();
+        const communitiesData = await communitiesRes.json();
+
+        const fetchedTopics: Topic[] = topicsData.topics ?? [];
+        const fetchedCommunities: Community[] = communitiesData.communities ?? [];
+        setCommunities(fetchedCommunities);
+
+        const hotTopic = fetchedTopics.find((t) => t.status === "hot") ?? fetchedTopics[0] ?? null;
+        setActiveTopic(hotTopic);
+
+        if (hotTopic) {
+          try {
+            const perspRes = await fetch(`/api/topics/${hotTopic.slug}`);
+            const perspData = await perspRes.json();
+            setTopicPerspectives((perspData.perspectives ?? []).slice(0, 2));
+          } catch {
+            // no perspectives available
+          }
+        }
+      } catch {
+        // API unavailable
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchOnboardingData();
+  }, []);
 
   useEffect(() => {
     if (step === "perspectives") {
@@ -29,7 +74,7 @@ export default function OnboardingPage() {
     <div className="relative h-screen w-screen overflow-hidden bg-prism-bg-primary">
       {/* Full-screen map */}
       <div className="absolute inset-0">
-        <MapPlaceholder showPersonalPin={false} />
+        <MapPlaceholder communities={communities} showPersonalPin={false} />
       </div>
 
       {/* Dark gradient overlay from bottom */}
@@ -59,7 +104,7 @@ export default function OnboardingPage() {
           </div>
 
           {/* Topic card */}
-          {activeTopic && (
+          {!loading && activeTopic && (
             <div className="max-w-lg mx-auto w-full">
               <div className="bg-prism-bg-secondary/90 backdrop-blur-lg border border-prism-border rounded-2xl p-5 mb-4">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-prism-accent-active mb-2">
@@ -102,6 +147,25 @@ export default function OnboardingPage() {
                   />
                 </svg>
               </button>
+            </div>
+          )}
+
+          {!loading && !activeTopic && (
+            <div className="max-w-lg mx-auto w-full">
+              <div className="bg-prism-bg-secondary/90 backdrop-blur-lg border border-prism-border rounded-2xl p-5 mb-4 text-center">
+                <h2 className="font-display text-xl font-bold text-prism-text-primary mb-2">
+                  Welcome to PRISM
+                </h2>
+                <p className="text-sm text-prism-text-secondary leading-relaxed">
+                  Discover diverse perspectives from communities around the world.
+                </p>
+              </div>
+              <Link
+                href="/signup"
+                className="block w-full py-3 rounded-xl bg-prism-accent-active text-white text-sm font-semibold text-center hover:bg-prism-accent-active/90 transition-colors"
+              >
+                Get started
+              </Link>
             </div>
           )}
         </div>
@@ -196,6 +260,16 @@ export default function OnboardingPage() {
               );
             })}
 
+            {topicPerspectives.length === 0 && (
+              <div
+                className={`text-center py-8 transition-all duration-500 ${
+                  showPerspectives ? "opacity-100" : "opacity-0"
+                }`}
+              >
+                <p className="text-sm text-prism-text-dim">No perspectives available yet.</p>
+              </div>
+            )}
+
             {/* CTA to signup */}
             <div
               className={`text-center pt-4 transition-all duration-500 ${
@@ -263,7 +337,7 @@ export default function OnboardingPage() {
               href="/"
               className="inline-block mt-6 text-xs text-prism-text-dim hover:text-prism-text-secondary transition-colors"
             >
-              ← Keep exploring without an account
+              &larr; Keep exploring without an account
             </Link>
           </div>
         </div>

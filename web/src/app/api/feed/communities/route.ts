@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { applyRateLimit, parseQuery, slugSchema } from "@/lib/api";
 import { getSupabase, getSupabaseWithAuth } from "@/lib/supabase";
-import { SEED_PERSPECTIVES } from "@/lib/seed-data";
+
 import { z } from "zod";
 
 const feedQuerySchema = z
@@ -94,17 +94,8 @@ export async function GET(request: Request) {
     // fall through to seed data
   }
 
-  let perspectives = SEED_PERSPECTIVES;
-  if (topic) {
-    perspectives = perspectives.filter((p) => p.topic_slug === topic);
-  }
-
-  const communityPerspectives = perspectives.filter(
-    (p) => p.community.community_type === "civic" || p.community.community_type === "rural"
-  );
-
   return NextResponse.json({
-    data: communityPerspectives,
-    meta: { total: communityPerspectives.length, feed_type: "communities" },
+    data: [],
+    meta: { total: 0, feed_type: "communities" },
   });
 }

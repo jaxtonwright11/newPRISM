@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { applyRateLimit } from "@/lib/api";
 import { getSupabaseWithAuth } from "@/lib/supabase";
-import { SEED_USER } from "@/lib/seed-data";
+
 
 export async function GET(request: Request) {
   const rateLimitResponse = applyRateLimit(request, "user-profile");
@@ -35,5 +35,5 @@ export async function GET(request: Request) {
     // Supabase unavailable — fall through to seed data
   }
 
-  return NextResponse.json({ data: SEED_USER });
+  return NextResponse.json({ data: null });
 }

@@ -13,7 +13,7 @@ export async function GET() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #0A0A0F 0%, #12121A 50%, #0D1117 100%)",
+          background: "linear-gradient(135deg, #0F0A0B 0%, #1A0E11 50%, #0D0809 100%)",
           fontFamily: "system-ui, sans-serif",
         }}
       >
@@ -92,7 +92,7 @@ export async function GET() {
             style={{
               fontSize: "48px",
               fontWeight: 700,
-              color: "#F0F0F8",
+              color: "#F5F0E8",
               letterSpacing: "4px",
             }}
           >
@@ -103,7 +103,7 @@ export async function GET() {
         <p
           style={{
             fontSize: "22px",
-            color: "#8888A8",
+            color: "#C4A882",
             maxWidth: "600px",
             textAlign: "center",
             lineHeight: 1.5,

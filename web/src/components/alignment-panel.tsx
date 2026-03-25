@@ -1,29 +1,29 @@
 "use client";
 
-import { SEED_COMMUNITIES } from "@/lib/seed-data";
-import type { CommunityAlignment } from "@shared/types";
+import type { CommunityAlignment, Community } from "@shared/types";
 
 interface AlignmentPanelProps {
   alignments: CommunityAlignment[];
   topicTitle?: string;
+  communities?: Community[];
 }
 
-function getCommunityColor(id: string): string {
-  const community = SEED_COMMUNITIES.find((c) => c.id === id);
-  return community?.color_hex ?? "#4A4A6A";
-}
-
-function getCommunityName(id: string): string {
-  const community = SEED_COMMUNITIES.find((c) => c.id === id);
-  return community?.name ?? "Unknown";
-}
-
-export function AlignmentPanel({ alignments, topicTitle }: AlignmentPanelProps) {
+export function AlignmentPanel({ alignments, topicTitle, communities = [] }: AlignmentPanelProps) {
   const sorted = [...alignments].sort(
     (a, b) => b.agreement_pct - a.agreement_pct
   );
 
   const topAgreement = sorted[0]?.agreement_pct ?? 0;
+
+  function getCommunityColor(id: string): string {
+    const community = communities.find((c) => c.id === id);
+    return community?.color_hex ?? "#8A7A6A";
+  }
+
+  function getCommunityName(id: string): string {
+    const community = communities.find((c) => c.id === id);
+    return community?.name ?? "Unknown";
+  }
 
   return (
     <aside className="w-[320px] h-full bg-prism-bg-secondary border-l border-prism-border flex flex-col shrink-0 hidden lg:flex">

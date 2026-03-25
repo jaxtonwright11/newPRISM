@@ -1,28 +1,79 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useAuth } from "@/lib/auth-context";
 import { PerspectiveCard } from "@/components/perspective-card";
 import { PerspectiveDetail } from "@/components/perspective-detail";
-import { searchPerspectives, searchTopics, searchCommunities, SEED_PERSPECTIVES } from "@/lib/seed-data";
 import { COMMUNITY_COLORS } from "@/lib/constants";
-import type { CommunityType } from "@shared/types";
+import type { CommunityType, Community, Topic } from "@shared/types";
 
 type SearchTab = "all" | "perspectives" | "topics" | "communities";
+
+interface SearchPerspective {
+  id: string;
+  community: {
+    name: string;
+    region: string;
+    community_type: CommunityType;
+    color_hex: string;
+    verified: boolean;
+  };
+  quote: string;
+  context: string | null;
+  category_tag: string | null;
+  reaction_count: number;
+  bookmark_count: number;
+  created_at?: string;
+}
 
 export default function SearchPage() {
   const [query, setQuery] = useState("");
   const [activeTab, setActiveTab] = useState<SearchTab>("all");
   const [selectedPerspectiveId, setSelectedPerspectiveId] = useState<string | null>(null);
+  const { session } = useAuth();
 
-  const perspectives = useMemo(() => query.length >= 2 ? searchPerspectives(query) : [], [query]);
-  const topics = useMemo(() => query.length >= 2 ? searchTopics(query) : [], [query]);
-  const communities = useMemo(() => query.length >= 2 ? searchCommunities(query) : [], [query]);
+  const [perspectives, setPerspectives] = useState<SearchPerspective[]>([]);
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [communities, setCommunities] = useState<Community[]>([]);
+  const [searching, setSearching] = useState(false);
+
+  const doSearch = useCallback(async (q: string) => {
+    if (q.length < 2) {
+      setPerspectives([]);
+      setTopics([]);
+      setCommunities([]);
+      return;
+    }
+    setSearching(true);
+    try {
+      const headers: Record<string, string> = {};
+      if (session?.access_token) {
+        headers.Authorization = `Bearer ${session.access_token}`;
+      }
+      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`, { headers });
+      const data = await res.json();
+      setPerspectives(data.perspectives ?? []);
+      setTopics(data.topics ?? []);
+      setCommunities(data.communities ?? []);
+    } catch {
+      // API unavailable
+    } finally {
+      setSearching(false);
+    }
+  }, [session?.access_token]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      doSearch(query);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [query, doSearch]);
 
   const totalResults = perspectives.length + topics.length + communities.length;
 
   const selectedPerspective = selectedPerspectiveId
-    ? SEED_PERSPECTIVES.find((p) => p.id === selectedPerspectiveId)
+    ? perspectives.find((p) => p.id === selectedPerspectiveId)
     : null;
 
   const tabs: { id: SearchTab; label: string; count: number }[] = [
@@ -96,7 +147,13 @@ export default function SearchPage() {
               ))}
             </div>
 
-            {totalResults === 0 && (
+            {searching && (
+              <div className="text-center py-8">
+                <div className="w-6 h-6 border-2 border-prism-accent-active border-t-transparent rounded-full animate-spin mx-auto" />
+              </div>
+            )}
+
+            {!searching && totalResults === 0 && (
               <div className="text-center py-16">
                 <p className="text-sm text-prism-text-dim">No results found for &quot;{query}&quot;</p>
                 <p className="text-xs text-prism-text-dim/60 mt-1">Try different keywords or browse topics from the home page.</p>
@@ -104,7 +161,7 @@ export default function SearchPage() {
             )}
 
             {/* Communities results */}
-            {showCommunities && communities.length > 0 && (
+            {!searching && showCommunities && communities.length > 0 && (
               <div className="mb-6">
                 {activeTab === "all" && (
                   <h2 className="text-xs font-semibold text-prism-text-dim uppercase tracking-wider mb-2">Communities</h2>
@@ -136,7 +193,7 @@ export default function SearchPage() {
             )}
 
             {/* Topics results */}
-            {showTopics && topics.length > 0 && (
+            {!searching && showTopics && topics.length > 0 && (
               <div className="mb-6">
                 {activeTab === "all" && (
                   <h2 className="text-xs font-semibold text-prism-text-dim uppercase tracking-wider mb-2">Topics</h2>
@@ -159,7 +216,7 @@ export default function SearchPage() {
             )}
 
             {/* Perspectives results */}
-            {showPerspectives && perspectives.length > 0 && (
+            {!searching && showPerspectives && perspectives.length > 0 && (
               <div className="mb-6">
                 {activeTab === "all" && (
                   <h2 className="text-xs font-semibold text-prism-text-dim uppercase tracking-wider mb-2">Perspectives</h2>

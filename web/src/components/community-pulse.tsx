@@ -3,11 +3,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { COMMUNITY_COLORS } from "@/lib/constants";
-import {
-  SEED_PERSPECTIVES,
-  SEED_TOPICS,
-  SEED_COMMUNITIES,
-} from "@/lib/seed-data";
 import type { CommunityType } from "@shared/types";
 
 interface PulseData {
@@ -62,31 +57,9 @@ export function CommunityPulse({ isOpen, onClose }: CommunityPulseProps) {
           return;
         }
       } catch {
-        // fall through to seed data
+        // API unavailable — show empty pulse
+        setPulse({ top_topic: null, most_reacted: null, new_communities: [] });
       }
-
-      // Seed fallback
-      const topTopic = SEED_TOPICS.reduce((best, topic) =>
-        topic.perspective_count > best.perspective_count ? topic : best
-      );
-      const mostReacted = SEED_PERSPECTIVES.reduce((best, p) =>
-        p.reaction_count > best.reaction_count ? p : best
-      );
-      setPulse({
-        top_topic: topTopic,
-        most_reacted: {
-          id: mostReacted.id,
-          quote: mostReacted.quote,
-          reaction_count: mostReacted.reaction_count,
-          community: {
-            name: mostReacted.community.name,
-            community_type: mostReacted.community.community_type as CommunityType,
-          },
-        },
-        new_communities: SEED_COMMUNITIES.filter(
-          (c) => c.community_type === "cultural" || c.community_type === "diaspora"
-        ).slice(0, 3),
-      });
     }
     fetchPulse();
   }, [isOpen, session?.access_token]);

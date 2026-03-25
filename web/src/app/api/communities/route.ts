@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { applyRateLimit } from "@/lib/api";
 import { getSupabase } from "@/lib/supabase";
-import { SEED_COMMUNITIES } from "@/lib/seed-data";
+
 
 export async function GET(request: Request) {
   const rateLimitResponse = applyRateLimit(request, "communities");
@@ -26,7 +26,7 @@ export async function GET(request: Request) {
     // Supabase unavailable — fall through to seed data
   }
 
-  const res = NextResponse.json({ communities: SEED_COMMUNITIES });
+  const res = NextResponse.json({ communities: [] });
   res.headers.set("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
   return res;
 }

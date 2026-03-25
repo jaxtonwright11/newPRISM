@@ -9,7 +9,6 @@ import { AlignmentPanel } from "@/components/alignment-panel";
 import { StoriesBar } from "@/components/stories-bar";
 import { MobileNav } from "@/components/mobile-nav";
 
-// Lazy-load modal/panel components — only rendered when opened
 const PerspectiveDetail = dynamic(
   () => import("@/components/perspective-detail").then((mod) => mod.PerspectiveDetail),
   { ssr: false }
@@ -50,29 +49,33 @@ const MapPlaceholder = dynamic(
 import { useGhostMode } from "@/lib/use-ghost-mode";
 import { useRealtime } from "@/lib/use-realtime";
 import { useAuth } from "@/lib/auth-context";
-import type { Post, CommunityType } from "@shared/types";
-import {
-  SEED_TOPICS,
-  SEED_COMMUNITIES,
-  SEED_PERSPECTIVES,
-  getPerspectivesByTopic,
-  getAlignmentsByTopic,
-  getTopicBySlug,
-  getCommunitiesForTopic,
-  getStoryGroups,
-  getPostsByTopic,
-} from "@/lib/seed-data";
+import type { Post, Topic, Community, CommunityType, CommunityAlignment } from "@shared/types";
 
 type FeedTab = "nearby" | "communities" | "discover";
 
+// Perspective with inline community for display
+interface DisplayPerspective {
+  id: string;
+  quote: string;
+  context: string | null;
+  category_tag: string | null;
+  reaction_count: number;
+  bookmark_count: number;
+  community: {
+    name: string;
+    region: string;
+    community_type: CommunityType;
+    color_hex: string;
+    verified: boolean;
+  };
+}
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState<FeedTab>("nearby");
-  const [selectedTopicSlug, setSelectedTopicSlug] = useState(
-    SEED_TOPICS[0].slug
-  );
-  const [selectedPerspectiveId, setSelectedPerspectiveId] = useState<
-    string | null
-  >(null);
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [communities, setCommunities] = useState<Community[]>([]);
+  const [selectedTopicSlug, setSelectedTopicSlug] = useState("");
+  const [selectedPerspectiveId, setSelectedPerspectiveId] = useState<string | null>(null);
   const [mobileTopicOpen, setMobileTopicOpen] = useState(false);
   const [pulseOpen, setPulseOpen] = useState(false);
   const [composeOpen, setComposeOpen] = useState(false);
@@ -82,83 +85,73 @@ export default function Home() {
   const [selectedHeatPoint, setSelectedHeatPoint] = useState<HeatPoint | null>(null);
   const { ghostMode, toggleGhostMode } = useGhostMode();
   const { session } = useAuth();
-  const [feedPerspectives, setFeedPerspectives] = useState<typeof SEED_PERSPECTIVES>([]);
-  const [feedLoading, setFeedLoading] = useState(false);
+  const [feedPerspectives, setFeedPerspectives] = useState<DisplayPerspective[]>([]);
+  const [feedLoading, setFeedLoading] = useState(true);
   const [unreadNotifCount, setUnreadNotifCount] = useState(0);
+  const topicPosts: Post[] = [];
+  const topicAlignments: CommunityAlignment[] = [];
 
-  const currentTopic = getTopicBySlug(selectedTopicSlug);
-  const topicPerspectives = getPerspectivesByTopic(selectedTopicSlug);
-  const topicPosts = getPostsByTopic(selectedTopicSlug);
-  const topicAlignments = currentTopic
-    ? getAlignmentsByTopic(currentTopic.id)
-    : [];
-  const topicCommunities = getCommunitiesForTopic(selectedTopicSlug);
-  const topicCommunityIds = topicCommunities.map((c) => c.id);
-  const storyGroups = getStoryGroups();
-  const hotTopic = SEED_TOPICS.find((t) => t.status === "hot") ?? null;
+  const currentTopic = topics.find((t) => t.slug === selectedTopicSlug) ?? null;
+  const hotTopic = topics.find((t) => t.status === "hot") ?? null;
+  const topicCommunities = communities.filter((c) => c.active);
 
-  // Generate heat points from seed data (communities with perspectives on same topic)
-  const seedHeatPoints = useMemo<HeatPoint[]>(() => {
-    const communityMap = new Map<string, { lat: number; lng: number; ids: Set<string>; types: Set<string>; count: number }>();
-    for (const p of topicPerspectives) {
-      // Look up full community data with lat/lng from SEED_COMMUNITIES
-      const fullComm = SEED_COMMUNITIES.find((c) => c.name === p.community.name);
-      if (!fullComm?.latitude || !fullComm?.longitude) continue;
-      const key = `${Math.round(fullComm.latitude)}_${Math.round(fullComm.longitude)}`;
-      if (!communityMap.has(key)) {
-        communityMap.set(key, { lat: fullComm.latitude, lng: fullComm.longitude, ids: new Set(), types: new Set(), count: 0 });
-      }
-      const entry = communityMap.get(key)!;
-      if (!entry.ids.has(fullComm.id)) {
-        entry.ids.add(fullComm.id);
-        entry.types.add(fullComm.community_type);
-        entry.count++;
-      }
-    }
-    return Array.from(communityMap.values())
-      .filter((e) => e.count >= 2)
-      .map((e) => ({
-        latitude: e.lat,
-        longitude: e.lng,
-        intensity: Math.min(e.count / 5, 1),
-        community_count: e.count,
-        community_types: Array.from(e.types),
-        topic_count: 1,
-      }));
-  }, [topicPerspectives]);
-
-  // Use API heat points if available, otherwise seed
+  // Fetch topics and communities on mount
   useEffect(() => {
-    async function fetchHeat() {
+    async function fetchInitialData() {
       try {
-        const res = await fetch(`/api/map/heat${currentTopic ? `?topic_id=${currentTopic.id}` : ""}`);
-        const { heat_points } = await res.json();
-        if (heat_points?.length > 0) {
-          setHeatPoints(heat_points);
-          return;
+        const [topicsRes, communitiesRes] = await Promise.all([
+          fetch("/api/topics"),
+          fetch("/api/communities"),
+        ]);
+        const topicsJson = await topicsRes.json();
+        const communitiesJson = await communitiesRes.json();
+
+        const fetchedTopics: Topic[] = topicsJson.topics ?? [];
+        const fetchedCommunities: Community[] = communitiesJson.communities ?? [];
+
+        setTopics(fetchedTopics);
+        setCommunities(fetchedCommunities);
+
+        // Select first topic if none selected
+        if (fetchedTopics.length > 0) {
+          setSelectedTopicSlug(fetchedTopics[0].slug);
         }
       } catch {
-        // fall through
+        // APIs unavailable — show empty state
       }
-      setHeatPoints(seedHeatPoints);
+    }
+    fetchInitialData();
+  }, []);
+
+  // Fetch heat points when topic changes
+  useEffect(() => {
+    if (!currentTopic) return;
+    async function fetchHeat() {
+      try {
+        const res = await fetch(`/api/map/heat?topic_id=${currentTopic!.id}`);
+        const { heat_points } = await res.json();
+        setHeatPoints(heat_points ?? []);
+      } catch {
+        setHeatPoints([]);
+      }
     }
     fetchHeat();
-  }, [currentTopic, seedHeatPoints]);
+  }, [currentTopic]);
 
   const handleHeatTap = useCallback((point: HeatPoint) => {
     setSelectedHeatPoint(point);
     setHeatPanelOpen(true);
   }, []);
 
-  // Get perspectives near the selected heat point for the panel
+  // Heat perspectives for the panel
   const heatPerspectives = useMemo(() => {
     if (!selectedHeatPoint) return [];
-    return topicPerspectives
+    return feedPerspectives
       .filter((p) => {
-        const fullComm = SEED_COMMUNITIES.find((c) => c.name === p.community.name);
-        if (!fullComm?.latitude || !fullComm?.longitude) return false;
-        const dLat = Math.abs(fullComm.latitude - selectedHeatPoint.latitude);
-        const dLng = Math.abs(fullComm.longitude - selectedHeatPoint.longitude);
+        const comm = communities.find((c) => c.name === p.community.name);
+        if (!comm?.latitude || !comm?.longitude) return false;
+        const dLat = Math.abs(comm.latitude - selectedHeatPoint.latitude);
+        const dLng = Math.abs(comm.longitude - selectedHeatPoint.longitude);
         return dLat < 2 && dLng < 2;
       })
       .map((p) => ({
@@ -172,13 +165,14 @@ export default function Home() {
           verified: p.community.verified,
         },
       }));
-  }, [selectedHeatPoint, topicPerspectives]);
+  }, [selectedHeatPoint, feedPerspectives, communities]);
 
   // Fetch feed perspectives from API based on active tab
   useEffect(() => {
+    if (!selectedTopicSlug) return;
     async function fetchFeed() {
       setFeedLoading(true);
-      const feedEndpoint = `/api/feed/${activeTab}${selectedTopicSlug ? `?topic=${selectedTopicSlug}` : ""}`;
+      const feedEndpoint = `/api/feed/${activeTab}?topic=${selectedTopicSlug}`;
       const headers: Record<string, string> = {};
       if (session?.access_token) {
         headers.Authorization = `Bearer ${session.access_token}`;
@@ -186,45 +180,28 @@ export default function Home() {
       try {
         const res = await fetch(feedEndpoint, { headers });
         const json = await res.json();
-        // Nearby returns { posts, perspectives }, others return array directly
         const perspectives = activeTab === "nearby"
           ? (json.data?.perspectives ?? json.data ?? [])
           : (json.data ?? []);
         setFeedPerspectives(perspectives);
       } catch {
-        // Fall back to seed data
-        switch (activeTab) {
-          case "nearby":
-            setFeedPerspectives(topicPerspectives);
-            break;
-          case "communities":
-            setFeedPerspectives(topicPerspectives.filter(
-              (p) => p.community.community_type === "civic" || p.community.community_type === "rural"
-            ));
-            break;
-          case "discover":
-            setFeedPerspectives(topicPerspectives.filter(
-              (p) => p.community.community_type !== "civic" && p.community.community_type !== "rural"
-            ));
-            break;
-        }
+        setFeedPerspectives([]);
       } finally {
         setFeedLoading(false);
       }
     }
     fetchFeed();
-  }, [activeTab, selectedTopicSlug, session?.access_token, topicPerspectives]);
+  }, [activeTab, selectedTopicSlug, session?.access_token]);
 
   // Real-time: live new perspectives
   useRealtime({
     table: "perspectives",
     event: "INSERT",
     onInsert: useCallback((payload: Record<string, unknown>) => {
-      // Append new perspective to feed if it has basic data
       if (payload.quote && payload.id) {
         setFeedPerspectives((prev) => {
           if (prev.some((p) => p.id === payload.id)) return prev;
-          return [payload as unknown as (typeof prev)[0], ...prev];
+          return [payload as unknown as DisplayPerspective, ...prev];
         });
       }
     }, []),
@@ -270,7 +247,7 @@ export default function Home() {
   });
 
   const selectedPerspective = selectedPerspectiveId
-    ? SEED_PERSPECTIVES.find((p) => p.id === selectedPerspectiveId)
+    ? feedPerspectives.find((p) => p.id === selectedPerspectiveId)
     : null;
 
   const handleTopicSelect = (slug: string) => {
@@ -291,6 +268,8 @@ export default function Home() {
       <div className="flex flex-1 min-h-0">
       {/* Desktop sidebar */}
       <TopicSidebar
+        topics={topics}
+        communities={topicCommunities}
         selectedTopic={selectedTopicSlug}
         onTopicSelect={handleTopicSelect}
       />
@@ -393,7 +372,7 @@ export default function Home() {
         {/* Mobile topic dropdown */}
         {mobileTopicOpen && (
           <div className="md:hidden absolute top-[52px] left-0 right-0 bg-prism-bg-secondary border-b border-prism-border z-30 max-h-[50vh] overflow-y-auto">
-            {SEED_TOPICS.filter((t) => t.status !== "archived").map((topic) => (
+            {topics.filter((t) => t.status !== "archived").map((topic) => (
               <button
                 key={topic.slug}
                 onClick={() => handleTopicSelect(topic.slug)}
@@ -420,7 +399,8 @@ export default function Home() {
         {/* Map area — 40% viewport on all devices */}
         <div className="h-[40vh] p-2 md:p-3 relative">
           <MapPlaceholder
-            highlightedCommunityIds={topicCommunityIds}
+            communities={communities}
+            highlightedCommunityIds={communities.map((c) => c.id)}
             ghostMode={ghostMode}
             userPosts={userPosts}
             heatPoints={heatPoints}
@@ -429,9 +409,9 @@ export default function Home() {
           {/* Onboarding AHA overlay — shows on first visit, no signup gate */}
           <OnboardingAha
             activeTopic={
-              SEED_TOPICS.find((t) => t.status === "hot") ?? SEED_TOPICS[0]
+              hotTopic ?? (topics.length > 0 ? topics[0] : null)
             }
-            perspectives={topicPerspectives.slice(0, 2).map((p) => ({
+            perspectives={feedPerspectives.slice(0, 2).map((p) => ({
               id: p.id,
               quote: p.quote,
               context: p.context,
@@ -446,9 +426,9 @@ export default function Home() {
           />
         </div>
 
-        {/* Stories bar */}
+        {/* Stories bar — empty when no stories */}
         <div className="border-b border-prism-border">
-          <StoriesBar storyGroups={storyGroups} />
+          <StoriesBar storyGroups={[]} />
         </div>
 
         {/* ACTIVE NOW banner — retention mechanic */}
@@ -546,7 +526,6 @@ export default function Home() {
               key={`${activeTab}-${selectedTopicSlug}`}
               className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4 animate-fade-in"
             >
-              {/* Interleave perspectives and personal posts */}
               {feedPerspectives.map((p, i) => (
                 <PerspectiveCard
                   key={p.id}
@@ -588,7 +567,7 @@ export default function Home() {
                 </svg>
               </div>
               <p className="text-sm text-prism-text-dim mb-1">
-                {activeTab === "nearby" && "No nearby perspectives yet"}
+                {activeTab === "nearby" && "Be the first in your community to share a perspective"}
                 {activeTab === "communities" && "No perspectives from your communities yet"}
                 {activeTab === "discover" && "No new perspectives to discover right now"}
               </p>
@@ -606,6 +585,7 @@ export default function Home() {
       <AlignmentPanel
         alignments={topicAlignments}
         topicTitle={currentTopic?.title}
+        communities={communities}
       />
 
       {/* Mobile bottom nav */}
@@ -665,7 +645,6 @@ export default function Home() {
           category_tag={selectedPerspective.category_tag}
           reaction_count={selectedPerspective.reaction_count}
           bookmark_count={selectedPerspective.bookmark_count}
-          created_at={selectedPerspective.created_at}
           onClose={() => setSelectedPerspectiveId(null)}
         />
       )}

@@ -49,7 +49,7 @@ export function PrismMap({ communities }: PrismMapProps) {
               {
                 id: "background",
                 type: "background",
-                paint: { "background-color": "#0D1117" },
+                paint: { "background-color": "#0D0809" },
               },
               {
                 id: "carto-tiles",
@@ -106,9 +106,9 @@ export function PrismMap({ communities }: PrismMapProps) {
 
             const popup = new mapboxgl.Popup({ offset: 15, closeButton: false })
               .setHTML(
-                `<div style="padding:6px 10px;font-size:12px;color:#F0F0F8;background:#1A1A26;border-radius:8px;border:1px solid #2A2A3A;">
+                `<div style="padding:6px 10px;font-size:12px;color:#F5F0E8;background:#1A0E11;border-radius:8px;border:1px solid #2A1219;">
                   <strong>${community.name}</strong><br/>
-                  <span style="opacity:0.6;color:#8888A8">${community.region}</span>
+                  <span style="opacity:0.6;color:#C4A882">${community.region}</span>
                 </div>`
               );
 

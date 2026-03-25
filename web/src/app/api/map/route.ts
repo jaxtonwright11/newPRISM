@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { applyRateLimit } from "@/lib/api";
 import { getSupabase, getSupabaseServer } from "@/lib/supabase";
-import { SEED_MAP_PINS } from "@/lib/seed-data";
+
 
 export async function GET(request: Request) {
   const rateLimitResponse = applyRateLimit(request, "map");
@@ -65,5 +65,5 @@ export async function GET(request: Request) {
     // Supabase unavailable — fall through to seed data
   }
 
-  return NextResponse.json({ pins: SEED_MAP_PINS });
+  return NextResponse.json({ pins: [] });
 }

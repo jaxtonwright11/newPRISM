@@ -1,21 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { useAuth } from "@/lib/auth-context";
 import { PerspectiveCard } from "@/components/perspective-card";
 import { PerspectiveDetail } from "@/components/perspective-detail";
 import { AlignmentPanel } from "@/components/alignment-panel";
 import { MobileNav } from "@/components/mobile-nav";
-import {
-  getTopicBySlug,
-  getPerspectivesByTopic,
-  getAlignmentsByTopic,
-  getCommunitiesForTopic,
-  SEED_PERSPECTIVES,
-} from "@/lib/seed-data";
 import { COMMUNITY_COLORS } from "@/lib/constants";
-import type { TopicStatus } from "@shared/types";
+import type { Topic, Community, CommunityAlignment, CommunityType, TopicStatus } from "@shared/types";
 
 const STATUS_BADGE: Record<TopicStatus, { label: string; color: string }> = {
   hot: {
@@ -40,23 +34,87 @@ const STATUS_BADGE: Record<TopicStatus, { label: string; color: string }> = {
   },
 };
 
+interface TopicPerspective {
+  id: string;
+  community: {
+    name: string;
+    region: string;
+    community_type: CommunityType;
+    color_hex: string;
+    verified: boolean;
+  };
+  quote: string;
+  context: string | null;
+  category_tag: string | null;
+  reaction_count: number;
+  bookmark_count: number;
+  created_at?: string;
+}
+
 export default function TopicDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
-  const topic = getTopicBySlug(slug);
-  const perspectives = getPerspectivesByTopic(slug);
-  const alignments = topic ? getAlignmentsByTopic(topic.id) : [];
-  const activeCommunities = getCommunitiesForTopic(slug);
+  const { session } = useAuth();
 
-  const [selectedPerspectiveId, setSelectedPerspectiveId] = useState<
-    string | null
-  >(null);
+  const [topic, setTopic] = useState<Topic | null>(null);
+  const [perspectives, setPerspectives] = useState<TopicPerspective[]>([]);
+  const [alignments, setAlignments] = useState<CommunityAlignment[]>([]);
+  const [activeCommunities, setActiveCommunities] = useState<Community[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+
+  const [selectedPerspectiveId, setSelectedPerspectiveId] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchTopic() {
+      try {
+        const headers: Record<string, string> = {};
+        if (session?.access_token) {
+          headers.Authorization = `Bearer ${session.access_token}`;
+        }
+        const res = await fetch(`/api/topics/${slug}`, { headers });
+        if (!res.ok) {
+          setNotFound(true);
+          setLoading(false);
+          return;
+        }
+        const data = await res.json();
+        setTopic(data.topic ?? null);
+        setPerspectives(data.perspectives ?? []);
+        setAlignments(data.alignments ?? []);
+        setActiveCommunities(data.communities ?? []);
+        if (!data.topic) setNotFound(true);
+      } catch {
+        setNotFound(true);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchTopic();
+  }, [slug, session?.access_token]);
 
   const selectedPerspective = selectedPerspectiveId
-    ? SEED_PERSPECTIVES.find((p) => p.id === selectedPerspectiveId)
+    ? perspectives.find((p) => p.id === selectedPerspectiveId)
     : null;
 
-  if (!topic) {
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-prism-bg-primary p-6">
+        <div className="max-w-2xl mx-auto space-y-4">
+          <div className="h-6 bg-prism-bg-elevated rounded-full w-1/4 animate-shimmer" />
+          <div className="h-8 bg-prism-bg-elevated rounded-full w-2/3 animate-shimmer" />
+          <div className="h-4 bg-prism-bg-elevated rounded-full w-1/2 animate-shimmer" />
+          <div className="space-y-3 mt-8">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-32 bg-prism-bg-elevated rounded-xl animate-shimmer" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (notFound || !topic) {
     return (
       <div className="min-h-screen bg-prism-bg-primary flex items-center justify-center">
         <div className="text-center">
@@ -70,7 +128,7 @@ export default function TopicDetailPage() {
             href="/"
             className="text-sm text-prism-accent-active hover:underline"
           >
-            ← Back to home
+            &larr; Back to home
           </Link>
         </div>
       </div>

@@ -2,15 +2,14 @@
 
 import { useCallback, useEffect, useState, useRef } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { SEED_USER } from "@/lib/seed-data";
 
 const GHOST_MODE_STORAGE_KEY = "prism_ghost_mode";
 
 function readGhostModeFromStorage(): boolean {
-  if (typeof window === "undefined") return SEED_USER.ghost_mode;
+  if (typeof window === "undefined") return false;
 
   const raw = window.localStorage.getItem(GHOST_MODE_STORAGE_KEY);
-  if (raw === null) return SEED_USER.ghost_mode;
+  if (raw === null) return false;
   return raw === "true";
 }
 

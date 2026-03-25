@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 
 export default function SignupPage() {
@@ -10,8 +11,9 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [step, setStep] = useState<"create" | "community">("create");
-  const { signUp, signInWithGoogle } = useAuth();
+  const [step, setStep] = useState<"create" | "check-email" | "community">("create");
+  const router = useRouter();
+  const { signUp, signInWithGoogle, supabase } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,7 +27,14 @@ export default function SignupPage() {
       setLoading(false);
     } else {
       setLoading(false);
-      setStep("community");
+      // Check if a session was created (email confirmation disabled → auto-login)
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        router.push('/onboarding');
+      } else {
+        // Email confirmation required — show check-email step
+        setStep("check-email");
+      }
     }
   };
 
@@ -36,6 +45,48 @@ export default function SignupPage() {
       setError(error.message);
     }
   };
+
+  if (step === "check-email") {
+    return (
+      <div className="min-h-screen bg-prism-bg-primary flex items-center justify-center p-4">
+        <div className="w-full max-w-sm text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-prism-accent-active/10 mb-6">
+            <svg
+              className="w-8 h-8 text-prism-accent-active"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={1.5}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
+              />
+            </svg>
+          </div>
+          <h1 className="font-display text-xl font-bold text-prism-text-primary mb-2">
+            Check your email
+          </h1>
+          <p className="text-sm text-prism-text-secondary mb-6">
+            We sent a confirmation link to <span className="text-prism-text-primary font-medium">{email}</span>.
+            Click the link to activate your account, then come back here to sign in.
+          </p>
+
+          <Link
+            href="/login"
+            className="inline-flex px-6 py-2.5 rounded-lg bg-prism-accent-active text-white text-sm font-medium hover:bg-prism-accent-active/90 transition-colors"
+          >
+            Go to Sign In
+          </Link>
+
+          <p className="text-xs text-prism-text-dim mt-4">
+            Didn&apos;t receive the email? Check your spam folder or try signing up again.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (step === "community") {
     return (

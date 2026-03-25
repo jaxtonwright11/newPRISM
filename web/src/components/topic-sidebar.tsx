@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { SEED_TOPICS, getCommunitiesForTopic } from "@/lib/seed-data";
 import { COMMUNITY_COLORS } from "@/lib/constants";
-import type { TopicStatus } from "@shared/types";
+import type { TopicStatus, Topic, Community } from "@shared/types";
 
 const STATUS_BADGE: Record<TopicStatus, { label: string; color: string }> = {
   hot: {
@@ -30,17 +29,21 @@ const STATUS_BADGE: Record<TopicStatus, { label: string; color: string }> = {
 };
 
 interface TopicSidebarProps {
+  topics: Topic[];
+  communities: Community[];
   selectedTopic: string;
   onTopicSelect: (slug: string) => void;
 }
 
 export function TopicSidebar({
+  topics,
+  communities,
   selectedTopic,
   onTopicSelect,
 }: TopicSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredTopics = SEED_TOPICS.filter(
+  const filteredTopics = topics.filter(
     (t) =>
       t.status !== "archived" &&
       t.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -98,55 +101,66 @@ export function TopicSidebar({
 
       {/* Topic lists */}
       <div className="flex-1 overflow-y-auto px-2 pb-4">
-        {/* Hot / Trending */}
-        {hotTopics.length > 0 && (
-          <div className="mb-3">
-            <div className="flex items-center gap-2 px-2 py-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-prism-accent-live animate-pulse-slow" />
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-prism-text-dim">
-                Live Now
-              </span>
-            </div>
-            {hotTopics.map((topic) => (
-              <TopicItem
-                key={topic.slug}
-                title={topic.title}
-                slug={topic.slug}
-                status={topic.status}
-                perspectiveCount={topic.perspective_count}
-                communityCount={topic.community_count}
-                isSelected={selectedTopic === topic.slug}
-                onSelect={onTopicSelect}
-              />
-            ))}
+        {topics.length === 0 ? (
+          <div className="px-3 py-6 text-center">
+            <p className="text-xs text-prism-text-dim">No topics yet.</p>
+            <p className="text-[10px] text-prism-text-dim/60 mt-1">
+              Topics will appear here as communities start sharing perspectives.
+            </p>
           </div>
-        )}
+        ) : (
+          <>
+            {/* Hot / Trending */}
+            {hotTopics.length > 0 && (
+              <div className="mb-3">
+                <div className="flex items-center gap-2 px-2 py-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-prism-accent-live animate-pulse-slow" />
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-prism-text-dim">
+                    Live Now
+                  </span>
+                </div>
+                {hotTopics.map((topic) => (
+                  <TopicItem
+                    key={topic.slug}
+                    title={topic.title}
+                    slug={topic.slug}
+                    status={topic.status}
+                    perspectiveCount={topic.perspective_count}
+                    communityCount={topic.community_count}
+                    isSelected={selectedTopic === topic.slug}
+                    onSelect={onTopicSelect}
+                  />
+                ))}
+              </div>
+            )}
 
-        {/* Active */}
-        {activeTopics.length > 0 && (
-          <div>
-            <div className="px-2 py-1.5">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-prism-text-dim">
-                Active
-              </span>
-            </div>
-            {activeTopics.map((topic) => (
-              <TopicItem
-                key={topic.slug}
-                title={topic.title}
-                slug={topic.slug}
-                status={topic.status}
-                perspectiveCount={topic.perspective_count}
-                communityCount={topic.community_count}
-                isSelected={selectedTopic === topic.slug}
-                onSelect={onTopicSelect}
-              />
-            ))}
-          </div>
-        )}
+            {/* Active */}
+            {activeTopics.length > 0 && (
+              <div>
+                <div className="px-2 py-1.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-prism-text-dim">
+                    Active
+                  </span>
+                </div>
+                {activeTopics.map((topic) => (
+                  <TopicItem
+                    key={topic.slug}
+                    title={topic.title}
+                    slug={topic.slug}
+                    status={topic.status}
+                    perspectiveCount={topic.perspective_count}
+                    communityCount={topic.community_count}
+                    isSelected={selectedTopic === topic.slug}
+                    onSelect={onTopicSelect}
+                  />
+                ))}
+              </div>
+            )}
 
-        {/* Communities active on selected topic */}
-        <ActiveCommunities topicSlug={selectedTopic} />
+            {/* Communities active on selected topic */}
+            <ActiveCommunities communities={communities} />
+          </>
+        )}
       </div>
     </aside>
   );
@@ -198,9 +212,7 @@ function TopicItem({
   );
 }
 
-function ActiveCommunities({ topicSlug }: { topicSlug: string }) {
-  const communities = getCommunitiesForTopic(topicSlug);
-
+function ActiveCommunities({ communities }: { communities: Community[] }) {
   if (communities.length === 0) return null;
 
   return (

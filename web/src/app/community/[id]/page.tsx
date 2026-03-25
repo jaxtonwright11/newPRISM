@@ -1,22 +1,97 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { useAuth } from "@/lib/auth-context";
 import { PerspectiveCard } from "@/components/perspective-card";
 import { PerspectiveDetail } from "@/components/perspective-detail";
-import { SEED_COMMUNITIES, SEED_PERSPECTIVES, SEED_TOPICS } from "@/lib/seed-data";
 import { COMMUNITY_COLORS } from "@/lib/constants";
-import type { CommunityType } from "@shared/types";
+import type { Community, CommunityType, Topic } from "@shared/types";
+
+interface CommunityPerspective {
+  id: string;
+  community: {
+    name: string;
+    region: string;
+    community_type: CommunityType;
+    color_hex: string;
+    verified: boolean;
+  };
+  quote: string;
+  context: string | null;
+  category_tag: string | null;
+  reaction_count: number;
+  bookmark_count: number;
+  created_at?: string;
+}
 
 export default function CommunityPage() {
   const params = useParams();
   const id = params.id as string;
+  const { session } = useAuth();
+
+  const [community, setCommunity] = useState<Community | null>(null);
+  const [communityPerspectives, setCommunityPerspectives] = useState<CommunityPerspective[]>([]);
+  const [activeTopics, setActiveTopics] = useState<Topic[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+
   const [selectedPerspectiveId, setSelectedPerspectiveId] = useState<string | null>(null);
 
-  const community = SEED_COMMUNITIES.find((c) => c.id === id);
+  useEffect(() => {
+    async function fetchCommunity() {
+      try {
+        const headers: Record<string, string> = {};
+        if (session?.access_token) {
+          headers.Authorization = `Bearer ${session.access_token}`;
+        }
+        const res = await fetch(`/api/communities/${id}`, { headers });
+        if (!res.ok) {
+          setNotFound(true);
+          setLoading(false);
+          return;
+        }
+        const data = await res.json();
+        setCommunity(data.community ?? null);
+        setCommunityPerspectives(data.perspectives ?? []);
+        setActiveTopics(data.topics ?? []);
+        if (!data.community) setNotFound(true);
+      } catch {
+        setNotFound(true);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchCommunity();
+  }, [id, session?.access_token]);
 
-  if (!community) {
+  const selectedPerspective = selectedPerspectiveId
+    ? communityPerspectives.find((p) => p.id === selectedPerspectiveId)
+    : null;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-prism-bg-primary p-6">
+        <div className="max-w-2xl mx-auto space-y-4">
+          <div className="flex items-start gap-4">
+            <div className="w-14 h-14 rounded-full bg-prism-bg-elevated animate-shimmer shrink-0" />
+            <div className="space-y-2 flex-1">
+              <div className="h-5 bg-prism-bg-elevated rounded-full w-1/3 animate-shimmer" />
+              <div className="h-3 bg-prism-bg-elevated rounded-full w-1/4 animate-shimmer" />
+            </div>
+          </div>
+          <div className="space-y-3 mt-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-28 bg-prism-bg-elevated rounded-xl animate-shimmer" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (notFound || !community) {
     return (
       <div className="min-h-screen bg-prism-bg-primary flex items-center justify-center">
         <div className="text-center">
@@ -29,18 +104,7 @@ export default function CommunityPage() {
     );
   }
 
-  const communityPerspectives = SEED_PERSPECTIVES.filter(
-    (p) => p.community_id === community.id
-  );
-
-  const topicSlugs = Array.from(new Set(communityPerspectives.map((p) => p.topic_slug)));
-  const activeTopics = SEED_TOPICS.filter((t) => topicSlugs.includes(t.slug));
-
   const color = COMMUNITY_COLORS[community.community_type as CommunityType];
-
-  const selectedPerspective = selectedPerspectiveId
-    ? SEED_PERSPECTIVES.find((p) => p.id === selectedPerspectiveId)
-    : null;
 
   return (
     <div className="min-h-screen bg-prism-bg-primary">

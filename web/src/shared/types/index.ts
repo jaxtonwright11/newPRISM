@@ -134,6 +134,17 @@ export interface Notification {
   metadata?: Record<string, string>;
 }
 
+export interface StoryGroup {
+  id: string;
+  type: "community" | "user";
+  name: string;
+  communityType: CommunityType;
+  colorHex: string;
+  verified: boolean;
+  stories: Post[];
+  hasUnread: boolean;
+}
+
 export interface BookmarkedPerspective {
   perspective_id: string;
   bookmarked_at: string;
