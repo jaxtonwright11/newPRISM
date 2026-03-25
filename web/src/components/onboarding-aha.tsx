@@ -60,11 +60,11 @@ export function OnboardingAha({ activeTopic, perspectives }: OnboardingAhaProps)
   if (step === "prompt") {
     return (
       <div className="absolute inset-0 z-20 flex flex-col justify-end pointer-events-none">
-        {/* ACTIVE NOW indicator */}
+        {/* Topic activity indicator */}
         <div className="absolute top-4 left-4 flex items-center gap-2 bg-prism-bg-primary/85 backdrop-blur-md px-3 py-2 rounded-full border border-prism-border pointer-events-auto">
-          <span className="w-2 h-2 rounded-full bg-prism-accent-live animate-pulse-slow" />
-          <span className="text-[10px] font-semibold text-prism-accent-live uppercase tracking-wide">
-            Active Now
+          <span className="w-1.5 h-1.5 rounded-full bg-prism-accent-active" />
+          <span className="text-[10px] font-medium text-prism-text-secondary uppercase tracking-wide">
+            Communities discussing
           </span>
         </div>
 
@@ -72,8 +72,8 @@ export function OnboardingAha({ activeTopic, perspectives }: OnboardingAhaProps)
         <div className="p-4 pointer-events-auto">
           <div className="max-w-lg mx-auto">
             <div className="bg-prism-bg-secondary/95 backdrop-blur-lg border border-prism-border rounded-2xl p-5 mb-3 shadow-xl">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-prism-accent-active mb-2">
-                Happening Now
+              <p className="text-[10px] font-medium uppercase tracking-wider text-prism-accent-active mb-2">
+                Being discussed
               </p>
               <h3 className="font-display text-lg font-bold text-prism-text-primary mb-1.5">
                 {activeTopic.title}

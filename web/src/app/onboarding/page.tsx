@@ -85,9 +85,9 @@ export default function OnboardingPage() {
         <div className="absolute inset-0 flex flex-col justify-end pb-12 px-6 animate-fade-in">
           {/* Active topic indicator */}
           <div className="absolute top-6 left-6 flex items-center gap-2 bg-prism-bg-primary/80 backdrop-blur-md px-3 py-2 rounded-full border border-prism-border z-10">
-            <span className="w-2 h-2 rounded-full bg-prism-accent-live animate-pulse-slow" />
-            <span className="text-xs font-semibold text-prism-accent-live uppercase tracking-wide">
-              Active Now
+            <span className="w-1.5 h-1.5 rounded-full bg-prism-accent-active" />
+            <span className="text-xs font-medium text-prism-text-secondary uppercase tracking-wide">
+              Communities discussing
             </span>
           </div>
 
@@ -107,8 +107,8 @@ export default function OnboardingPage() {
           {!loading && activeTopic && (
             <div className="max-w-lg mx-auto w-full">
               <div className="bg-prism-bg-secondary/90 backdrop-blur-lg border border-prism-border rounded-2xl p-5 mb-4">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-prism-accent-active mb-2">
-                  Happening Now
+                <p className="text-[10px] font-medium uppercase tracking-wider text-prism-accent-active mb-2">
+                  Being discussed
                 </p>
                 <h2 className="font-body text-xl font-bold text-prism-text-primary mb-2">
                   {activeTopic.title}
