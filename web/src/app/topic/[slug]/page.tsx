@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
@@ -59,7 +59,7 @@ export default function TopicDetailPage() {
   const [topic, setTopic] = useState<Topic | null>(null);
   const [perspectives, setPerspectives] = useState<TopicPerspective[]>([]);
   const [alignments, setAlignments] = useState<CommunityAlignment[]>([]);
-  const [activeCommunities, setActiveCommunities] = useState<Community[]>([]);
+  const [allCommunities, setAllCommunities] = useState<Community[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -72,17 +72,21 @@ export default function TopicDetailPage() {
         if (session?.access_token) {
           headers.Authorization = `Bearer ${session.access_token}`;
         }
-        const res = await fetch(`/api/topics/${slug}`, { headers });
-        if (!res.ok) {
+        const [topicRes, communitiesRes] = await Promise.all([
+          fetch(`/api/topics/${slug}`, { headers }),
+          fetch("/api/communities"),
+        ]);
+        if (!topicRes.ok) {
           setNotFound(true);
           setLoading(false);
           return;
         }
-        const data = await res.json();
+        const data = await topicRes.json();
+        const commData = await communitiesRes.json();
         setTopic(data.topic ?? null);
         setPerspectives(data.perspectives ?? []);
         setAlignments(data.alignments ?? []);
-        setActiveCommunities(data.communities ?? []);
+        setAllCommunities(commData.communities ?? []);
         if (!data.topic) setNotFound(true);
       } catch {
         setNotFound(true);
@@ -92,6 +96,19 @@ export default function TopicDetailPage() {
     }
     fetchTopic();
   }, [slug, session?.access_token]);
+
+  // Communities that have perspectives on this topic (for header display)
+  const topicCommunities = useMemo(() => {
+    const seen = new Set<string>();
+    return perspectives.reduce<Community[]>((acc, p) => {
+      const match = allCommunities.find((c) => c.name === p.community.name);
+      if (match && !seen.has(match.id)) {
+        seen.add(match.id);
+        acc.push(match);
+      }
+      return acc;
+    }, []);
+  }, [perspectives, allCommunities]);
 
   const selectedPerspective = selectedPerspectiveId
     ? perspectives.find((p) => p.id === selectedPerspectiveId)
@@ -191,9 +208,9 @@ export default function TopicDetailPage() {
           </div>
 
           {/* Active communities */}
-          {activeCommunities.length > 0 && (
+          {topicCommunities.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mt-3">
-              {activeCommunities.map((community) => (
+              {topicCommunities.map((community) => (
                 <Link
                   key={community.id}
                   href={`/community/${community.id}`}
@@ -244,7 +261,7 @@ export default function TopicDetailPage() {
       </main>
 
       {/* Alignment panel */}
-      <AlignmentPanel alignments={alignments} topicTitle={topic.title} />
+      <AlignmentPanel alignments={alignments} topicTitle={topic.title} communities={allCommunities} />
 
       {/* Mobile bottom nav */}
       <MobileNav />

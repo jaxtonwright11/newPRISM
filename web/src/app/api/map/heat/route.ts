@@ -4,7 +4,7 @@ import { getSupabase } from "@/lib/supabase";
 import { z } from "zod";
 
 const querySchema = z.object({
-  topic_id: z.string().uuid().optional(),
+  topic_id: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i).optional(),
 });
 
 export async function GET(request: NextRequest) {

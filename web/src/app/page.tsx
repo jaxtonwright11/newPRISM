@@ -89,7 +89,7 @@ export default function Home() {
   const [feedLoading, setFeedLoading] = useState(true);
   const [unreadNotifCount, setUnreadNotifCount] = useState(0);
   const topicPosts: Post[] = [];
-  const topicAlignments: CommunityAlignment[] = [];
+  const [topicAlignments, setTopicAlignments] = useState<CommunityAlignment[]>([]);
 
   const currentTopic = topics.find((t) => t.slug === selectedTopicSlug) ?? null;
   const hotTopic = topics.find((t) => t.status === "hot") ?? null;
@@ -123,19 +123,25 @@ export default function Home() {
     fetchInitialData();
   }, []);
 
-  // Fetch heat points when topic changes
+  // Fetch heat points and alignments when topic changes
   useEffect(() => {
     if (!currentTopic) return;
-    async function fetchHeat() {
+    async function fetchTopicData() {
       try {
-        const res = await fetch(`/api/map/heat?topic_id=${currentTopic!.id}`);
-        const { heat_points } = await res.json();
+        const [heatRes, alignRes] = await Promise.all([
+          fetch(`/api/map/heat?topic_id=${currentTopic!.id}`),
+          fetch(`/api/alignment?topic_id=${currentTopic!.id}`),
+        ]);
+        const { heat_points } = await heatRes.json();
+        const { alignments } = await alignRes.json();
         setHeatPoints(heat_points ?? []);
+        setTopicAlignments(alignments ?? []);
       } catch {
         setHeatPoints([]);
+        setTopicAlignments([]);
       }
     }
-    fetchHeat();
+    fetchTopicData();
   }, [currentTopic]);
 
   const handleHeatTap = useCallback((point: HeatPoint) => {
