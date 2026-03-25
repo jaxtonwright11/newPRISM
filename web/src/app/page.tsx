@@ -431,19 +431,18 @@ export default function Home() {
           <StoriesBar storyGroups={[]} />
         </div>
 
-        {/* ACTIVE NOW banner — retention mechanic */}
+        {/* Topic suggestion — shows the most active topic if none selected */}
         {hotTopic && selectedTopicSlug !== hotTopic.slug && (
           <button
             onClick={() => handleTopicSelect(hotTopic.slug)}
-            className="w-full px-3 md:px-4 py-2 bg-prism-accent-live/[0.06] border-b border-prism-border flex items-center gap-2 hover:bg-prism-accent-live/10 transition-colors group"
+            className="w-full px-3 md:px-4 py-2 bg-prism-bg-elevated/50 border-b border-prism-border flex items-center gap-2 hover:bg-prism-bg-elevated transition-colors group"
           >
-            <span className="w-2 h-2 rounded-full bg-prism-accent-live animate-pulse-slow shrink-0" />
-            <span className="text-xs font-medium text-prism-accent-live">ACTIVE NOW</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-prism-accent-active shrink-0" />
             <span className="text-xs text-prism-text-secondary truncate flex-1 text-left">
               {hotTopic.title}
             </span>
             <span className="text-[10px] font-mono text-prism-text-dim group-hover:text-prism-text-secondary transition-colors">
-              {hotTopic.community_count} communities
+              {hotTopic.community_count} communities discussing
             </span>
           </button>
         )}

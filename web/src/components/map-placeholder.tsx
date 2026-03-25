@@ -47,7 +47,7 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
     {
       id: "background",
       type: "background",
-      paint: { "background-color": "#0D0809" },
+      paint: { "background-color": "#0A0908" },
     },
     // Land fill — using terrain source which has the landcover layer
     {
@@ -55,7 +55,7 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
       type: "fill",
       source: "mapbox-terrain",
       "source-layer": "landcover",
-      paint: { "fill-color": "#150D10" },
+      paint: { "fill-color": "#131110" },
     },
     // Water
     {
@@ -63,7 +63,7 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
       type: "fill",
       source: "mapbox-streets",
       "source-layer": "water",
-      paint: { "fill-color": "#0D0809" },
+      paint: { "fill-color": "#0A0908" },
     },
     // Admin boundaries — barely visible
     {
@@ -73,7 +73,7 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
       "source-layer": "admin",
       filter: ["==", ["get", "admin_level"], 0],
       paint: {
-        "line-color": "#2A1219",
+        "line-color": "#2A251E",
         "line-width": 0.5,
         "line-opacity": 0.4,
       },
@@ -86,7 +86,7 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
       "source-layer": "admin",
       filter: ["==", ["get", "admin_level"], 1],
       paint: {
-        "line-color": "#1A0E11",
+        "line-color": "#15120E",
         "line-width": 0.3,
         "line-opacity": 0.25,
       },
@@ -197,7 +197,7 @@ function createHeatElement(
   label.style.transform = "translate(-50%, -50%)";
   label.style.fontSize = "10px";
   label.style.fontWeight = "700";
-  label.style.color = "#F5F0E8";
+  label.style.color = "#F2EDE5";
   label.style.textShadow = "0 1px 4px rgba(0,0,0,0.8)";
   label.style.zIndex = "5";
   label.textContent = `${communityCount}`;
@@ -309,7 +309,7 @@ export function MapPlaceholder({
         offset: 12,
         className: "prism-popup",
       }).setHTML(
-        `<div style="background:#0F0A0B;border:1px solid #2A1219;border-radius:6px;padding:4px 8px;font-size:10px;color:#F5F0E8;font-family:'DM Sans',sans-serif;">${c.name}</div>`
+        `<div style="background:#0D0B08;border:1px solid #2A251E;border-radius:6px;padding:4px 8px;font-size:10px;color:#F2EDE5;font-family:'DM Sans',sans-serif;">${c.name}</div>`
       );
 
       el.addEventListener("mouseenter", () => {
@@ -355,7 +355,7 @@ export function MapPlaceholder({
       if (post.post_type === "story") {
         el.style.border = "2px solid transparent";
         el.style.backgroundImage =
-          "linear-gradient(#4A9EFF, #4A9EFF), linear-gradient(135deg, #8B1A2E, #C23B5A)";
+          "linear-gradient(#4A9EFF, #4A9EFF), linear-gradient(135deg, #C17F4E, #D4955E)";
         el.style.backgroundOrigin = "border-box";
         el.style.backgroundClip = "padding-box, border-box";
       }
@@ -390,7 +390,7 @@ export function MapPlaceholder({
         offset: 10,
         className: "prism-popup",
       }).setHTML(
-        `<div style="background:#0F0A0B;border:1px solid #2A1219;border-radius:6px;padding:4px 8px;font-size:10px;color:#F5F0E8;font-family:'DM Sans',sans-serif;">You (${homeCommunity.region})</div>`
+        `<div style="background:#0D0B08;border:1px solid #2A251E;border-radius:6px;padding:4px 8px;font-size:10px;color:#F2EDE5;font-family:'DM Sans',sans-serif;">You (${homeCommunity.region})</div>`
       );
 
       el.addEventListener("mouseenter", () => {

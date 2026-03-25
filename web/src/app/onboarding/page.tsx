@@ -110,7 +110,7 @@ export default function OnboardingPage() {
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-prism-accent-active mb-2">
                   Happening Now
                 </p>
-                <h2 className="font-display text-xl font-bold text-prism-text-primary mb-2">
+                <h2 className="font-body text-xl font-bold text-prism-text-primary mb-2">
                   {activeTopic.title}
                 </h2>
                 <p className="text-sm text-prism-text-secondary leading-relaxed mb-3">
@@ -308,7 +308,7 @@ export default function OnboardingPage() {
               </span>
             </div>
 
-            <h2 className="font-display text-2xl font-bold text-prism-text-primary mb-2">
+            <h2 className="font-body text-2xl font-bold text-prism-text-primary mb-2">
               See every perspective
             </h2>
             <p className="text-sm text-prism-text-secondary mb-8 leading-relaxed">

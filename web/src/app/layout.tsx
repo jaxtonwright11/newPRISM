@@ -30,7 +30,7 @@ const jetbrainsMono = JetBrains_Mono({
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://prism-app.vercel.app";
 
 export const viewport: Viewport = {
-  themeColor: "#8B1A2E",
+  themeColor: "#0D0B08",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,

@@ -58,7 +58,7 @@ function LoginPageInner() {
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-prism-accent-active to-prism-community-diaspora mb-4 shadow-lg shadow-prism-accent-active/20">
             <span className="text-white font-display font-bold text-xl">P</span>
           </div>
-          <h1 className="font-display text-2xl font-bold text-prism-text-primary">
+          <h1 className="font-body text-2xl font-bold text-prism-text-primary">
             Welcome back
           </h1>
           <p className="text-sm text-prism-text-secondary mt-1">

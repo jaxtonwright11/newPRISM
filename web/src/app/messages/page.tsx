@@ -332,7 +332,7 @@ export default function MessagesPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
             </svg>
           </Link>
-          <h1 className="font-display text-base font-bold text-prism-text-primary">
+          <h1 className="font-body text-base font-bold text-prism-text-primary">
             Messages
           </h1>
           <span className="text-xs text-prism-text-dim ml-auto">

@@ -54,8 +54,8 @@ export function StoriesBar({ storyGroups, onStorySelect }: StoriesBarProps) {
               }`}
               style={{
                 background: group.hasUnread
-                  ? "linear-gradient(135deg, #8B1A2E, #C23B5A)"
-                  : "#2A1219",
+                  ? "linear-gradient(135deg, #C17F4E, #D4955E)"
+                  : "#2A251E",
               }}
             >
               <div className="w-full h-full rounded-full bg-prism-bg-primary p-[2px]">

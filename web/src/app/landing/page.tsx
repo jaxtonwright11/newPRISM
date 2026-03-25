@@ -167,7 +167,7 @@ function HowItWorksSection() {
     <section id="how-it-works" className="py-24 md:py-32 px-4 bg-prism-bg-secondary">
       <div className="max-w-5xl mx-auto">
         <motion.h2
-          className="font-display text-2xl md:text-4xl font-bold text-prism-text-primary text-center mb-16"
+          className="font-body text-2xl md:text-4xl font-bold text-prism-text-primary text-center mb-16"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
@@ -195,7 +195,7 @@ function HowItWorksSection() {
                   {step.number}
                 </span>
               </div>
-              <h3 className="font-display text-xl font-semibold text-prism-text-primary mb-3">
+              <h3 className="font-body text-xl font-semibold text-prism-text-primary mb-3">
                 {step.title}
               </h3>
               <p className="text-sm text-prism-text-secondary leading-relaxed">
@@ -330,7 +330,7 @@ function EarlyAccessSection() {
         viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.6 }}
       >
-        <h2 className="font-display text-2xl md:text-3xl font-bold text-prism-text-primary">
+        <h2 className="font-body text-2xl md:text-3xl font-bold text-prism-text-primary">
           Join the first community
         </h2>
         <p className="text-sm text-prism-text-secondary mt-3 mb-8">

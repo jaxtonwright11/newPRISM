@@ -7,24 +7,24 @@ import type { TopicStatus, Topic, Community } from "@shared/types";
 
 const STATUS_BADGE: Record<TopicStatus, { label: string; color: string }> = {
   hot: {
-    label: "HOT",
-    color: "bg-prism-accent-live/20 text-prism-accent-live",
+    label: "LIVE",
+    color: "bg-prism-accent-live/15 text-prism-accent-live",
   },
   trending: {
-    label: "TRENDING",
-    color: "bg-prism-accent-active/20 text-prism-accent-active",
+    label: "DISCUSSED",
+    color: "bg-prism-accent-active/15 text-prism-accent-active",
   },
   active: {
     label: "ACTIVE",
-    color: "bg-prism-accent-verified/20 text-prism-accent-verified",
+    color: "bg-prism-accent-verified/15 text-prism-accent-verified",
   },
   cooling: {
-    label: "COOLING",
-    color: "bg-prism-text-dim/20 text-prism-text-dim",
+    label: "QUIETING",
+    color: "bg-prism-text-dim/15 text-prism-text-dim",
   },
   archived: {
     label: "ARCHIVED",
-    color: "bg-prism-text-dim/20 text-prism-text-dim",
+    color: "bg-prism-text-dim/15 text-prism-text-dim",
   },
 };
 

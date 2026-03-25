@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --background: #0F0A0B;
-  --foreground: #F5F0E8;
+  --background: #0D0B08;
+  --foreground: #F2EDE5;
 }
 
 body {
@@ -48,7 +48,7 @@ body {
 
 /* Focus-visible for keyboard navigation (a11y) */
 *:focus-visible {
-  outline: 2px solid #C23B5A;
+  outline: 2px solid #C17F4E;
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -56,7 +56,7 @@ body {
 button:focus-visible,
 a:focus-visible,
 [tabindex]:focus-visible {
-  outline: 2px solid #C23B5A;
+  outline: 2px solid #C17F4E;
   outline-offset: 2px;
 }
 
@@ -70,8 +70,8 @@ a:focus-visible,
 }
 
 ::selection {
-  background: rgba(194, 59, 90, 0.3);
-  color: #F5F0E8;
+  background: rgba(193, 127, 78, 0.3);
+  color: #F2EDE5;
 }
 
 ::-webkit-scrollbar {
@@ -79,16 +79,16 @@ a:focus-visible,
 }
 
 ::-webkit-scrollbar-track {
-  background: #0F0A0B;
+  background: #0D0B08;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #2A1219;
+  background: #2A251E;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #6B5544;
+  background: #6B5F52;
 }
 
 @keyframes shimmer {
@@ -114,7 +114,7 @@ a:focus-visible,
 }
 
 .animate-shimmer {
-  background: linear-gradient(90deg, transparent, rgba(194, 59, 90, 0.05), transparent);
+  background: linear-gradient(90deg, transparent, rgba(193, 127, 78, 0.08), transparent);
   background-size: 200% 100%;
   animation: shimmer 3s ease-in-out infinite;
 }

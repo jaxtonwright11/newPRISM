@@ -13,20 +13,20 @@ import type { Topic, Community, CommunityAlignment, CommunityType, TopicStatus }
 
 const STATUS_BADGE: Record<TopicStatus, { label: string; color: string }> = {
   hot: {
-    label: "HOT",
-    color: "bg-prism-accent-live/20 text-prism-accent-live",
+    label: "LIVE",
+    color: "bg-prism-accent-live/15 text-prism-accent-live",
   },
   trending: {
-    label: "TRENDING",
-    color: "bg-prism-accent-active/20 text-prism-accent-active",
+    label: "DISCUSSED",
+    color: "bg-prism-accent-active/15 text-prism-accent-active",
   },
   active: {
     label: "ACTIVE",
-    color: "bg-prism-accent-verified/20 text-prism-accent-verified",
+    color: "bg-prism-accent-verified/15 text-prism-accent-verified",
   },
   cooling: {
-    label: "COOLING",
-    color: "bg-prism-text-dim/20 text-prism-text-dim",
+    label: "QUIETING",
+    color: "bg-prism-text-dim/15 text-prism-text-dim",
   },
   archived: {
     label: "ARCHIVED",
@@ -118,7 +118,7 @@ export default function TopicDetailPage() {
     return (
       <div className="min-h-screen bg-prism-bg-primary flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-xl font-display font-bold text-prism-text-primary mb-2">
+          <h1 className="text-xl font-body font-bold text-prism-text-primary mb-2">
             Topic Not Found
           </h1>
           <p className="text-sm text-prism-text-dim mb-4">
@@ -172,7 +172,7 @@ export default function TopicDetailPage() {
             )}
           </div>
 
-          <h1 className="font-display text-xl md:text-2xl font-bold text-prism-text-primary mb-2">
+          <h1 className="font-body text-xl md:text-2xl font-bold text-prism-text-primary mb-2">
             {topic.title}
           </h1>
           {topic.summary && (

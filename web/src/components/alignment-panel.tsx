@@ -17,7 +17,7 @@ export function AlignmentPanel({ alignments, topicTitle, communities = [] }: Ali
 
   function getCommunityColor(id: string): string {
     const community = communities.find((c) => c.id === id);
-    return community?.color_hex ?? "#8A7A6A";
+    return community?.color_hex ?? "#756A5C";
   }
 
   function getCommunityName(id: string): string {
