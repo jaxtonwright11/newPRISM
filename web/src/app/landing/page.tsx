@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { motion, useScroll, useTransform, useInView } from "framer-motion";
+import { motion } from "framer-motion";
 import type { CommunityType } from "@shared/types";
 import { COMMUNITY_COLORS } from "@/lib/constants";
 
@@ -114,16 +114,14 @@ function HeroSection() {
 
 // ─── Problem Section ────────────────────────────────────────────────────────
 function ProblemSection() {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
-
   return (
-    <section ref={ref} className="py-32 md:py-40 px-4 bg-prism-bg-primary">
+    <section className="py-32 md:py-40 px-4 bg-prism-bg-primary">
       <div className="max-w-3xl mx-auto text-center">
         <motion.h2
           className="font-display text-3xl md:text-5xl font-bold text-prism-text-primary leading-tight"
           initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.8 }}
         >
           We&apos;re all experiencing the same world differently.
@@ -131,7 +129,8 @@ function ProblemSection() {
         <motion.p
           className="text-xl md:text-2xl text-prism-text-dim mt-6"
           initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.8, delay: 0.3 }}
         >
           Nobody&apos;s showing you why.
@@ -143,9 +142,6 @@ function ProblemSection() {
 
 // ─── How It Works Section ───────────────────────────────────────────────────
 function HowItWorksSection() {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
-
   const steps = [
     {
       number: "01",
@@ -168,12 +164,13 @@ function HowItWorksSection() {
   ];
 
   return (
-    <section id="how-it-works" ref={ref} className="py-24 md:py-32 px-4 bg-prism-bg-secondary">
+    <section id="how-it-works" className="py-24 md:py-32 px-4 bg-prism-bg-secondary">
       <div className="max-w-5xl mx-auto">
         <motion.h2
           className="font-display text-2xl md:text-4xl font-bold text-prism-text-primary text-center mb-16"
           initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.6 }}
         >
           How it works
@@ -184,7 +181,8 @@ function HowItWorksSection() {
               key={step.number}
               className="text-center md:text-left"
               initial={{ opacity: 0, y: 30 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
               transition={{ duration: 0.6, delay: i * 0.2 }}
             >
               {/* Abstract visual */}
@@ -213,9 +211,6 @@ function HowItWorksSection() {
 
 // ─── AHA Moment Preview Section ─────────────────────────────────────────────
 function AhaPreviewSection() {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
-
   const previewPerspectives = [
     {
       quote: "When the factory closed, everyone said learn to code. But my grandmother can't code — she just lost her pharmacy.",
@@ -238,12 +233,13 @@ function AhaPreviewSection() {
   ];
 
   return (
-    <section ref={ref} className="py-24 md:py-32 px-4 bg-prism-bg-primary">
+    <section className="py-24 md:py-32 px-4 bg-prism-bg-primary">
       <div className="max-w-4xl mx-auto">
         <motion.div
           className="text-center mb-12"
           initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.6 }}
         >
           <span className="text-xs font-mono uppercase tracking-widest text-prism-accent-glow">
@@ -264,7 +260,8 @@ function AhaPreviewSection() {
               key={i}
               className="p-5 rounded-xl bg-prism-bg-secondary border border-prism-border relative overflow-hidden"
               initial={{ opacity: 0, y: 30 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
               transition={{ duration: 0.6, delay: i * 0.15 }}
             >
               {/* Left color accent */}
@@ -301,8 +298,6 @@ function AhaPreviewSection() {
 
 // ─── Early Access CTA Section ───────────────────────────────────────────────
 function EarlyAccessSection() {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -327,11 +322,12 @@ function EarlyAccessSection() {
   };
 
   return (
-    <section ref={ref} className="py-24 md:py-32 px-4 bg-prism-bg-secondary">
+    <section className="py-24 md:py-32 px-4 bg-prism-bg-secondary">
       <motion.div
         className="max-w-md mx-auto text-center"
         initial={{ opacity: 0, y: 20 }}
-        animate={isInView ? { opacity: 1, y: 0 } : {}}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.6 }}
       >
         <h2 className="font-display text-2xl md:text-3xl font-bold text-prism-text-primary">

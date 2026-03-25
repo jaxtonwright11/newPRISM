@@ -37,6 +37,10 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
       type: "vector",
       url: "mapbox://mapbox.mapbox-streets-v8",
     },
+    "mapbox-terrain": {
+      type: "vector",
+      url: "mapbox://mapbox.mapbox-terrain-v2",
+    },
   },
   layers: [
     // Ocean background
@@ -45,12 +49,12 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
       type: "background",
       paint: { "background-color": "#0D0809" },
     },
-    // Land fill
+    // Land fill — using terrain source which has the landcover layer
     {
       id: "land",
       type: "fill",
-      source: "mapbox-streets",
-      "source-layer": "land",
+      source: "mapbox-terrain",
+      "source-layer": "landcover",
       paint: { "fill-color": "#150D10" },
     },
     // Water
@@ -69,7 +73,7 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
       "source-layer": "admin",
       filter: ["==", ["get", "admin_level"], 0],
       paint: {
-        "line-color": "#2A3441",
+        "line-color": "#2A1219",
         "line-width": 0.5,
         "line-opacity": 0.4,
       },
@@ -82,7 +86,7 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
       "source-layer": "admin",
       filter: ["==", ["get", "admin_level"], 1],
       paint: {
-        "line-color": "#1E2530",
+        "line-color": "#1A0E11",
         "line-width": 0.3,
         "line-opacity": 0.25,
       },
@@ -305,7 +309,7 @@ export function MapPlaceholder({
         offset: 12,
         className: "prism-popup",
       }).setHTML(
-        `<div style="background:#0F0A0B;border:1px solid #2A1219;border-radius:6px;padding:4px 8px;font-size:10px;color:#F5F0E8;font-family:Inter,sans-serif;">${c.name}</div>`
+        `<div style="background:#0F0A0B;border:1px solid #2A1219;border-radius:6px;padding:4px 8px;font-size:10px;color:#F5F0E8;font-family:'DM Sans',sans-serif;">${c.name}</div>`
       );
 
       el.addEventListener("mouseenter", () => {
@@ -386,7 +390,7 @@ export function MapPlaceholder({
         offset: 10,
         className: "prism-popup",
       }).setHTML(
-        `<div style="background:#0F0A0B;border:1px solid #2A1219;border-radius:6px;padding:4px 8px;font-size:10px;color:#F5F0E8;font-family:Inter,sans-serif;">You (${homeCommunity.region})</div>`
+        `<div style="background:#0F0A0B;border:1px solid #2A1219;border-radius:6px;padding:4px 8px;font-size:10px;color:#F5F0E8;font-family:'DM Sans',sans-serif;">You (${homeCommunity.region})</div>`
       );
 
       el.addEventListener("mouseenter", () => {
