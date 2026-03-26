@@ -199,7 +199,6 @@ export default function DiscoverPage() {
                 category_tag={p.category_tag}
                 reaction_count={p.reaction_count}
                 bookmark_count={p.bookmark_count}
-                isNew
                 onSelect={setSelectedPerspectiveId}
                 animationDelay={i * 50}
               />

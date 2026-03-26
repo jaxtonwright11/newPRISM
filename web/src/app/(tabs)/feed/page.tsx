@@ -218,7 +218,6 @@ export default function FeedPage() {
                 category_tag={p.category_tag}
                 reaction_count={p.reaction_count}
                 bookmark_count={p.bookmark_count}
-                isNew={false}
                 onSelect={setSelectedPerspectiveId}
                 animationDelay={i * 50}
               />

@@ -23,7 +23,6 @@ interface PerspectiveCardProps {
   category_tag: string | null;
   reaction_count: number;
   bookmark_count?: number;
-  isNew?: boolean;
   onSelect?: (id: string) => void;
   animationDelay?: number;
 }
