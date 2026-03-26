@@ -302,12 +302,16 @@ export function MapPlaceholder({
         `<div style="background:#0F1114;border:1px solid #262A31;border-radius:6px;padding:4px 8px;font-size:10px;color:#EDEDEF;font-family:'DM Sans',sans-serif;">${c.name}</div>`
       );
 
+      el.style.cursor = "pointer";
       el.addEventListener("mouseenter", () => {
         marker.setPopup(popup);
         popup.addTo(mapRef.current!);
       });
       el.addEventListener("mouseleave", () => {
         popup.remove();
+      });
+      el.addEventListener("click", () => {
+        window.location.href = `/community/${c.id}`;
       });
 
       markersRef.current.push(marker);
