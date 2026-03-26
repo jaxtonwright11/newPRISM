@@ -6,12 +6,28 @@ import { useAuth } from "@/lib/auth-context";
 import { useRealtime } from "@/lib/use-realtime";
 import type { Notification } from "@shared/types";
 
-const NOTIF_ICONS: Record<Notification["type"], { emoji: string; color: string }> = {
-  reaction: { emoji: "💡", color: "bg-prism-accent-primary/10" },
-  connection_request: { emoji: "🤝", color: "bg-prism-community-diaspora/10" },
-  connection_accepted: { emoji: "✓", color: "bg-prism-accent-live/10" },
-  new_perspective: { emoji: "📝", color: "bg-prism-community-cultural/10" },
-  community_milestone: { emoji: "🎉", color: "bg-prism-accent-primary/10" },
+function NotifIcon({ type }: { type: Notification["type"] }) {
+  const base = "w-5 h-5";
+  switch (type) {
+    case "reaction":
+      return <svg className={base} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" /></svg>;
+    case "connection_request":
+      return <svg className={base} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM3 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 019.374 21c-2.331 0-4.512-.645-6.374-1.766z" /></svg>;
+    case "connection_accepted":
+      return <svg className={base} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
+    case "new_perspective":
+      return <svg className={base} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" /></svg>;
+    case "community_milestone":
+      return <svg className={base} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" /></svg>;
+  }
+}
+
+const NOTIF_COLORS: Record<Notification["type"], string> = {
+  reaction: "bg-prism-accent-primary/10 text-prism-accent-primary",
+  connection_request: "bg-prism-community-diaspora/10 text-prism-community-diaspora",
+  connection_accepted: "bg-prism-accent-live/10 text-prism-accent-live",
+  new_perspective: "bg-prism-community-cultural/10 text-prism-community-cultural",
+  community_milestone: "bg-prism-accent-primary/10 text-prism-accent-primary",
 };
 
 export default function NotificationsPage() {
@@ -148,7 +164,6 @@ export default function NotificationsPage() {
         ) : notifications.length > 0 ? (
           <div className="divide-y divide-prism-border">
             {notifications.map((notif) => {
-              const icon = NOTIF_ICONS[notif.type];
               return (
                 <button
                   key={notif.id}
@@ -157,8 +172,8 @@ export default function NotificationsPage() {
                     notif.read ? "opacity-60" : "bg-prism-accent-primary/[0.03]"
                   } hover:bg-prism-bg-elevated`}
                 >
-                  <div className={`w-10 h-10 rounded-full ${icon.color} flex items-center justify-center shrink-0 text-base`}>
-                    {icon.emoji}
+                  <div className={`w-10 h-10 rounded-full ${NOTIF_COLORS[notif.type]} flex items-center justify-center shrink-0`}>
+                    <NotifIcon type={notif.type} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
