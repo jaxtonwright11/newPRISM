@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
+import { CommentThread } from "@/components/comment-thread";
 import type { Post } from "@shared/types";
 import { COMMUNITY_COLORS } from "@/lib/constants";
 
@@ -18,6 +20,7 @@ export function PersonalPostCard({
   const [liked, setLiked] = useState(false);
   const [likeDelta, setLikeDelta] = useState(0);
   const [bookmarked, setBookmarked] = useState(false);
+  const [showComments, setShowComments] = useState(false);
 
   const handleLike = useCallback(async () => {
     const wasLiked = liked;
@@ -101,9 +104,12 @@ export function PersonalPostCard({
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className="text-sm font-medium text-prism-text-primary truncate">
+            <Link
+              href={`/profile/${post.user_id}`}
+              className="text-sm font-medium text-prism-text-primary truncate hover:text-prism-accent-primary transition-colors"
+            >
               {displayName}
-            </span>
+            </Link>
             <span
               className="text-[10px] px-1.5 py-0.5 rounded inline-flex items-center gap-0.5"
               style={{
@@ -170,7 +176,12 @@ export function PersonalPostCard({
           </button>
 
           <button
-            className="flex items-center gap-1 px-2 py-1 rounded-full text-xs text-prism-text-dim hover:text-prism-text-secondary hover:bg-prism-bg-elevated transition-all duration-150"
+            onClick={() => setShowComments(!showComments)}
+            className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-all duration-150 ${
+              showComments
+                ? "bg-prism-accent-primary/15 text-prism-accent-primary"
+                : "text-prism-text-dim hover:text-prism-text-secondary hover:bg-prism-bg-elevated"
+            }`}
             aria-label="Comments"
           >
             <svg
@@ -190,6 +201,14 @@ export function PersonalPostCard({
           </button>
 
           <button
+            onClick={async () => {
+              const url = `${window.location.origin}/post/${post.id}`;
+              if (navigator.share) {
+                try { await navigator.share({ title: "PRISM", text: post.content.slice(0, 100), url }); } catch {}
+              } else {
+                await navigator.clipboard.writeText(url);
+              }
+            }}
             className="flex items-center gap-1 px-2 py-1 rounded-full text-xs text-prism-text-dim hover:text-prism-text-secondary hover:bg-prism-bg-elevated transition-all duration-150"
             aria-label="Share"
           >
@@ -229,6 +248,9 @@ export function PersonalPostCard({
           </svg>
         </button>
       </div>
+
+      {/* Comment thread */}
+      {showComments && <CommentThread postId={post.id} />}
     </div>
   );
 }

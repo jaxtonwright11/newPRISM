@@ -224,7 +224,11 @@ export default function FeedPage() {
             ))}
           </div>
         ) : (
-          <EmptyState {...EMPTY_STATES.feed} />
+          <EmptyState {...(
+            activeTab === "for-you" ? EMPTY_STATES.feedForYou
+            : activeTab === "following" ? EMPTY_STATES.feedFollowing
+            : EMPTY_STATES.feedNearby
+          )} />
         )}
         </div>
       </div>

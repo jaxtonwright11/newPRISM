@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { useAuth } from "@/lib/auth-context";
 import { COMMUNITY_COLORS } from "@/lib/constants";
 import type { CommunityType } from "@shared/types";
 
@@ -47,6 +48,33 @@ export default function PublicProfilePage() {
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [connectStatus, setConnectStatus] = useState<"idle" | "sending" | "sent">("idle");
+  const { session } = useAuth();
+
+  const handleConnect = useCallback(async () => {
+    if (!session?.access_token || connectStatus !== "idle") return;
+    setConnectStatus("sending");
+    try {
+      const res = await fetch("/api/connections", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          recipient_id: userId,
+          intro_message: `Hi! I'd like to connect with you on PRISM.`,
+        }),
+      });
+      if (res.ok) {
+        setConnectStatus("sent");
+      } else {
+        setConnectStatus("idle");
+      }
+    } catch {
+      setConnectStatus("idle");
+    }
+  }, [session?.access_token, userId, connectStatus]);
 
   useEffect(() => {
     async function load() {
@@ -99,6 +127,7 @@ export default function PublicProfilePage() {
 
   const verification = VERIFICATION_LABELS[profile.verification_level ?? 1];
   const stats = profile.profile ?? { perspectives_read: 0, communities_engaged: 0, connections_made: 0 };
+  const isOwnProfile = session?.user?.id === userId;
 
   return (
     <div className="min-h-screen bg-prism-bg-base">
@@ -151,6 +180,40 @@ export default function PublicProfilePage() {
               )}
             </div>
           </div>
+
+          {/* Action buttons */}
+          {!isOwnProfile && !profile.ghost_mode && (
+            <div className="flex gap-2 mt-4">
+              {session ? (
+                <>
+                  <button
+                    onClick={handleConnect}
+                    disabled={connectStatus !== "idle"}
+                    className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
+                      connectStatus === "sent"
+                        ? "bg-prism-accent-live/15 text-prism-accent-live border border-prism-accent-live/30"
+                        : "bg-prism-accent-primary text-white hover:bg-prism-accent-primary/90"
+                    } disabled:opacity-50`}
+                  >
+                    {connectStatus === "sent" ? "Request Sent" : connectStatus === "sending" ? "Sending..." : "Connect"}
+                  </button>
+                  <Link
+                    href={`/messages?to=${userId}`}
+                    className="flex-1 py-2 rounded-lg text-sm font-medium text-center border border-prism-border text-prism-text-primary hover:bg-prism-bg-elevated transition-colors"
+                  >
+                    Message
+                  </Link>
+                </>
+              ) : (
+                <Link
+                  href="/login"
+                  className="flex-1 py-2 rounded-lg text-sm font-medium text-center bg-prism-accent-primary text-white hover:bg-prism-accent-primary/90 transition-colors"
+                >
+                  Sign in to connect
+                </Link>
+              )}
+            </div>
+          )}
 
           <div className="grid grid-cols-3 gap-4 mt-6 pt-5 border-t border-prism-border">
             <div className="text-center">

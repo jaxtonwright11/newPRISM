@@ -62,7 +62,7 @@ function HeroSection() {
       {/* Hero content */}
       <div className="relative z-10 text-center px-4 max-w-3xl mx-auto">
         <motion.h1
-          className="font-body text-5xl md:text-7xl lg:text-8xl font-bold text-prism-text-primary tracking-tight"
+          className="font-display text-5xl md:text-7xl lg:text-8xl font-bold text-prism-text-primary tracking-tight"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, ease: "easeOut" }}
@@ -115,22 +115,22 @@ function HeroSection() {
 // ─── Problem Section ────────────────────────────────────────────────────────
 function ProblemSection() {
   return (
-    <section className="py-32 md:py-40 px-4 bg-prism-bg-base">
+    <section className="py-32 md:py-40 px-4 bg-prism-bg-base border-t border-prism-border/30">
       <div className="max-w-3xl mx-auto text-center">
         <motion.h2
           className="font-display text-3xl md:text-5xl font-bold text-prism-text-primary leading-tight"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.8 }}
         >
           We&apos;re all experiencing the same world differently.
         </motion.h2>
         <motion.p
-          className="text-xl md:text-2xl text-prism-text-dim mt-6"
+          className="text-xl md:text-2xl text-prism-text-secondary mt-6"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.8, delay: 0.3 }}
         >
           Nobody&apos;s showing you why.
@@ -164,13 +164,13 @@ function HowItWorksSection() {
   ];
 
   return (
-    <section id="how-it-works" className="py-24 md:py-32 px-4 bg-prism-bg-surface">
+    <section id="how-it-works" className="py-24 md:py-32 px-4 bg-prism-bg-elevated/50 border-t border-prism-border/30">
       <div className="max-w-5xl mx-auto">
         <motion.h2
-          className="font-body text-2xl md:text-4xl font-bold text-prism-text-primary text-center mb-16"
+          className="font-display text-2xl md:text-4xl font-bold text-prism-text-primary text-center mb-16"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.6 }}
         >
           How it works
@@ -182,7 +182,7 @@ function HowItWorksSection() {
               className="text-center md:text-left"
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
+              viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.6, delay: i * 0.2 }}
             >
               {/* Abstract visual */}
@@ -195,7 +195,7 @@ function HowItWorksSection() {
                   {step.number}
                 </span>
               </div>
-              <h3 className="font-body text-xl font-semibold text-prism-text-primary mb-3">
+              <h3 className="font-display text-xl font-semibold text-prism-text-primary mb-3">
                 {step.title}
               </h3>
               <p className="text-sm text-prism-text-secondary leading-relaxed">
@@ -233,13 +233,13 @@ function AhaPreviewSection() {
   ];
 
   return (
-    <section className="py-24 md:py-32 px-4 bg-prism-bg-base">
+    <section className="py-24 md:py-32 px-4 bg-prism-bg-base border-t border-prism-border/30">
       <div className="max-w-4xl mx-auto">
         <motion.div
           className="text-center mb-12"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.6 }}
         >
           <span className="text-xs font-mono uppercase tracking-widest text-prism-accent-glow">
@@ -261,7 +261,7 @@ function AhaPreviewSection() {
               className="p-5 rounded-xl bg-prism-bg-surface border border-prism-border relative overflow-hidden"
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
+              viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.6, delay: i * 0.15 }}
             >
               {/* Left color accent */}
@@ -322,12 +322,12 @@ function EarlyAccessSection() {
   };
 
   return (
-    <section className="py-24 md:py-32 px-4 bg-prism-bg-surface">
+    <section className="py-24 md:py-32 px-4 bg-prism-bg-elevated/50 border-t border-prism-border/30">
       <motion.div
         className="max-w-md mx-auto text-center"
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
+        viewport={{ once: true, amount: 0.3 }}
         transition={{ duration: 0.6 }}
       >
         <h2 className="font-body text-2xl md:text-3xl font-bold text-prism-text-primary">

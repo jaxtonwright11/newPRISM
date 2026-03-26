@@ -15,22 +15,50 @@ export function PWAInstallPrompt() {
   useEffect(() => {
     if (localStorage.getItem("prism-pwa-dismissed")) return;
 
-    // Android/Chrome: capture beforeinstallprompt
-    const handler = (e: Event) => {
+    // Don't show on auth, onboarding, or landing pages
+    const path = window.location.pathname;
+    const suppressedPaths = ["/login", "/signup", "/onboarding", "/landing"];
+    if (suppressedPaths.some((p) => path.startsWith(p))) return;
+
+    // Track page views — only show after user has visited 2+ pages
+    const views = parseInt(sessionStorage.getItem("prism-page-views") ?? "0", 10) + 1;
+    sessionStorage.setItem("prism-page-views", String(views));
+    if (views < 2) return;
+
+    // Delay showing by 60 seconds after qualifying
+    const timer = setTimeout(() => {
+      // Android/Chrome: capture beforeinstallprompt
+      const handler = (e: Event) => {
+        e.preventDefault();
+        setDeferredPrompt(e as BeforeInstallPromptEvent);
+      };
+      window.addEventListener("beforeinstallprompt", handler);
+
+      // iOS Safari: detect and show manual instructions
+      const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+      const isStandalone = window.matchMedia("(display-mode: standalone)").matches
+        || ("standalone" in navigator && (navigator as unknown as { standalone: boolean }).standalone);
+      if (isIOS && !isStandalone) {
+        setShowIOSPrompt(true);
+      }
+
+      // Fire beforeinstallprompt if it already happened before timer
+      if ((window as unknown as Record<string, unknown>).__pwaPromptEvent) {
+        setDeferredPrompt((window as unknown as Record<string, unknown>).__pwaPromptEvent as BeforeInstallPromptEvent);
+      }
+    }, 60000);
+
+    // Still capture the event early so we don't miss it
+    const earlyHandler = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
+      (window as unknown as Record<string, unknown>).__pwaPromptEvent = e;
     };
-    window.addEventListener("beforeinstallprompt", handler);
+    window.addEventListener("beforeinstallprompt", earlyHandler);
 
-    // iOS Safari: detect and show manual instructions
-    const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
-    const isStandalone = window.matchMedia("(display-mode: standalone)").matches
-      || ("standalone" in navigator && (navigator as unknown as { standalone: boolean }).standalone);
-    if (isIOS && !isStandalone) {
-      setShowIOSPrompt(true);
-    }
-
-    return () => window.removeEventListener("beforeinstallprompt", handler);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("beforeinstallprompt", earlyHandler);
+    };
   }, []);
 
   const dismiss = () => {

@@ -128,8 +128,11 @@ export default function OnboardingPage() {
             <h1 className="font-display font-bold text-2xl text-[var(--text-primary)] mb-2">
               What&apos;s one thing about your neighborhood that outsiders don&apos;t understand?
             </h1>
-            <p className="text-base text-[var(--text-secondary)] font-body mb-8 max-w-sm">
+            <p className="text-base text-[var(--text-secondary)] font-body mb-4 max-w-sm">
               This becomes your first perspective on PRISM.
+            </p>
+            <p className="text-xs text-[var(--text-dim)] font-body mb-6 max-w-sm">
+              A perspective is a firsthand account of how your community experiences an event or issue.
             </p>
 
             {location && (
@@ -191,6 +194,18 @@ export default function OnboardingPage() {
             >
               Go to feed instead
             </button>
+
+            <div className="mt-8 pt-6 border-t border-[var(--bg-elevated)] w-full max-w-sm">
+              <p className="text-xs text-[var(--text-dim)] mb-2 text-center">
+                Want to represent your community on PRISM?
+              </p>
+              <button
+                onClick={() => router.push("/apply")}
+                className="w-full py-2.5 rounded-lg border border-[var(--bg-elevated)] text-sm text-[var(--text-secondary)] font-body hover:text-[var(--text-primary)] hover:border-[var(--accent-primary)]/30 transition-all"
+              >
+                Register a community
+              </button>
+            </div>
           </div>
         )}
       </div>

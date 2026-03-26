@@ -59,10 +59,10 @@ function LoginPageInner() {
         <div className="flex flex-col items-center mb-8">
           <PrismWordmark size="lg" />
           <h1 className="font-display text-2xl font-bold text-prism-text-primary mt-6 tracking-tight">
-            Welcome back
+            Sign in to PRISM
           </h1>
           <p className="text-sm text-prism-text-secondary mt-1 font-body">
-            Sign in to continue exploring perspectives
+            See the world through every community&apos;s eyes
           </p>
         </div>
 

@@ -26,7 +26,22 @@ export async function GET(request: Request) {
       }
     )
     const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (!error) return NextResponse.redirect(`${origin}${next}`)
+    if (!error) {
+      // Check if user is new (no home community set) → route to onboarding
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('home_community_id')
+          .eq('id', user.id)
+          .single()
+
+        if (!profile?.home_community_id) {
+          return NextResponse.redirect(`${origin}/onboarding`)
+        }
+      }
+      return NextResponse.redirect(`${origin}${next}`)
+    }
   }
   return NextResponse.redirect(`${origin}/login?error=auth_callback_failed`)
 }

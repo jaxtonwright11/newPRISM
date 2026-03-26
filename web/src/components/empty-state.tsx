@@ -136,13 +136,38 @@ export function EmptyState({
 
 export const EMPTY_STATES = {
   feed: {
-    heading: "This is where perspectives live.",
-    body: "When communities share how they experience the world, their perspectives show up here. You're early — be the first voice.",
+    heading: "Your feed starts here.",
+    body: "Share what your community is experiencing — a perspective is a firsthand account of how an event or issue affects your world.",
     icon: "perspectives" as const,
     ctaLabel: "Share a perspective",
     ctaHref: "/create",
-    secondaryLabel: "Register a community",
-    secondaryHref: "/apply",
+    secondaryLabel: "Invite friends to PRISM",
+    secondaryHref: "/landing",
+  },
+  feedForYou: {
+    heading: "Your personalized feed.",
+    body: "Follow communities and engage with perspectives to build a feed tailored to your interests. Start by exploring what's out there.",
+    icon: "perspectives" as const,
+    ctaLabel: "Explore communities",
+    ctaHref: "/discover",
+    secondaryLabel: "Share a perspective",
+    secondaryHref: "/create",
+  },
+  feedFollowing: {
+    heading: "Follow communities you care about.",
+    body: "When communities you follow share new perspectives, they'll appear here. Discover communities to follow and stay connected.",
+    icon: "compass" as const,
+    ctaLabel: "Discover communities",
+    ctaHref: "/discover",
+  },
+  feedNearby: {
+    heading: "See what's happening near you.",
+    body: "Perspectives from communities in your area will appear here. Set your location to connect with nearby communities.",
+    icon: "map" as const,
+    ctaLabel: "Set your location",
+    ctaHref: "/onboarding",
+    secondaryLabel: "Share a perspective",
+    secondaryHref: "/create",
   },
   map: {
     heading: "The map is waiting.",
@@ -152,9 +177,13 @@ export const EMPTY_STATES = {
     ctaHref: "/apply",
   },
   discover: {
-    heading: "Nothing to discover yet.",
-    body: "This is where you'll see how different communities experience the same events. Once perspectives start flowing, this becomes the most interesting feed you've ever opened.",
+    heading: "Be the first to share.",
+    body: "This is where you'll see how different communities experience the same events — side by side. Add a perspective to get it started.",
     icon: "compass" as const,
+    ctaLabel: "Share a perspective",
+    ctaHref: "/create",
+    secondaryLabel: "Invite friends",
+    secondaryHref: "/landing",
   },
   profile: {
     heading: "Your story starts here.",

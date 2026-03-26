@@ -24,6 +24,7 @@ interface MapPlaceholderProps {
   userPosts?: Post[];
   heatPoints?: HeatPoint[];
   onHeatTap?: (point: HeatPoint) => void;
+  isAuthenticated?: boolean;
 }
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? "";
@@ -203,10 +204,12 @@ export function MapPlaceholder({
   userPosts = [],
   heatPoints = [],
   onHeatTap,
+  isAuthenticated = false,
 }: MapPlaceholderProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const emptyPopupRef = useRef<mapboxgl.Popup | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
 
   // Inject pulse animation CSS
@@ -247,6 +250,31 @@ export function MapPlaceholder({
 
     map.on("load", () => {
       setMapLoaded(true);
+    });
+
+    // Click on empty area → show "no perspectives here yet" prompt
+    map.on("click", (e) => {
+      // Remove any existing empty-area popup
+      if (emptyPopupRef.current) {
+        emptyPopupRef.current.remove();
+        emptyPopupRef.current = null;
+      }
+
+      const popup = new mapboxgl.Popup({
+        closeButton: true,
+        closeOnClick: true,
+        offset: 0,
+        className: "prism-popup",
+        maxWidth: "240px",
+      }).setLngLat(e.lngLat).setHTML(
+        `<div style="background:#181B20;border:1px solid #262A31;border-radius:10px;padding:12px 14px;font-family:'DM Sans',sans-serif;">
+          <p style="font-size:13px;color:#EDEDEF;margin:0 0 6px;">No perspectives here yet.</p>
+          <p style="font-size:11px;color:#9CA3AF;margin:0 0 8px;">Be the first to share what your community is experiencing.</p>
+          <a href="/create" style="display:inline-block;font-size:11px;color:#D4956B;text-decoration:none;font-weight:500;">Share a perspective →</a>
+        </div>`
+      ).addTo(map);
+
+      emptyPopupRef.current = popup;
     });
 
     mapRef.current = map;
@@ -310,7 +338,12 @@ export function MapPlaceholder({
       el.addEventListener("mouseleave", () => {
         popup.remove();
       });
-      el.addEventListener("click", () => {
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (emptyPopupRef.current) {
+          emptyPopupRef.current.remove();
+          emptyPopupRef.current = null;
+        }
         window.location.href = `/community/${c.id}`;
       });
 
@@ -332,7 +365,7 @@ export function MapPlaceholder({
       markersRef.current.push(marker);
     });
 
-    // User post pins
+    // User post pins — clickable with popup showing content and author link
     const homeCommunity = showPersonalPinCommunity ?? null;
     userPosts.forEach((post) => {
       const lat = post.latitude ?? homeCommunity?.latitude;
@@ -340,11 +373,12 @@ export function MapPlaceholder({
       if (lat == null || lng == null) return;
 
       const el = document.createElement("div");
-      el.style.width = "6px";
-      el.style.height = "6px";
+      el.style.width = "8px";
+      el.style.height = "8px";
       el.style.borderRadius = "50%";
       el.style.backgroundColor = "#3B82F6";
-      el.style.boxShadow = "0 1px 4px rgba(74,158,255,0.5)";
+      el.style.boxShadow = "0 1px 6px rgba(74,158,255,0.6)";
+      el.style.cursor = "pointer";
 
       if (post.post_type === "story") {
         el.style.border = "2px solid transparent";
@@ -353,6 +387,40 @@ export function MapPlaceholder({
         el.style.backgroundOrigin = "border-box";
         el.style.backgroundClip = "padding-box, border-box";
       }
+
+      const authorName = post.user?.display_name ?? post.user?.username ?? "Anonymous";
+      const contentPreview = post.content?.slice(0, 120) ?? "";
+      const communityName = post.community?.name ?? "";
+
+      const popup = new mapboxgl.Popup({
+        closeButton: true,
+        closeOnClick: true,
+        offset: 12,
+        className: "prism-popup",
+        maxWidth: "260px",
+      }).setHTML(
+        `<div style="background:#181B20;border:1px solid #262A31;border-radius:10px;padding:12px;font-family:'DM Sans',sans-serif;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+            <div style="width:24px;height:24px;border-radius:50%;background:#262A31;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#EDEDEF;">${authorName.charAt(0).toUpperCase()}</div>
+            <div>
+              <a href="/profile/${post.user_id}" style="font-size:12px;color:#EDEDEF;text-decoration:none;font-weight:500;">${authorName}</a>
+              ${communityName ? `<span style="font-size:10px;color:#5C6370;display:block;">${communityName}</span>` : ""}
+            </div>
+          </div>
+          <p style="font-size:12px;color:#9CA3AF;margin:0 0 8px;line-height:1.4;">${contentPreview}${post.content && post.content.length > 120 ? "..." : ""}</p>
+          <a href="/profile/${post.user_id}" style="font-size:11px;color:#D4956B;text-decoration:none;font-weight:500;">View profile →</a>
+        </div>`
+      );
+
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        // Remove the empty-area popup if visible
+        if (emptyPopupRef.current) {
+          emptyPopupRef.current.remove();
+          emptyPopupRef.current = null;
+        }
+        popup.setLngLat([lng, lat]).addTo(mapRef.current!);
+      });
 
       const marker = new mapboxgl.Marker({
         element: el,
@@ -433,22 +501,25 @@ export function MapPlaceholder({
 
       {/* Map status */}
 
-      {/* Privacy status */}
-      <div className="absolute top-11 right-3 bg-prism-bg-base/80 backdrop-blur-sm px-2.5 py-1 rounded-full z-10 border border-prism-border/60">
-        <span
-          className={`text-[10px] font-medium ${
-            ghostMode ? "text-prism-accent-primary" : "text-prism-text-secondary"
-          }`}
-        >
-          {ghostMode ? "Ghost mode on" : "Visible mode"}
-        </span>
-      </div>
+      {/* Privacy status — only show for authenticated users */}
+      {isAuthenticated && (
+        <div className="absolute top-11 right-3 bg-prism-bg-base/80 backdrop-blur-sm px-2.5 py-1 rounded-full z-10 border border-prism-border/60">
+          <span
+            className={`text-[10px] font-medium ${
+              ghostMode ? "text-prism-accent-primary" : "text-prism-text-secondary"
+            }`}
+          >
+            {ghostMode ? "Ghost mode on" : "Visible mode"}
+          </span>
+        </div>
+      )}
 
-      {/* Community count */}
+      {/* Community count — show count when > 0, or exploration prompt when empty */}
       <div className="absolute top-3 left-3 bg-prism-bg-base/80 backdrop-blur-sm px-2.5 py-1 rounded-full z-10">
         <span className="text-[10px] font-mono text-prism-text-secondary">
-          {communitiesProp.filter((c) => c.latitude != null).length} communities
-          active
+          {communitiesProp.filter((c) => c.latitude != null).length > 0
+            ? `${communitiesProp.filter((c) => c.latitude != null).length} communities active`
+            : "Tap anywhere to explore"}
         </span>
       </div>
 

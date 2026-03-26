@@ -103,8 +103,11 @@ export default function CreatePage() {
         <h2 className="font-display font-bold text-xl text-[var(--text-primary)] mb-2">
           Share your perspective
         </h2>
-        <p className="text-sm text-[var(--text-secondary)] mb-6">
+        <p className="text-sm text-[var(--text-secondary)] mb-2">
           Sign in to share what your community is experiencing.
+        </p>
+        <p className="text-xs text-[var(--text-dim)] mb-6 max-w-xs">
+          A perspective is a firsthand account of how your community experiences an event or issue.
         </p>
         <Link
           href="/login"

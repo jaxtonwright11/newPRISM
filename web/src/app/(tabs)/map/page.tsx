@@ -3,11 +3,13 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { MapPlaceholder } from "@/components/map-placeholder";
+import { useAuth } from "@/lib/auth-context";
 import type { Community, Topic } from "@shared/types";
 
 export default function MapPage() {
   const [communities, setCommunities] = useState<Community[]>([]);
   const [activeTopic, setActiveTopic] = useState<Topic | null>(null);
+  const { session } = useAuth();
 
   useEffect(() => {
     fetch("/api/communities")
@@ -27,7 +29,7 @@ export default function MapPage() {
 
   return (
     <div className="w-full h-[calc(100vh-3.5rem)] md:h-screen relative">
-      <MapPlaceholder communities={communities} />
+      <MapPlaceholder communities={communities} isAuthenticated={!!session} />
 
       {/* Active Now overlay */}
       {activeTopic && (

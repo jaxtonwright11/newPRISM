@@ -188,6 +188,24 @@ export default function ProfilePage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="m9 5 7 7-7 7" />
               </svg>
             </Link>
+            <Link
+              href="/apply"
+              className="flex items-center justify-between px-4 py-3 rounded-xl bg-[var(--bg-surface)] text-[var(--text-primary)] font-body text-sm"
+            >
+              Register a Community
+              <svg className="w-4 h-4 text-[var(--text-dim)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="m9 5 7 7-7 7" />
+              </svg>
+            </Link>
+            <Link
+              href="/landing"
+              className="flex items-center justify-between px-4 py-3 rounded-xl bg-[var(--bg-surface)] text-[var(--text-primary)] font-body text-sm"
+            >
+              Invite Friends
+              <svg className="w-4 h-4 text-[var(--text-dim)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="m9 5 7 7-7 7" />
+              </svg>
+            </Link>
           </div>
         )}
       </div>
