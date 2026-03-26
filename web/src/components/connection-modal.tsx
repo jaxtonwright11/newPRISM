@@ -182,7 +182,7 @@ export function ConnectionModal({
               <p className="text-xs text-prism-text-dim mb-1">
                 Inspired by this perspective:
               </p>
-              <p className="text-sm text-prism-text-secondary italic font-display leading-snug">
+              <p className="text-sm text-prism-text-secondary font-body leading-snug">
                 &ldquo;
                 {perspectiveQuote.length > 120
                   ? perspectiveQuote.slice(0, 120) + "..."

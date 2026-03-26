@@ -187,12 +187,12 @@ export default function SettingsPage() {
         </button>
 
         {/* Danger zone */}
-        <section className="bg-prism-bg-surface rounded-2xl border border-prism-accent-live/20 overflow-hidden">
-          <div className="px-4 py-3 border-b border-prism-accent-live/20">
-            <h2 className="text-sm font-semibold text-prism-accent-live">Danger Zone</h2>
+        <section className="bg-prism-bg-surface rounded-2xl border border-prism-accent-destructive/20 overflow-hidden">
+          <div className="px-4 py-3 border-b border-prism-accent-destructive/20">
+            <h2 className="text-sm font-semibold text-prism-accent-destructive">Danger Zone</h2>
           </div>
           <div className="p-4">
-            <button className="text-sm text-prism-accent-live hover:underline">
+            <button className="text-sm text-prism-accent-destructive hover:underline">
               Delete Account
             </button>
             <p className="text-xs text-prism-text-dim mt-1">This action cannot be undone.</p>

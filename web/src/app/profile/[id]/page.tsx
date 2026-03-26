@@ -116,7 +116,7 @@ export default function PublicProfilePage() {
       <div className="max-w-2xl mx-auto px-4 py-6">
         <div className="bg-prism-bg-surface rounded-2xl border border-prism-border p-6 mb-6">
           <div className="flex items-start gap-4">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-prism-accent-primary to-prism-community-diaspora flex items-center justify-center shrink-0 overflow-hidden">
+            <div className="w-16 h-16 rounded-full bg-prism-accent-primary/30 flex items-center justify-center shrink-0 overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               {profile.avatar_url ? (
                 <img src={profile.avatar_url} alt={profile.display_name ?? profile.username} className="w-full h-full object-cover" />

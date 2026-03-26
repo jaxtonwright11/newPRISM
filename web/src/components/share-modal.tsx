@@ -92,7 +92,7 @@ export function ShareModal({
           {/* Preview */}
           {quote && (
             <div className="p-3 rounded-lg bg-prism-bg-elevated border border-prism-border mb-4">
-              <p className="text-xs text-prism-text-secondary italic font-display leading-snug mb-1">
+              <p className="text-xs text-prism-text-secondary font-body leading-snug mb-1">
                 &ldquo;
                 {quote.length > 80 ? quote.slice(0, 80) + "..." : quote}
                 &rdquo;

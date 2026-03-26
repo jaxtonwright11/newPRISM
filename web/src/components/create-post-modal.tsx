@@ -212,7 +212,7 @@ export function CreatePostModal({
                   onClick={() => setPostType("story")}
                   className={`flex-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-150 flex items-center justify-center gap-1.5 ${
                     postType === "story"
-                      ? "bg-gradient-to-r from-prism-accent-primary to-amber-500 text-white shadow-sm"
+                      ? "bg-prism-accent-primary text-white shadow-sm"
                       : "text-prism-text-secondary hover:text-prism-text-primary"
                   }`}
                 >

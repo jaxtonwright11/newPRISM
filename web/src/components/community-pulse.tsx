@@ -186,7 +186,7 @@ export function CommunityPulse({ isOpen, onClose }: CommunityPulseProps) {
                         COMMUNITY_COLORS[mostReacted.community.community_type],
                     }}
                   >
-                    <p className="text-sm text-prism-text-primary italic font-display leading-snug mb-2">
+                    <p className="text-sm text-prism-text-primary font-body leading-snug mb-2">
                       &ldquo;
                       {mostReacted.quote.length > 100
                         ? mostReacted.quote.slice(0, 100) + "..."
