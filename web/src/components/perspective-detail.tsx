@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import type { CommunityType, ReactionType } from "@shared/types";
 import { REACTION_LABELS, COMMUNITY_COLORS } from "@/lib/constants";
+import { useAuth } from "@/lib/auth-context";
 
 interface PerspectiveDetailProps {
   id: string;
@@ -23,6 +24,7 @@ interface PerspectiveDetailProps {
 }
 
 export function PerspectiveDetail({
+  id,
   community,
   quote,
   context,
@@ -32,12 +34,68 @@ export function PerspectiveDetail({
   created_at,
   onClose,
 }: PerspectiveDetailProps) {
+  const { session } = useAuth();
   const [activeReaction, setActiveReaction] = useState<ReactionType | null>(null);
+  const [localReactionDelta, setLocalReactionDelta] = useState(0);
   const [bookmarked, setBookmarked] = useState(false);
 
-  const handleReaction = (type: ReactionType) => {
-    setActiveReaction(activeReaction === type ? null : type);
-  };
+  const handleReaction = useCallback(async (type: ReactionType) => {
+    const wasActive = activeReaction === type;
+
+    if (wasActive) {
+      setActiveReaction(null);
+      setLocalReactionDelta((d) => d - 1);
+    } else {
+      const hadPrevious = activeReaction !== null;
+      setActiveReaction(type);
+      if (!hadPrevious) setLocalReactionDelta((d) => d + 1);
+    }
+
+    if (!session?.access_token) return;
+
+    try {
+      if (wasActive) {
+        await fetch(`/api/perspectives/${id}/react`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+      } else {
+        await fetch(`/api/perspectives/${id}/react`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ reaction_type: type }),
+        });
+      }
+    } catch {
+      // Revert on failure
+      if (wasActive) {
+        setActiveReaction(type);
+        setLocalReactionDelta((d) => d + 1);
+      } else {
+        setActiveReaction(null);
+        setLocalReactionDelta((d) => d - 1);
+      }
+    }
+  }, [activeReaction, id, session?.access_token]);
+
+  const handleBookmark = useCallback(async () => {
+    const wasBookmarked = bookmarked;
+    setBookmarked(!wasBookmarked);
+
+    if (!session?.access_token) return;
+
+    try {
+      await fetch(`/api/perspectives/${id}/bookmark`, {
+        method: wasBookmarked ? "DELETE" : "POST",
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+    } catch {
+      setBookmarked(wasBookmarked);
+    }
+  }, [bookmarked, id, session?.access_token]);
 
   const formattedDate = created_at
     ? new Date(created_at).toLocaleDateString("en-US", {
@@ -113,15 +171,19 @@ export function PerspectiveDetail({
           </blockquote>
 
           {/* Context */}
-          <p className="text-sm text-prism-text-secondary leading-relaxed mb-6">
-            {context}
-          </p>
+          {context && (
+            <p className="text-sm text-prism-text-secondary leading-relaxed mb-6">
+              {context}
+            </p>
+          )}
 
           {/* Metadata row */}
           <div className="flex items-center gap-3 mb-6">
-            <span className="text-xs px-2.5 py-1 rounded-full bg-prism-bg-elevated text-prism-text-dim">
-              {category_tag}
-            </span>
+            {category_tag && (
+              <span className="text-xs px-2.5 py-1 rounded-full bg-prism-bg-elevated text-prism-text-dim">
+                {category_tag}
+              </span>
+            )}
             <span
               className="text-xs px-2.5 py-1 rounded-full inline-flex items-center gap-1"
               style={{
@@ -164,14 +226,14 @@ export function PerspectiveDetail({
                 >
                   <span className="text-base">{emoji}</span>
                   <span className="font-mono text-xs">
-                    {reaction_count + (activeReaction === type ? 1 : 0)}
+                    {reaction_count + localReactionDelta}
                   </span>
                 </button>
               ))}
             </div>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setBookmarked(!bookmarked)}
+                onClick={handleBookmark}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all duration-150 ${
                   bookmarked
                     ? "text-prism-accent-primary bg-prism-accent-primary/10"
