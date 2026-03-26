@@ -8,6 +8,7 @@ import { PrismWordmark } from "@/components/prism-wordmark";
 import { EmptyState, EMPTY_STATES } from "@/components/empty-state";
 import { useAuth } from "@/lib/auth-context";
 import { useRealtime } from "@/lib/use-realtime";
+import { recordPost } from "@/lib/streak";
 import type { CommunityType } from "@shared/types";
 
 const PerspectiveDetail = dynamic(

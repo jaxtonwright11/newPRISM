@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import Link from "next/link";
 import { EmptyState, EMPTY_STATES } from "@/components/empty-state";
+import { getStreak, getStreakMessage } from "@/lib/streak";
 
 type ProfileTab = "perspectives" | "saved" | "settings";
 
@@ -11,17 +12,12 @@ export default function ProfilePage() {
   const { session, user } = useAuth();
   const [activeTab, setActiveTab] = useState<ProfileTab>("perspectives");
   const [streak, setStreak] = useState(0);
+  const [streakMessage, setStreakMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    const saved = localStorage.getItem("prism_streak");
-    if (saved) {
-      try {
-        const data = JSON.parse(saved);
-        setStreak(data.count ?? 0);
-      } catch {
-        // ignore
-      }
-    }
+    const data = getStreak();
+    setStreak(data.count);
+    setStreakMessage(getStreakMessage(data.count));
   }, []);
 
   if (!session) {
@@ -78,6 +74,9 @@ export default function ProfilePage() {
           </span>
           <span className="font-mono font-medium text-sm text-[var(--text-primary)]">{streak}</span>
           <span className="text-xs text-[var(--text-secondary)]">day streak</span>
+          {streakMessage && (
+            <span className="text-xs text-[var(--text-dim)] ml-2">{streakMessage}</span>
+          )}
         </div>
       </header>
 
