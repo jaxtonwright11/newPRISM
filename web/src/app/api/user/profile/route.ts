@@ -98,8 +98,8 @@ export async function PATCH(request: Request) {
     const { error } = await supabase
       .from("user_profiles")
       .upsert(
-        { user_id: user.id, bio: parsed.data.bio },
-        { onConflict: "user_id" }
+        { id: user.id, bio: parsed.data.bio },
+        { onConflict: "id" }
       );
 
     if (error) {

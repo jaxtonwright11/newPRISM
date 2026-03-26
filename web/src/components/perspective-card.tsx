@@ -7,6 +7,7 @@ import { prismEvents } from "@/lib/posthog";
 import type { CommunityType, ReactionType } from "@shared/types";
 import { REACTION_LABELS } from "@/lib/constants";
 import { ShareButton } from "@/components/share-button";
+import { ReportButton } from "@/components/report-button";
 
 interface PerspectiveCardProps {
   id: string;
@@ -219,6 +220,7 @@ export function PerspectiveCard({
             </svg>
           </button>
           <ShareButton perspectiveId={id} quote={quote} />
+          <ReportButton contentType="perspective" contentId={id} />
         </div>
       </div>
       </div>
