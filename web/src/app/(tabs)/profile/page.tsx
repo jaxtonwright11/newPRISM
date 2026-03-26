@@ -103,10 +103,7 @@ export default function ProfilePage() {
           <EmptyState {...EMPTY_STATES.profile} />
         )}
         {activeTab === "saved" && (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <p className="text-sm text-[var(--text-secondary)] mb-1">No saved perspectives</p>
-            <p className="text-xs text-[var(--text-dim)]">Bookmark perspectives to save them here.</p>
-          </div>
+          <EmptyState {...EMPTY_STATES.bookmarksPerspectives} />
         )}
         {activeTab === "settings" && (
           <div className="flex flex-col gap-3">

@@ -45,9 +45,13 @@ export default function DiscoverPage() {
       .then((data) => {
         const t: Topic[] = data.topics ?? [];
         setTopics(t);
-        if (t.length > 0) setSelectedTopicSlug(t[0].slug);
+        if (t.length > 0) {
+          setSelectedTopicSlug(t[0].slug);
+        } else {
+          setLoading(false);
+        }
       })
-      .catch(() => {});
+      .catch(() => setLoading(false));
   }, []);
 
   useEffect(() => {

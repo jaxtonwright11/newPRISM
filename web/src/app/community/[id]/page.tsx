@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth-context";
 import { PerspectiveCard } from "@/components/perspective-card";
 import { PerspectiveDetail } from "@/components/perspective-detail";
 import { COMMUNITY_COLORS } from "@/lib/constants";
+import { EmptyState, EMPTY_STATES } from "@/components/empty-state";
 import type { Community, CommunityType, Topic } from "@shared/types";
 
 interface CommunityPerspective {
@@ -211,9 +212,7 @@ export default function CommunityPage() {
                 />
               ))
             ) : (
-              <div className="text-center py-12">
-                <p className="text-sm text-prism-text-dim">No perspectives shared yet.</p>
-              </div>
+              <EmptyState {...EMPTY_STATES.communityPerspectives} />
             )}
           </div>
         </div>

@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth-context";
 import { PerspectiveCard } from "@/components/perspective-card";
 import { PerspectiveDetail } from "@/components/perspective-detail";
 import { COMMUNITY_COLORS } from "@/lib/constants";
+import { EmptyState, EMPTY_STATES } from "@/components/empty-state";
 import type { Topic, Community, CommunityAlignment, CommunityType, TopicStatus } from "@shared/types";
 
 const STATUS_DOT: Record<TopicStatus, string> = {
@@ -228,11 +229,7 @@ export default function TopicDetailPage() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12">
-              <p className="text-sm text-prism-text-dim">
-                No perspectives for this topic yet.
-              </p>
-            </div>
+            <EmptyState {...EMPTY_STATES.topicPerspectives} />
           )}
         </div>
       </main>

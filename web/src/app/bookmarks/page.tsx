@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { PerspectiveCard } from "@/components/perspective-card";
 import { PerspectiveDetail } from "@/components/perspective-detail";
+import { EmptyState as SharedEmptyState, EMPTY_STATES } from "@/components/empty-state";
 import type { CommunityType } from "@shared/types";
 
 type BookmarkTab = "perspectives" | "topics";
@@ -151,7 +152,7 @@ export default function BookmarksPage() {
                 />
               ))
             ) : (
-              <EmptyState message="No bookmarked perspectives yet." sub="Tap the bookmark icon on any perspective to save it here." />
+              <SharedEmptyState {...EMPTY_STATES.bookmarksPerspectives} />
             )}
           </div>
         )}
@@ -178,7 +179,7 @@ export default function BookmarksPage() {
                 </Link>
               ))
             ) : (
-              <EmptyState message="No bookmarked topics yet." sub="Topics you save will appear here." />
+              <SharedEmptyState {...EMPTY_STATES.bookmarksTopics} />
             )}
           </div>
         )}
@@ -202,16 +203,3 @@ export default function BookmarksPage() {
   );
 }
 
-function EmptyState({ message, sub }: { message: string; sub: string }) {
-  return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="w-12 h-12 rounded-full bg-prism-bg-elevated flex items-center justify-center mb-3">
-        <svg className="w-6 h-6 text-prism-text-dim" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
-        </svg>
-      </div>
-      <p className="text-sm text-prism-text-dim mb-1">{message}</p>
-      <p className="text-xs text-prism-text-dim/60">{sub}</p>
-    </div>
-  );
-}

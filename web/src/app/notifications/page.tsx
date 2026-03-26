@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { useRealtime } from "@/lib/use-realtime";
+import { EmptyState, EMPTY_STATES } from "@/components/empty-state";
 import type { Notification } from "@shared/types";
 
 function NotifIcon({ type }: { type: Notification["type"] }) {
@@ -190,14 +191,7 @@ export default function NotificationsPage() {
             })}
           </div>
         ) : (
-          <div className="text-center py-16">
-            <div className="w-12 h-12 rounded-full bg-prism-bg-elevated flex items-center justify-center mx-auto mb-3">
-              <svg className="w-6 h-6 text-prism-text-dim" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
-              </svg>
-            </div>
-            <p className="text-sm text-prism-text-dim">No notifications yet.</p>
-          </div>
+          <EmptyState {...EMPTY_STATES.notifications} />
         )}
       </div>
     </div>
