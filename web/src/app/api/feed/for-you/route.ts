@@ -48,22 +48,23 @@ export async function GET(request: Request) {
       });
     }
 
-    // Get followed community IDs
-    const followedIds: string[] = [];
-    const { data: follows } = await supabase
-      .from("community_follows")
-      .select("community_id")
-      .eq("user_id", user.id);
+    // Get followed community IDs and home community in parallel
+    const [{ data: follows }, { data: userData }] = await Promise.all([
+      supabase
+        .from("community_follows")
+        .select("community_id")
+        .eq("user_id", user.id),
+      supabase
+        .from("users")
+        .select("home_community_id")
+        .eq("id", user.id)
+        .single(),
+    ]);
 
+    const followedIds: string[] = [];
     if (follows) {
       for (const f of follows) followedIds.push(f.community_id);
     }
-
-    const { data: userData } = await supabase
-      .from("users")
-      .select("home_community_id")
-      .eq("id", user.id)
-      .single();
 
     if (userData?.home_community_id && !followedIds.includes(userData.home_community_id)) {
       followedIds.push(userData.home_community_id);

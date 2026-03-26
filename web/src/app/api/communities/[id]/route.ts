@@ -36,25 +36,19 @@ export async function GET(
       return NextResponse.json({ error: "Community not found" }, { status: 404 });
     }
 
-    // Fetch perspectives from this community
+    // Fetch perspectives (with topic_id) and topics in parallel
     const { data: perspectives } = await supabase
       .from("perspectives")
-      .select("id, quote, context, category_tag, reaction_count, bookmark_count, created_at, community:communities(name, region, community_type, color_hex, verified)")
+      .select("id, quote, context, category_tag, reaction_count, bookmark_count, created_at, topic_id, community:communities(name, region, community_type, color_hex, verified)")
       .eq("community_id", id)
       .order("created_at", { ascending: false })
       .limit(20);
 
-    // Fetch topics this community participates in
+    // Extract unique topic IDs from the perspectives we already fetched
     const topicIds = new Set<string>();
     if (perspectives) {
-      const { data: perspWithTopics } = await supabase
-        .from("perspectives")
-        .select("topic_id")
-        .eq("community_id", id);
-      if (perspWithTopics) {
-        for (const p of perspWithTopics) {
-          if (p.topic_id) topicIds.add(p.topic_id);
-        }
+      for (const p of perspectives) {
+        if (p.topic_id) topicIds.add(p.topic_id as string);
       }
     }
 

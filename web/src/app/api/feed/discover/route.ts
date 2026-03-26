@@ -41,11 +41,18 @@ export async function GET(request: Request) {
             engagedCommunityIds.push(userData.home_community_id);
           }
 
-          // Communities reacted to
-          const { data: reactions } = await supabase
-            .from("reactions")
-            .select("perspective:perspectives(community_id)")
-            .eq("user_id", user.id);
+          // Fetch reactions and bookmarks in parallel
+          const [{ data: reactions }, { data: bookmarks }] = await Promise.all([
+            supabase
+              .from("reactions")
+              .select("perspective:perspectives(community_id)")
+              .eq("user_id", user.id),
+            supabase
+              .from("bookmarks")
+              .select("perspective:perspectives(community_id)")
+              .eq("user_id", user.id)
+              .eq("bookmark_type", "perspective"),
+          ]);
 
           if (reactions) {
             for (const r of reactions) {
@@ -55,13 +62,6 @@ export async function GET(request: Request) {
               }
             }
           }
-
-          // Communities bookmarked from
-          const { data: bookmarks } = await supabase
-            .from("bookmarks")
-            .select("perspective:perspectives(community_id)")
-            .eq("user_id", user.id)
-            .eq("bookmark_type", "perspective");
 
           if (bookmarks) {
             for (const b of bookmarks) {
