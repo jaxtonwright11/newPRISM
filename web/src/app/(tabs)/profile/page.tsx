@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import Link from "next/link";
+import { EmptyState, EMPTY_STATES } from "@/components/empty-state";
 
 type ProfileTab = "perspectives" | "saved" | "settings";
 
@@ -100,10 +101,7 @@ export default function ProfilePage() {
       {/* Tab content */}
       <div className="flex-1 overflow-y-auto p-4">
         {activeTab === "perspectives" && (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <p className="text-sm text-[var(--text-secondary)] mb-1">No perspectives yet</p>
-            <p className="text-xs text-[var(--text-dim)]">Share what your community is experiencing.</p>
-          </div>
+          <EmptyState {...EMPTY_STATES.profile} />
         )}
         {activeTab === "saved" && (
           <div className="flex flex-col items-center justify-center py-16 text-center">

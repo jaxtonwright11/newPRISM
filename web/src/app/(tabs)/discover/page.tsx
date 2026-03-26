@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { PerspectiveCard } from "@/components/perspective-card";
 import { FeedSkeleton } from "@/components/skeleton";
+import { EmptyState, EMPTY_STATES } from "@/components/empty-state";
 import { useAuth } from "@/lib/auth-context";
 import { useRealtime } from "@/lib/use-realtime";
 import type { Topic, CommunityType } from "@shared/types";
@@ -149,10 +150,7 @@ export default function DiscoverPage() {
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <p className="text-sm text-[var(--text-secondary)] mb-1">No new perspectives to discover right now</p>
-            <p className="text-xs text-[var(--text-dim)]">Check back soon — new voices are joining every day.</p>
-          </div>
+          <EmptyState {...EMPTY_STATES.discover} />
         )}
       </div>
 
