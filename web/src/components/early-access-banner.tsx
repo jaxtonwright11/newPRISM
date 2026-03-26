@@ -23,7 +23,7 @@ export function EarlyAccessBanner() {
   return (
     <div className="w-full bg-prism-accent-primary/10 border-b border-prism-accent-primary/20 px-4 py-2 flex items-center justify-center gap-3 relative z-50">
       <span className="text-xs sm:text-sm text-prism-text-primary font-medium">
-        <span className="font-display italic text-prism-accent-primary">Early Access</span>
+        <span className="font-body text-prism-accent-primary">Early Access</span>
         {" — "}You&apos;re among the first to experience PRISM. Things may shift as we grow.
       </span>
       <button

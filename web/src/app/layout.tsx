@@ -1,21 +1,20 @@
 import type { Metadata, Viewport } from "next";
-import { Playfair_Display, DM_Sans, JetBrains_Mono } from "next/font/google";
+import { Sora, DM_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import { ServiceWorkerRegistrar } from "@/components/sw-registrar";
 
-const playfairDisplay = Playfair_Display({
+const sora = Sora({
   subsets: ["latin"],
-  weight: ["400", "600", "700"],
-  style: ["normal", "italic"],
+  weight: ["500", "700"],
   variable: "--font-display",
   display: "swap",
 });
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["400", "500", "700"],
   variable: "--font-body",
   display: "swap",
 });
@@ -83,7 +82,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`dark ${playfairDisplay.variable} ${dmSans.variable} ${jetbrainsMono.variable}`}
+      className={`dark ${sora.variable} ${dmSans.variable} ${jetbrainsMono.variable}`}
     >
       <head>
         <link rel="apple-touch-icon" sizes="180x180" href="/api/icon?size=180" />

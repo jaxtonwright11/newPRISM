@@ -62,7 +62,7 @@ function HeroSection() {
       {/* Hero content */}
       <div className="relative z-10 text-center px-4 max-w-3xl mx-auto">
         <motion.h1
-          className="font-display italic text-5xl md:text-7xl lg:text-8xl font-bold text-prism-text-primary tracking-tight"
+          className="font-body text-5xl md:text-7xl lg:text-8xl font-bold text-prism-text-primary tracking-tight"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, ease: "easeOut" }}
@@ -285,7 +285,7 @@ function AhaPreviewSection() {
               </div>
 
               {/* Quote */}
-              <p className="font-display italic text-prism-text-primary leading-relaxed text-sm">
+              <p className="font-body text-prism-text-primary leading-relaxed text-sm">
                 &ldquo;{p.quote}&rdquo;
               </p>
             </motion.div>
@@ -377,7 +377,7 @@ function Footer() {
     <footer className="py-12 px-4 border-t border-prism-border bg-prism-bg-base">
       <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-3">
-          <span className="font-display italic text-xl font-bold text-prism-text-primary">
+          <span className="font-body text-xl font-bold text-prism-text-primary">
             PRISM
           </span>
           <span className="text-xs text-prism-text-dim">

@@ -187,7 +187,7 @@ export function PerspectiveCard({
       </div>
 
       {/* Quote — the most important element */}
-      <blockquote className="font-display italic text-base leading-relaxed text-prism-text-primary mb-3">
+      <blockquote className="font-body text-base leading-relaxed text-prism-text-primary mb-3">
         &ldquo;{quote}&rdquo;
       </blockquote>
 

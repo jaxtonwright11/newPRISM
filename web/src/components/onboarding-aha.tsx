@@ -162,7 +162,7 @@ export function OnboardingAha({ activeTopic, perspectives }: OnboardingAhaProps)
                       <span className="text-[10px] text-prism-text-dim">{p.community.region}</span>
                     </div>
                   </div>
-                  <blockquote className="font-display italic text-base leading-relaxed text-prism-text-primary">
+                  <blockquote className="font-body text-base leading-relaxed text-prism-text-primary">
                     &ldquo;{p.quote}&rdquo;
                   </blockquote>
                 </div>

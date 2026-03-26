@@ -108,7 +108,7 @@ export function PerspectiveDetail({
           </div>
 
           {/* Quote — large, prominent */}
-          <blockquote className="font-display italic text-xl leading-relaxed text-prism-text-primary mb-4 border-l-0">
+          <blockquote className="font-body text-xl leading-relaxed text-prism-text-primary mb-4 border-l-0">
             &ldquo;{quote}&rdquo;
           </blockquote>
 

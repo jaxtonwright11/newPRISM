@@ -81,7 +81,7 @@ export function HeatPerspectivesPanel({
                       <span className="text-[10px] text-prism-text-dim">{p.community.region}</span>
                     </div>
                   </div>
-                  <blockquote className="font-display italic text-sm leading-relaxed text-prism-text-primary">
+                  <blockquote className="font-body text-sm leading-relaxed text-prism-text-primary">
                     &ldquo;{p.quote}&rdquo;
                   </blockquote>
                   {p.context && (

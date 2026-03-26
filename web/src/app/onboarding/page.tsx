@@ -253,7 +253,7 @@ export default function OnboardingPage() {
                   </div>
 
                   {/* Quote */}
-                  <blockquote className="font-display italic text-base leading-relaxed text-prism-text-primary">
+                  <blockquote className="font-body text-base leading-relaxed text-prism-text-primary">
                     &ldquo;{perspective.quote}&rdquo;
                   </blockquote>
                 </div>
