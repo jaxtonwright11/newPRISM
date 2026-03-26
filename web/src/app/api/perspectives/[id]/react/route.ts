@@ -3,13 +3,13 @@ import {
   applyRateLimit,
   parseJsonBody,
   parseParams,
-  slugSchema,
 } from "@/lib/api";
 import { getSupabaseWithAuth } from "@/lib/supabase";
+import { createNotification } from "@/lib/notifications";
 import { z } from "zod";
 
 const perspectiveIdParamsSchema = z.object({
-  id: slugSchema,
+  id: z.string().uuid(),
 });
 
 const reactionBodySchema = z.object({
@@ -77,6 +77,27 @@ export async function POST(
       { error: "Failed to save reaction"},
       { status: 500 }
     );
+  }
+
+  // Fire-and-forget: notify the perspective author about the reaction
+  const { data: perspective } = await supabase
+    .from("perspectives")
+    .select("community:communities(name), contributor:contributors(user_id)")
+    .eq("id", id)
+    .single();
+
+  if (perspective) {
+    const contributor = perspective.contributor as unknown as { user_id: string } | null;
+    const community = perspective.community as unknown as { name: string } | null;
+    if (contributor?.user_id && contributor.user_id !== user.id) {
+      createNotification({
+        recipientId: contributor.user_id,
+        type: "reaction",
+        title: "New reaction",
+        body: `Someone reacted to your perspective from ${community?.name ?? "a community"}`,
+        metadata: { perspective_id: id, reaction_type },
+      });
+    }
   }
 
   return NextResponse.json({ data });

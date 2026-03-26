@@ -22,7 +22,7 @@ const PerspectiveDetail = dynamic(
   { ssr: false }
 );
 
-type FeedTab = "nearby" | "communities";
+type FeedTab = "for-you" | "following" | "nearby";
 
 interface DisplayPerspective {
   id: string;
@@ -41,7 +41,7 @@ interface DisplayPerspective {
 }
 
 export default function FeedPage() {
-  const [activeTab, setActiveTab] = useState<FeedTab>("nearby");
+  const [activeTab, setActiveTab] = useState<FeedTab>("for-you");
   const [feedPerspectives, setFeedPerspectives] = useState<DisplayPerspective[]>([]);
   const [feedLoading, setFeedLoading] = useState(true);
   const [selectedPerspectiveId, setSelectedPerspectiveId] = useState<string | null>(null);
@@ -74,7 +74,12 @@ export default function FeedPage() {
         headers.Authorization = `Bearer ${session.access_token}`;
       }
       try {
-        const res = await fetch(`/api/feed/${activeTab}`, { headers });
+        const endpoint = activeTab === "for-you"
+          ? "/api/feed/discover"
+          : activeTab === "following"
+            ? "/api/feed/communities"
+            : "/api/feed/nearby";
+        const res = await fetch(endpoint, { headers });
         const json = await res.json();
         const perspectives = activeTab === "nearby"
           ? (json.data?.perspectives ?? json.data ?? [])
@@ -108,8 +113,9 @@ export default function FeedPage() {
     : null;
 
   const tabs: { id: FeedTab; label: string }[] = [
+    { id: "for-you", label: "For You" },
+    { id: "following", label: "Following" },
     { id: "nearby", label: "Nearby" },
-    { id: "communities", label: "Communities" },
   ];
 
   return (

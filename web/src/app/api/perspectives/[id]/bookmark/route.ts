@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { applyRateLimit, parseParams, slugSchema } from "@/lib/api";
+import { applyRateLimit, parseParams } from "@/lib/api";
 import { getSupabaseWithAuth } from "@/lib/supabase";
 import { z } from "zod";
 
 const perspectiveIdParamsSchema = z.object({
-  id: slugSchema,
+  id: z.string().uuid(),
 });
 
 export async function POST(
