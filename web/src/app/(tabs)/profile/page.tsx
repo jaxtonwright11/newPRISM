@@ -3,10 +3,8 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import Link from "next/link";
-import { PerspectiveCard } from "@/components/perspective-card";
 import { EmptyState, EMPTY_STATES } from "@/components/empty-state";
 import { getStreak, getStreakMessage } from "@/lib/streak";
-import type { CommunityType } from "@shared/types";
 
 type ProfileTab = "perspectives" | "saved" | "settings";
 
@@ -15,13 +13,6 @@ interface UserPost {
   content: string;
   post_type: string;
   created_at: string;
-  community?: {
-    name: string;
-    region: string;
-    community_type: CommunityType;
-    color_hex: string;
-    verified: boolean;
-  };
 }
 
 export default function ProfilePage() {
