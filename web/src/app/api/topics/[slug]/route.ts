@@ -62,7 +62,7 @@ export async function GET(
       }
     }
   } catch {
-    // Supabase unavailable — fall through to seed data
+    // Supabase unavailable
   }
 
   return NextResponse.json({ error: "Topic not found" }, { status: 404 });

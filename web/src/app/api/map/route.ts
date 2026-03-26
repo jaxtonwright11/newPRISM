@@ -27,9 +27,6 @@ export async function GET(request: Request) {
             longitude: c.longitude as number,
             color_hex: c.color_hex,
             community_type: c.community_type,
-            activity_level: (["high", "medium", "low"] as const)[
-              Math.floor(Math.abs(c.latitude as number) % 3)
-            ],
             community: c,
           }))
         : [];
@@ -53,7 +50,6 @@ export async function GET(request: Request) {
             longitude: p.longitude as number,
             color_hex: "#3B82F6",
             community_type: "civic" as const,
-            activity_level: "medium" as const,
           }))
         : [];
 
@@ -62,7 +58,7 @@ export async function GET(request: Request) {
       return res;
     }
   } catch {
-    // Supabase unavailable — fall through to seed data
+    // Supabase unavailable
   }
 
   return NextResponse.json({ pins: [] });

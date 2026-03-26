@@ -98,7 +98,6 @@ export interface MapPin {
   longitude: number;
   color_hex: string;
   community_type: CommunityType;
-  activity_level: 'high' | 'medium' | 'low';
   community?: Community;
   post?: Post;
 }

@@ -4,7 +4,7 @@ let _client: SupabaseClient | null | undefined;
 
 /**
  * Returns a lazily-initialised Supabase client when valid credentials
- * are configured, or null when running with seed/mock data only.
+ * are configured, or null when running with no Supabase configured.
  * Lazy init avoids build-time crashes when env vars are absent.
  */
 export function getSupabase(): SupabaseClient | null {

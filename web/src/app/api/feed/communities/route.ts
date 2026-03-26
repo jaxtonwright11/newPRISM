@@ -91,7 +91,7 @@ export async function GET(request: Request) {
       }
     }
   } catch {
-    // fall through to seed data
+    // Supabase unavailable
   }
 
   return NextResponse.json({

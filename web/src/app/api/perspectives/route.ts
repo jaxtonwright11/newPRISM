@@ -60,7 +60,7 @@ export async function GET(request: Request) {
       }
     }
   } catch {
-    // Supabase unavailable — fall through to seed data
+    // Supabase unavailable
   }
 
   return NextResponse.json({ perspectives: [] });

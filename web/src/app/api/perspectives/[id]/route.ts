@@ -34,7 +34,7 @@ export async function GET(
       }
     }
   } catch {
-    // Supabase unavailable — fall through to seed data
+    // Supabase unavailable
   }
 
   return NextResponse.json({ error: "Perspective not found" }, { status: 404 });
