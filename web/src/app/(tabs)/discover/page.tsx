@@ -2,13 +2,15 @@
 
 import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { PerspectiveCard } from "@/components/perspective-card";
 import { PerspectiveComparison } from "@/components/perspective-comparison";
 import { FeedSkeleton } from "@/components/skeleton";
 import { EmptyState, EMPTY_STATES } from "@/components/empty-state";
+import { COMMUNITY_COLORS } from "@/lib/constants";
 import { useAuth } from "@/lib/auth-context";
 import { useRealtime } from "@/lib/use-realtime";
-import type { Topic, CommunityType } from "@shared/types";
+import type { Topic, Community, CommunityType } from "@shared/types";
 
 const PerspectiveDetail = dynamic(
   () => import("@/components/perspective-detail").then((mod) => mod.PerspectiveDetail),
@@ -38,6 +40,7 @@ export default function DiscoverPage() {
   const [loading, setLoading] = useState(true);
   const [selectedPerspectiveId, setSelectedPerspectiveId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [trendingCommunities, setTrendingCommunities] = useState<Community[]>([]);
   const { session } = useAuth();
 
   useEffect(() => {
@@ -53,6 +56,11 @@ export default function DiscoverPage() {
         }
       })
       .catch(() => setLoading(false));
+
+    fetch("/api/communities")
+      .then((res) => res.json())
+      .then((data) => setTrendingCommunities((data.communities ?? []).slice(0, 8)))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -137,6 +145,35 @@ export default function DiscoverPage() {
           ))}
         </div>
       </div>
+
+      {/* Trending communities */}
+      {trendingCommunities.length > 0 && (
+        <div className="px-4 py-3 border-b border-[var(--bg-elevated)]">
+          <p className="text-[10px] font-semibold text-prism-text-dim uppercase tracking-wider mb-2">
+            Explore communities
+          </p>
+          <div className="flex gap-2 overflow-x-auto no-scrollbar">
+            {trendingCommunities.map((c) => {
+              const color = COMMUNITY_COLORS[c.community_type as CommunityType];
+              return (
+                <Link
+                  key={c.id}
+                  href={`/community/${c.id}`}
+                  className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--bg-surface)] border border-[var(--bg-elevated)] hover:bg-[var(--bg-elevated)] transition-colors"
+                >
+                  <div
+                    className="w-6 h-6 rounded-full flex items-center justify-center text-[8px] font-bold"
+                    style={{ backgroundColor: color + "20", color }}
+                  >
+                    {c.name.split(" ").map((w) => w[0]).slice(0, 2).join("")}
+                  </div>
+                  <span className="text-xs text-prism-text-primary whitespace-nowrap">{c.name}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Perspectives */}
       <div className="flex-1 overflow-y-auto p-3 md:p-6">
