@@ -8,7 +8,7 @@ const protectedRoutes = ['/settings', '/profile', '/messages', '/bookmarks', '/n
 const publicRoutes = ['/', '/login', '/signup', '/onboarding', '/search', '/landing', '/apply', '/admin'];
 
 // Prefixes that are always public
-const publicPrefixes = ['/topic/', '/community/', '/perspective/', '/api/', '/_next/', '/favicon', '/auth/'];
+const publicPrefixes = ['/topic/', '/community/', '/perspective/', '/post/', '/profile/', '/api/', '/_next/', '/favicon', '/auth/'];
 
 function isPublicRoute(pathname: string): boolean {
   if (publicRoutes.includes(pathname)) return true;

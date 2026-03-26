@@ -258,11 +258,12 @@ function AhaPreviewSection() {
           {previewPerspectives.map((p, i) => (
             <motion.div
               key={i}
-              className="p-5 rounded-xl bg-prism-bg-surface border border-prism-border relative overflow-hidden"
+              className="p-5 rounded-xl bg-prism-bg-surface border border-prism-border relative overflow-hidden cursor-pointer hover:border-prism-accent-primary/30 transition-colors"
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.6, delay: i * 0.15 }}
+              onClick={() => window.location.href = "/discover"}
             >
               {/* Left color accent */}
               <div
@@ -291,6 +292,24 @@ function AhaPreviewSection() {
             </motion.div>
           ))}
         </div>
+
+        <motion.div
+          className="text-center mt-10"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+        >
+          <Link
+            href="/discover"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-prism-accent-primary/10 border border-prism-accent-primary/20 text-prism-accent-primary text-sm font-medium hover:bg-prism-accent-primary/20 transition-colors"
+          >
+            Explore real perspectives
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+            </svg>
+          </Link>
+        </motion.div>
       </div>
     </section>
   );

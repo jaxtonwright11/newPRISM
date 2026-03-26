@@ -18,10 +18,14 @@ interface Comment {
 }
 
 interface CommentThreadProps {
-  postId: string;
+  postId?: string;
+  perspectiveId?: string;
 }
 
-export function CommentThread({ postId }: CommentThreadProps) {
+export function CommentThread({ postId, perspectiveId }: CommentThreadProps) {
+  const apiPath = postId
+    ? `/api/posts/${postId}/comments`
+    : `/api/perspectives/${perspectiveId}/comments`;
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [newComment, setNewComment] = useState("");
@@ -31,7 +35,7 @@ export function CommentThread({ postId }: CommentThreadProps) {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch(`/api/posts/${postId}/comments`);
+        const res = await fetch(apiPath);
         if (res.ok) {
           const { data } = await res.json();
           setComments(data);
@@ -43,7 +47,7 @@ export function CommentThread({ postId }: CommentThreadProps) {
       }
     }
     load();
-  }, [postId]);
+  }, [apiPath]);
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +55,7 @@ export function CommentThread({ postId }: CommentThreadProps) {
 
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/posts/${postId}/comments`, {
+      const res = await fetch(apiPath, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -70,7 +74,7 @@ export function CommentThread({ postId }: CommentThreadProps) {
     } finally {
       setSubmitting(false);
     }
-  }, [newComment, postId, session?.access_token]);
+  }, [newComment, apiPath, session?.access_token]);
 
   return (
     <div className="mt-3 pt-3 border-t border-prism-border/50">

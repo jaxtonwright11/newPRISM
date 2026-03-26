@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { COMMUNITY_COLORS, REACTION_LABELS } from "@/lib/constants";
 import { ShareButton } from "@/components/share-button";
 import { ReportButton } from "@/components/report-button";
+import { CommentThread } from "@/components/comment-thread";
+import { useAuth } from "@/lib/auth-context";
 import type { CommunityType, ReactionType } from "@shared/types";
 
 interface PerspectiveData {
@@ -38,6 +40,29 @@ export default function PerspectivePage() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [activeReaction, setActiveReaction] = useState<ReactionType | null>(null);
+  const [reactionDelta, setReactionDelta] = useState(0);
+  const { session } = useAuth();
+
+  const handleReaction = useCallback(async (type: ReactionType) => {
+    const wasActive = activeReaction === type;
+    setActiveReaction(wasActive ? null : type);
+    setReactionDelta(wasActive ? 0 : 1);
+
+    if (!session?.access_token) return;
+    try {
+      await fetch(`/api/perspectives/${id}/react`, {
+        method: wasActive ? "DELETE" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ reaction_type: type }),
+      });
+    } catch {
+      setActiveReaction(wasActive ? type : null);
+      setReactionDelta(wasActive ? 1 : 0);
+    }
+  }, [activeReaction, id, session?.access_token]);
 
   useEffect(() => {
     async function fetchPerspective() {
@@ -198,7 +223,7 @@ export default function PerspectivePage() {
               ).map(([type, { emoji, label }]) => (
                 <button
                   key={type}
-                  onClick={() => setActiveReaction(activeReaction === type ? null : type)}
+                  onClick={() => handleReaction(type)}
                   className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-sm transition-all ${
                     activeReaction === type
                       ? "bg-prism-accent-primary/20 text-prism-accent-primary"
@@ -208,7 +233,7 @@ export default function PerspectivePage() {
                 >
                   <span>{emoji}</span>
                   <span className="font-mono text-xs">
-                    {perspective.reaction_count + (activeReaction === type ? 1 : 0)}
+                    {perspective.reaction_count + (activeReaction === type ? reactionDelta : 0)}
                   </span>
                 </button>
               ))}
@@ -218,7 +243,25 @@ export default function PerspectivePage() {
               <ReportButton contentType="perspective" contentId={perspective.id} />
             </div>
           </div>
+
+          {/* Comments */}
+          <CommentThread perspectiveId={perspective.id} />
         </div>
+
+        {/* Signup CTA for unauthenticated users */}
+        {!session && (
+          <div className="mt-4 p-4 rounded-xl bg-prism-bg-surface border border-prism-border text-center">
+            <p className="text-sm text-prism-text-secondary mb-3">
+              See how communities across the world experience the same events differently.
+            </p>
+            <Link
+              href="/signup"
+              className="inline-block px-6 py-2.5 rounded-lg bg-prism-accent-primary text-white text-sm font-medium hover:bg-prism-accent-glow transition-colors"
+            >
+              Join PRISM
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );

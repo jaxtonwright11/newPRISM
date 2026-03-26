@@ -27,7 +27,7 @@ export async function GET(request: Request) {
     )
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      // Check if user is new (no home community set) → route to onboarding
+      // Check if user is new (no home community AND no posts) → route to onboarding
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         const { data: profile } = await supabase
@@ -37,7 +37,15 @@ export async function GET(request: Request) {
           .single()
 
         if (!profile?.home_community_id) {
-          return NextResponse.redirect(`${origin}/onboarding`)
+          // Check if they've already completed onboarding (have at least one post)
+          const { count } = await supabase
+            .from('posts')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+
+          if (!count || count === 0) {
+            return NextResponse.redirect(`${origin}/onboarding`)
+          }
         }
       }
       return NextResponse.redirect(`${origin}${next}`)
