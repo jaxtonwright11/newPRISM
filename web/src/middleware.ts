@@ -5,10 +5,10 @@ import type { NextRequest } from 'next/server';
 const protectedRoutes = ['/settings', '/profile', '/messages', '/bookmarks'];
 
 // Routes that are always public
-const publicRoutes = ['/', '/login', '/signup', '/onboarding', '/search', '/landing'];
+const publicRoutes = ['/', '/login', '/signup', '/onboarding', '/search', '/landing', '/apply', '/admin'];
 
 // Prefixes that are always public
-const publicPrefixes = ['/topic/', '/community/', '/api/', '/_next/', '/favicon', '/auth/'];
+const publicPrefixes = ['/topic/', '/community/', '/perspective/', '/api/', '/_next/', '/favicon', '/auth/'];
 
 function isPublicRoute(pathname: string): boolean {
   if (publicRoutes.includes(pathname)) return true;
