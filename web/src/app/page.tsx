@@ -6,7 +6,6 @@ import { TopicSidebar } from "@/components/topic-sidebar";
 import { PerspectiveCard } from "@/components/perspective-card";
 import { PersonalPostCard } from "@/components/personal-post-card";
 import { AlignmentPanel } from "@/components/alignment-panel";
-import { StoriesBar } from "@/components/stories-bar";
 import { MobileNav } from "@/components/mobile-nav";
 
 const PerspectiveDetail = dynamic(
@@ -76,7 +75,6 @@ export default function Home() {
   const [communities, setCommunities] = useState<Community[]>([]);
   const [selectedTopicSlug, setSelectedTopicSlug] = useState("");
   const [selectedPerspectiveId, setSelectedPerspectiveId] = useState<string | null>(null);
-  const [mobileTopicOpen, setMobileTopicOpen] = useState(false);
   const [pulseOpen, setPulseOpen] = useState(false);
   const [composeOpen, setComposeOpen] = useState(false);
   const [userPosts, setUserPosts] = useState<Post[]>([]);
@@ -258,7 +256,6 @@ export default function Home() {
 
   const handleTopicSelect = (slug: string) => {
     setSelectedTopicSlug(slug);
-    setMobileTopicOpen(false);
   };
 
   const tabs: { id: FeedTab; label: string; icon?: string }[] = [
@@ -295,36 +292,6 @@ export default function Home() {
             </span>
           </div>
           <div className="flex items-center gap-2">
-            {/* Ghost mode toggle */}
-            <button
-              onClick={toggleGhostMode}
-              className={`p-2 rounded-lg transition-colors ${
-                ghostMode
-                  ? "text-prism-accent-active bg-prism-accent-active/10"
-                  : "text-prism-text-dim hover:text-prism-text-primary hover:bg-prism-bg-elevated"
-              }`}
-              aria-label={`Ghost mode ${ghostMode ? "on" : "off"}`}
-              title={ghostMode ? "Ghost mode on" : "Visible mode"}
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1.7}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M3 3l18 18M10.73 5.08A10.477 10.477 0 0112 5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M9.88 9.88a3 3 0 104.24 4.24"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498A10.523 10.523 0 0112 19.5a10.45 10.45 0 01-5.772-1.728M3 3l18 18"
-                />
-              </svg>
-            </button>
             {/* Pulse bell */}
             <button
               onClick={() => setPulseOpen(true)}
@@ -350,57 +317,27 @@ export default function Home() {
                 </span>
               )}
             </button>
-            {/* Topic selector */}
-            <button
-              onClick={() => setMobileTopicOpen(!mobileTopicOpen)}
-              className="text-sm text-prism-accent-active flex items-center gap-1"
-            >
-              <span className="truncate max-w-[140px]">
-                {currentTopic?.title ?? "Select topic"}
-              </span>
-              <svg
-                className={`w-4 h-4 transition-transform ${mobileTopicOpen ? "rotate-180" : ""}`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M19.5 8.25l-7.5 7.5-7.5-7.5"
-                />
-              </svg>
-            </button>
           </div>
         </div>
 
-        {/* Mobile topic dropdown */}
-        {mobileTopicOpen && (
-          <div className="md:hidden absolute top-[52px] left-0 right-0 bg-prism-bg-secondary border-b border-prism-border z-30 max-h-[50vh] overflow-y-auto">
+        {/* Mobile topic pills — horizontal scroll */}
+        <div className="md:hidden overflow-x-auto scrollbar-hide border-b border-prism-border bg-prism-bg-secondary/80">
+          <div className="flex gap-2 px-4 py-2.5">
             {topics.filter((t) => t.status !== "archived").map((topic) => (
               <button
                 key={topic.slug}
                 onClick={() => handleTopicSelect(topic.slug)}
-                className={`w-full text-left px-4 py-3 border-b border-prism-border/50 transition-colors ${
+                className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-150 border ${
                   selectedTopicSlug === topic.slug
-                    ? "bg-prism-accent-active/10"
-                    : ""
+                    ? "bg-prism-accent-active/15 border-prism-accent-active/40 text-prism-accent-active"
+                    : "bg-prism-bg-elevated border-prism-border text-prism-text-secondary hover:text-prism-text-primary"
                 }`}
               >
-                <span className="text-sm font-medium text-prism-text-primary">
-                  {topic.title}
-                </span>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-[10px] font-mono text-prism-text-dim">
-                    {topic.perspective_count} perspectives ·{" "}
-                    {topic.community_count} communities
-                  </span>
-                </div>
+                {topic.title}
               </button>
             ))}
           </div>
-        )}
+        </div>
 
         {/* Map area — 40% viewport on all devices */}
         <div className="h-[40vh] p-2 md:p-3 relative">
@@ -432,10 +369,7 @@ export default function Home() {
           />
         </div>
 
-        {/* Stories bar — empty when no stories */}
-        <div className="border-b border-prism-border">
-          <StoriesBar storyGroups={[]} />
-        </div>
+        {/* Stories bar — hidden when empty */}
 
         {/* Topic suggestion — shows the most active topic if none selected */}
         {hotTopic && selectedTopicSlug !== hotTopic.slug && (

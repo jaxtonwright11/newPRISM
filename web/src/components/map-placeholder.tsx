@@ -437,13 +437,7 @@ export function MapPlaceholder({
       {/* Map container */}
       <div ref={mapContainer} className="absolute inset-0" />
 
-      {/* LIVE indicator */}
-      <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-prism-bg-primary/80 backdrop-blur-sm px-2.5 py-1 rounded-full z-10">
-        <span className="w-2 h-2 rounded-full bg-prism-accent-live animate-pulse-slow" />
-        <span className="text-[10px] font-semibold tracking-widest text-prism-accent-live uppercase">
-          Live
-        </span>
-      </div>
+      {/* Map status */}
 
       {/* Privacy status */}
       <div className="absolute top-11 right-3 bg-prism-bg-primary/80 backdrop-blur-sm px-2.5 py-1 rounded-full z-10 border border-prism-border/60">

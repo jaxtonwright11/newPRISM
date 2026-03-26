@@ -5,27 +5,12 @@ import Link from "next/link";
 import { COMMUNITY_COLORS } from "@/lib/constants";
 import type { TopicStatus, Topic, Community } from "@shared/types";
 
-const STATUS_BADGE: Record<TopicStatus, { label: string; color: string }> = {
-  hot: {
-    label: "LIVE",
-    color: "bg-prism-accent-live/15 text-prism-accent-live",
-  },
-  trending: {
-    label: "DISCUSSED",
-    color: "bg-prism-accent-active/15 text-prism-accent-active",
-  },
-  active: {
-    label: "ACTIVE",
-    color: "bg-prism-accent-verified/15 text-prism-accent-verified",
-  },
-  cooling: {
-    label: "QUIETING",
-    color: "bg-prism-text-dim/15 text-prism-text-dim",
-  },
-  archived: {
-    label: "ARCHIVED",
-    color: "bg-prism-text-dim/15 text-prism-text-dim",
-  },
+const STATUS_DOT: Record<TopicStatus, string> = {
+  hot: "bg-prism-accent-active",
+  trending: "bg-prism-accent-active/60",
+  active: "bg-prism-accent-verified/60",
+  cooling: "bg-prism-text-dim/40",
+  archived: "bg-prism-text-dim/20",
 };
 
 interface TopicSidebarProps {
@@ -110,13 +95,12 @@ export function TopicSidebar({
           </div>
         ) : (
           <>
-            {/* Hot / Trending */}
+            {/* Active topics */}
             {hotTopics.length > 0 && (
               <div className="mb-3">
                 <div className="flex items-center gap-2 px-2 py-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-prism-accent-live animate-pulse-slow" />
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-prism-text-dim">
-                    Live Now
+                    Active Topics
                   </span>
                 </div>
                 {hotTopics.map((topic) => (
@@ -134,12 +118,12 @@ export function TopicSidebar({
               </div>
             )}
 
-            {/* Active */}
+            {/* Other topics */}
             {activeTopics.length > 0 && (
               <div>
                 <div className="px-2 py-1.5">
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-prism-text-dim">
-                    Active
+                    More Topics
                   </span>
                 </div>
                 {activeTopics.map((topic) => (
@@ -183,7 +167,7 @@ function TopicItem({
   isSelected: boolean;
   onSelect: (slug: string) => void;
 }) {
-  const badge = STATUS_BADGE[status];
+  const dotColor = STATUS_DOT[status];
   return (
     <button
       onClick={() => onSelect(slug)}
@@ -193,20 +177,18 @@ function TopicItem({
           : "hover:bg-prism-bg-elevated border border-transparent"
       }`}
     >
-      <span className="text-sm font-medium text-prism-text-primary leading-tight line-clamp-2">
-        {title}
-      </span>
-      <div className="flex items-center gap-2 mt-1">
-        {badge && (
-          <span
-            className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${badge.color}`}
-          >
-            {badge.label}
+      <div className="flex items-start gap-2">
+        <span className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${dotColor}`} />
+        <div className="min-w-0">
+          <span className="text-sm font-medium text-prism-text-primary leading-tight line-clamp-2">
+            {title}
           </span>
-        )}
-        <span className="text-[10px] text-prism-text-dim font-mono">
-          {perspectiveCount} perspectives · {communityCount} communities
-        </span>
+          <div className="flex items-center gap-1 mt-1">
+            <span className="text-[10px] text-prism-text-dim font-mono">
+              {communityCount} communities · {perspectiveCount} perspectives
+            </span>
+          </div>
+        </div>
       </div>
     </button>
   );

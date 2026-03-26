@@ -11,27 +11,12 @@ import { MobileNav } from "@/components/mobile-nav";
 import { COMMUNITY_COLORS } from "@/lib/constants";
 import type { Topic, Community, CommunityAlignment, CommunityType, TopicStatus } from "@shared/types";
 
-const STATUS_BADGE: Record<TopicStatus, { label: string; color: string }> = {
-  hot: {
-    label: "LIVE",
-    color: "bg-prism-accent-live/15 text-prism-accent-live",
-  },
-  trending: {
-    label: "DISCUSSED",
-    color: "bg-prism-accent-active/15 text-prism-accent-active",
-  },
-  active: {
-    label: "ACTIVE",
-    color: "bg-prism-accent-verified/15 text-prism-accent-verified",
-  },
-  cooling: {
-    label: "QUIETING",
-    color: "bg-prism-text-dim/15 text-prism-text-dim",
-  },
-  archived: {
-    label: "ARCHIVED",
-    color: "bg-prism-text-dim/20 text-prism-text-dim",
-  },
+const STATUS_DOT: Record<TopicStatus, string> = {
+  hot: "bg-prism-accent-active",
+  trending: "bg-prism-accent-active/60",
+  active: "bg-prism-accent-verified/60",
+  cooling: "bg-prism-text-dim/40",
+  archived: "bg-prism-text-dim/20",
 };
 
 interface TopicPerspective {
@@ -152,7 +137,7 @@ export default function TopicDetailPage() {
     );
   }
 
-  const badge = STATUS_BADGE[topic.status];
+  const dotColor = STATUS_DOT[topic.status];
 
   return (
     <div className="flex h-screen overflow-hidden bg-prism-bg-primary">
@@ -180,13 +165,7 @@ export default function TopicDetailPage() {
                 />
               </svg>
             </Link>
-            {badge && (
-              <span
-                className={`text-[10px] font-bold px-2 py-0.5 rounded ${badge.color}`}
-              >
-                {badge.label}
-              </span>
-            )}
+            <span className={`w-2 h-2 rounded-full ${dotColor}`} />
           </div>
 
           <h1 className="font-body text-xl md:text-2xl font-bold text-prism-text-primary mb-2">
