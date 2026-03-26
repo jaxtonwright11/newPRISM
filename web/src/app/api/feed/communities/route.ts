@@ -24,35 +24,33 @@ export async function GET(request: Request) {
     const supabase = token ? getSupabaseWithAuth(token) : getSupabase();
 
     if (supabase) {
-      // Get user's followed/home community IDs
+      // Get user's followed community IDs
       const followedCommunityIds: string[] = [];
 
       if (token) {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
+          // Get explicitly followed communities
+          const { data: follows } = await supabase
+            .from("community_follows")
+            .select("community_id")
+            .eq("user_id", user.id);
+
+          if (follows) {
+            for (const f of follows) {
+              followedCommunityIds.push(f.community_id);
+            }
+          }
+
+          // Also include home community
           const { data: userData } = await supabase
             .from("users")
             .select("home_community_id")
             .eq("id", user.id)
             .single();
 
-          if (userData?.home_community_id) {
+          if (userData?.home_community_id && !followedCommunityIds.includes(userData.home_community_id)) {
             followedCommunityIds.push(userData.home_community_id);
-          }
-
-          // Also get communities the user has engaged with (reacted to perspectives from)
-          const { data: reactions } = await supabase
-            .from("reactions")
-            .select("perspective:perspectives(community_id)")
-            .eq("user_id", user.id);
-
-          if (reactions) {
-            for (const r of reactions) {
-              const persp = r.perspective as unknown as { community_id: string } | null;
-              if (persp?.community_id && !followedCommunityIds.includes(persp.community_id)) {
-                followedCommunityIds.push(persp.community_id);
-              }
-            }
           }
         }
       }

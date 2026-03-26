@@ -37,6 +37,7 @@ export default function CommunityPage() {
   const [activeTopics, setActiveTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [following, setFollowing] = useState(false);
 
   const [selectedPerspectiveId, setSelectedPerspectiveId] = useState<string | null>(null);
 
@@ -66,6 +67,38 @@ export default function CommunityPage() {
     }
     fetchCommunity();
   }, [id, session?.access_token]);
+
+  // Check if user follows this community
+  useEffect(() => {
+    if (!session?.access_token) return;
+    fetch("/api/communities/follow", {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.follows?.includes(id)) setFollowing(true);
+      })
+      .catch(() => {});
+  }, [id, session?.access_token]);
+
+  const toggleFollow = async () => {
+    if (!session?.access_token) return;
+    const wasFollowing = following;
+    setFollowing(!wasFollowing);
+    try {
+      const res = await fetch("/api/communities/follow", {
+        method: wasFollowing ? "DELETE" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ community_id: id }),
+      });
+      if (!res.ok) setFollowing(wasFollowing);
+    } catch {
+      setFollowing(wasFollowing);
+    }
+  };
 
   const selectedPerspective = selectedPerspectiveId
     ? communityPerspectives.find((p) => p.id === selectedPerspectiveId)
@@ -143,12 +176,26 @@ export default function CommunityPage() {
                 )}
               </div>
               <p className="text-sm text-prism-text-secondary">{community.region}</p>
-              <span
-                className="inline-block text-[10px] px-2 py-0.5 rounded-full mt-2 capitalize"
-                style={{ backgroundColor: color + "15", color }}
-              >
-                {community.community_type}
-              </span>
+              <div className="flex items-center gap-2 mt-2">
+                <span
+                  className="inline-block text-[10px] px-2 py-0.5 rounded-full capitalize"
+                  style={{ backgroundColor: color + "15", color }}
+                >
+                  {community.community_type}
+                </span>
+                {session && (
+                  <button
+                    onClick={toggleFollow}
+                    className={`text-[10px] px-2.5 py-0.5 rounded-full font-medium transition-all ${
+                      following
+                        ? "bg-prism-accent-primary/15 text-prism-accent-primary border border-prism-accent-primary/30"
+                        : "bg-prism-bg-elevated text-prism-text-secondary border border-prism-border hover:border-prism-accent-primary/30 hover:text-prism-accent-primary"
+                    }`}
+                  >
+                    {following ? "Following" : "Follow"}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
           {community.description && (
