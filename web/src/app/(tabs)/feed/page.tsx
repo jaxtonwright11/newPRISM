@@ -105,7 +105,7 @@ export default function FeedPage() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <header className="flex items-center justify-between px-4 py-3 border-b border-[var(--bg-elevated)]">
+      <header className="flex items-center justify-between px-4 py-3 border-b border-[var(--bg-elevated)] max-w-2xl mx-auto w-full md:px-6">
         <PrismWordmark size="sm" />
         <div className="flex gap-1 bg-[var(--bg-elevated)] rounded-full p-1">
           {tabs.map((tab) => (
@@ -154,7 +154,8 @@ export default function FeedPage() {
       </AnimatePresence>
 
       {/* Feed */}
-      <div className="flex-1 overflow-y-auto p-3 md:p-4">
+      <div className="flex-1 overflow-y-auto p-3 md:p-6">
+        <div className="max-w-2xl mx-auto">
         {feedLoading ? (
           <FeedSkeleton count={4} />
         ) : feedPerspectives.length > 0 ? (
@@ -178,6 +179,7 @@ export default function FeedPage() {
         ) : (
           <EmptyState {...EMPTY_STATES.feed} />
         )}
+        </div>
       </div>
 
       {/* Perspective detail modal */}

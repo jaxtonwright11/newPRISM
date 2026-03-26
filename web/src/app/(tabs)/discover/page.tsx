@@ -128,7 +128,8 @@ export default function DiscoverPage() {
       </div>
 
       {/* Perspectives */}
-      <div className="flex-1 overflow-y-auto p-3 md:p-4">
+      <div className="flex-1 overflow-y-auto p-3 md:p-6">
+        <div className="max-w-2xl mx-auto">
         {loading ? (
           <FeedSkeleton count={4} />
         ) : perspectives.length > 0 ? (
@@ -152,6 +153,7 @@ export default function DiscoverPage() {
         ) : (
           <EmptyState {...EMPTY_STATES.discover} />
         )}
+        </div>
       </div>
 
       {selectedPerspective && (
