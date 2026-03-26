@@ -63,8 +63,8 @@ export function PWAInstallPrompt() {
       </button>
 
       <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-prism-accent-primary to-prism-community-diaspora flex items-center justify-center shrink-0">
-          <span className="text-white font-display font-bold text-sm">P</span>
+        <div className="w-10 h-10 rounded-xl bg-prism-accent-primary/20 flex items-center justify-center shrink-0">
+          <span className="text-prism-accent-primary font-display font-bold text-sm">P</span>
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-prism-text-primary mb-1">Install PRISM</p>

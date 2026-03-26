@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { PrismWordmark } from "@/components/prism-wordmark";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
@@ -172,11 +173,9 @@ export default function SignupPage() {
 
       <div className="w-full max-w-sm relative z-10">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-prism-accent-primary to-prism-community-diaspora mb-4 shadow-lg shadow-prism-accent-primary/20">
-            <span className="text-white font-display font-bold text-xl">P</span>
-          </div>
-          <h1 className="font-body text-2xl font-bold text-prism-text-primary">
+        <div className="flex flex-col items-center mb-8">
+          <PrismWordmark size="lg" />
+          <h1 className="font-body text-2xl font-bold text-prism-text-primary mt-6">
             Join PRISM
           </h1>
           <p className="text-sm text-prism-text-secondary mt-1">

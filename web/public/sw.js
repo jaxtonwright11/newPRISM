@@ -1,4 +1,4 @@
-const CACHE_NAME = "prism-v1";
+const CACHE_NAME = "prism-v2";
 const PRECACHE_URLS = ["/", "/offline"];
 
 self.addEventListener("install", (event) => {
@@ -20,27 +20,23 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
-  // Network-first for API calls and navigation
-  if (event.request.url.includes("/api/") || event.request.mode === "navigate") {
-    event.respondWith(
-      fetch(event.request).catch(() =>
-        caches.match(event.request).then((r) => r || caches.match("/offline"))
-      )
-    );
-    return;
-  }
-
-  // Cache-first for static assets
+  // Network-first for everything except precached URLs
+  // This prevents stale JS/CSS chunks after deploys
   event.respondWith(
-    caches.match(event.request).then((cached) =>
-      cached ||
-      fetch(event.request).then((response) => {
+    fetch(event.request)
+      .then((response) => {
         if (response.ok && response.type === "basic") {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
         }
         return response;
       })
-    )
+      .catch(() =>
+        caches.match(event.request).then((r) => {
+          if (r) return r;
+          if (event.request.mode === "navigate") return caches.match("/offline");
+          return new Response("", { status: 503 });
+        })
+      )
   );
 });

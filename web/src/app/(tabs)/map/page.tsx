@@ -15,7 +15,7 @@ export default function MapPage() {
   }, []);
 
   return (
-    <div className="h-full w-full relative">
+    <div className="w-full h-[calc(100vh-3.5rem)] md:h-screen relative">
       <MapPlaceholder communities={communities} />
     </div>
   );

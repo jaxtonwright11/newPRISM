@@ -8,7 +8,7 @@ export function Skeleton({ className = "" }: { className?: string }) {
 
 export function PerspectiveCardSkeleton() {
   return (
-    <div className="rounded-[10px] border border-prism-border bg-prism-bg-surface p-5 space-y-3">
+    <div className="rounded-[10px] bg-prism-bg-surface p-5 space-y-3">
       {/* Header */}
       <div className="flex items-center gap-2.5">
         <Skeleton className="w-9 h-9 rounded-full" />
