@@ -8,8 +8,8 @@ import type { CommunityType } from "@shared/types";
 
 const VERIFICATION_LABELS: Record<number, { label: string; description: string; color: string }> = {
   1: { label: "Level 1", description: "Email verified", color: "text-prism-text-secondary" },
-  2: { label: "Level 2", description: "Community verified", color: "text-prism-accent-active" },
-  3: { label: "Level 3", description: "Fully verified", color: "text-prism-accent-verified" },
+  2: { label: "Level 2", description: "Community verified", color: "text-prism-accent-primary" },
+  3: { label: "Level 3", description: "Fully verified", color: "text-prism-accent-live" },
 };
 
 interface PublicProfile {
@@ -70,7 +70,7 @@ export default function PublicProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-prism-bg-primary p-6">
+      <div className="min-h-screen bg-prism-bg-base p-6">
         <div className="max-w-2xl mx-auto space-y-6">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-full bg-prism-bg-elevated animate-shimmer" />
@@ -86,10 +86,10 @@ export default function PublicProfilePage() {
 
   if (error || !profile) {
     return (
-      <div className="min-h-screen bg-prism-bg-primary flex items-center justify-center">
+      <div className="min-h-screen bg-prism-bg-base flex items-center justify-center">
         <div className="text-center">
           <p className="text-prism-text-dim text-sm">{error ?? "Profile not found"}</p>
-          <Link href="/" className="text-xs text-prism-accent-active mt-2 inline-block hover:underline">
+          <Link href="/" className="text-xs text-prism-accent-primary mt-2 inline-block hover:underline">
             Back to home
           </Link>
         </div>
@@ -101,8 +101,8 @@ export default function PublicProfilePage() {
   const stats = profile.profile ?? { perspectives_read: 0, communities_engaged: 0, connections_made: 0 };
 
   return (
-    <div className="min-h-screen bg-prism-bg-primary">
-      <header className="border-b border-prism-border bg-prism-bg-secondary/95 backdrop-blur-md sticky top-0 z-30">
+    <div className="min-h-screen bg-prism-bg-base">
+      <header className="border-b border-prism-border bg-prism-bg-surface/95 backdrop-blur-md sticky top-0 z-30">
         <div className="max-w-2xl mx-auto px-4 py-3">
           <Link href="/" className="flex items-center gap-2 text-prism-text-dim hover:text-prism-text-primary transition-colors w-fit">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -114,9 +114,9 @@ export default function PublicProfilePage() {
       </header>
 
       <div className="max-w-2xl mx-auto px-4 py-6">
-        <div className="bg-prism-bg-secondary rounded-2xl border border-prism-border p-6 mb-6">
+        <div className="bg-prism-bg-surface rounded-2xl border border-prism-border p-6 mb-6">
           <div className="flex items-start gap-4">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-prism-accent-active to-prism-community-diaspora flex items-center justify-center shrink-0 overflow-hidden">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-prism-accent-primary to-prism-community-diaspora flex items-center justify-center shrink-0 overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               {profile.avatar_url ? (
                 <img src={profile.avatar_url} alt={profile.display_name ?? profile.username} className="w-full h-full object-cover" />
@@ -170,7 +170,7 @@ export default function PublicProfilePage() {
 
         {/* Recent posts */}
         {profile.recent_posts.length > 0 && !profile.ghost_mode && (
-          <div className="bg-prism-bg-secondary rounded-xl border border-prism-border p-4">
+          <div className="bg-prism-bg-surface rounded-xl border border-prism-border p-4">
             <span className="text-xs font-semibold text-prism-text-dim uppercase tracking-wider">Recent Posts</span>
             <div className="space-y-3 mt-3">
               {profile.recent_posts.map((post) => (

@@ -42,7 +42,7 @@ export function PersonalPostCard({
 
   const communityColor = post.community
     ? COMMUNITY_COLORS[post.community.community_type]
-    : "#4A9EFF";
+    : "#3B82F6";
 
   const displayName =
     post.user?.display_name ?? post.user?.username ?? "Anonymous";
@@ -55,7 +55,7 @@ export function PersonalPostCard({
 
   return (
     <div
-      className="rounded-[10px] border border-prism-border bg-prism-bg-secondary p-4 opacity-0 animate-fade-in transition-colors duration-200 hover:bg-prism-bg-elevated/50"
+      className="rounded-[10px] border border-prism-border bg-prism-bg-surface p-4 opacity-0 animate-fade-in transition-colors duration-200 hover:bg-prism-bg-elevated/50"
       style={{
         animationDelay: `${animationDelay}ms`,
         animationFillMode: "forwards",
@@ -66,7 +66,7 @@ export function PersonalPostCard({
         <div className="relative">
           <div
             className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold ${
-              isStory ? "ring-2 ring-offset-1 ring-offset-prism-bg-secondary" : ""
+              isStory ? "ring-2 ring-offset-1 ring-offset-prism-bg-surface" : ""
             }`}
             style={{
               backgroundColor: communityColor + "20",
@@ -82,7 +82,7 @@ export function PersonalPostCard({
               .toUpperCase()}
           </div>
           {isStory && (
-            <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-prism-bg-secondary flex items-center justify-center">
+            <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-prism-bg-surface flex items-center justify-center">
               <svg
                 className="w-2.5 h-2.5 text-prism-text-dim"
                 fill="none"
@@ -150,7 +150,7 @@ export function PersonalPostCard({
             onClick={handleLike}
             className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-all duration-150 ${
               liked
-                ? "bg-prism-accent-like/15 text-prism-accent-like"
+                ? "bg-prism-accent-primary/15 text-prism-accent-primary"
                 : "text-prism-text-dim hover:text-prism-text-secondary hover:bg-prism-bg-elevated"
             }`}
             aria-label={liked ? "Unlike" : "Like"}
@@ -213,7 +213,7 @@ export function PersonalPostCard({
           onClick={() => setBookmarked(!bookmarked)}
           className={`p-1 rounded transition-all duration-150 ${
             bookmarked
-              ? "text-prism-accent-active"
+              ? "text-prism-accent-primary"
               : "text-prism-text-dim hover:text-prism-text-secondary"
           }`}
           aria-label={bookmarked ? "Remove bookmark" : "Bookmark"}

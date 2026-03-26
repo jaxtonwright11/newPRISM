@@ -17,7 +17,7 @@ export function AlignmentPanel({ alignments, topicTitle, communities = [] }: Ali
 
   function getCommunityColor(id: string): string {
     const community = communities.find((c) => c.id === id);
-    return community?.color_hex ?? "#756A5C";
+    return community?.color_hex ?? "#5C6370";
   }
 
   function getCommunityName(id: string): string {
@@ -26,7 +26,7 @@ export function AlignmentPanel({ alignments, topicTitle, communities = [] }: Ali
   }
 
   return (
-    <aside className="w-[320px] h-full bg-prism-bg-secondary border-l border-prism-border flex flex-col shrink-0 hidden lg:flex">
+    <aside className="w-[320px] h-full bg-prism-bg-surface border-l border-prism-border flex flex-col shrink-0 hidden lg:flex">
       {/* Header */}
       <div className="p-4 border-b border-prism-border">
         <h2 className="text-sm font-semibold text-prism-text-primary">
@@ -44,7 +44,7 @@ export function AlignmentPanel({ alignments, topicTitle, communities = [] }: Ali
             <span className="text-[10px] font-semibold uppercase tracking-wider text-prism-text-dim">
               Highest Agreement
             </span>
-            <span className="font-mono text-lg font-bold text-prism-accent-verified">
+            <span className="font-mono text-lg font-bold text-prism-accent-live">
               {topAgreement}%
             </span>
           </div>
@@ -65,13 +65,13 @@ export function AlignmentPanel({ alignments, topicTitle, communities = [] }: Ali
 
               {/* Agreement bar */}
               <div className="flex items-center gap-2 mb-2.5">
-                <div className="flex-1 h-1.5 bg-prism-bg-primary rounded-full overflow-hidden">
+                <div className="flex-1 h-1.5 bg-prism-bg-base rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-prism-accent-verified rounded-full transition-all duration-500"
+                    className="h-full bg-prism-accent-live rounded-full transition-all duration-500"
                     style={{ width: `${item.agreement_pct}%` }}
                   />
                 </div>
-                <span className="font-mono text-xs text-prism-accent-verified font-bold w-10 text-right">
+                <span className="font-mono text-xs text-prism-accent-live font-bold w-10 text-right">
                   {item.agreement_pct}%
                 </span>
               </div>

@@ -71,21 +71,21 @@ export default function OnboardingPage() {
   }, [step]);
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-prism-bg-primary">
+    <div className="relative h-screen w-screen overflow-hidden bg-prism-bg-base">
       {/* Full-screen map */}
       <div className="absolute inset-0">
         <MapPlaceholder communities={communities} showPersonalPin={false} />
       </div>
 
       {/* Dark gradient overlay from bottom */}
-      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-prism-bg-primary via-prism-bg-primary/80 to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-prism-bg-base via-prism-bg-base/80 to-transparent pointer-events-none" />
 
       {/* Step 1: Map with active topic prompt */}
       {step === "map" && (
         <div className="absolute inset-0 flex flex-col justify-end pb-12 px-6 animate-fade-in">
           {/* Active topic indicator */}
-          <div className="absolute top-6 left-6 flex items-center gap-2 bg-prism-bg-primary/80 backdrop-blur-md px-3 py-2 rounded-full border border-prism-border z-10">
-            <span className="w-1.5 h-1.5 rounded-full bg-prism-accent-active" />
+          <div className="absolute top-6 left-6 flex items-center gap-2 bg-prism-bg-base/80 backdrop-blur-md px-3 py-2 rounded-full border border-prism-border z-10">
+            <span className="w-1.5 h-1.5 rounded-full bg-prism-accent-primary" />
             <span className="text-xs font-medium text-prism-text-secondary uppercase tracking-wide">
               Communities discussing
             </span>
@@ -93,7 +93,7 @@ export default function OnboardingPage() {
 
           {/* PRISM logo */}
           <div className="absolute top-6 right-6 flex items-center gap-2 z-10">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-prism-accent-active to-prism-community-diaspora flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-prism-accent-primary to-prism-community-diaspora flex items-center justify-center">
               <span className="text-white font-display font-bold text-sm">
                 P
               </span>
@@ -106,8 +106,8 @@ export default function OnboardingPage() {
           {/* Topic card */}
           {!loading && activeTopic && (
             <div className="max-w-lg mx-auto w-full">
-              <div className="bg-prism-bg-secondary/90 backdrop-blur-lg border border-prism-border rounded-2xl p-5 mb-4">
-                <p className="text-[10px] font-medium uppercase tracking-wider text-prism-accent-active mb-2">
+              <div className="bg-prism-bg-surface/90 backdrop-blur-lg border border-prism-border rounded-2xl p-5 mb-4">
+                <p className="text-[10px] font-medium uppercase tracking-wider text-prism-accent-primary mb-2">
                   Being discussed
                 </p>
                 <h2 className="font-body text-xl font-bold text-prism-text-primary mb-2">
@@ -127,7 +127,7 @@ export default function OnboardingPage() {
 
               <button
                 onClick={() => setStep("perspectives")}
-                className="w-full py-3 rounded-xl bg-prism-accent-active text-white text-sm font-semibold hover:bg-prism-accent-active/90 transition-colors flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-xl bg-prism-accent-primary text-white text-sm font-semibold hover:bg-prism-accent-primary/90 transition-colors flex items-center justify-center gap-2"
               >
                 <span>
                   See how {activeTopic.community_count} communities experience
@@ -152,7 +152,7 @@ export default function OnboardingPage() {
 
           {!loading && !activeTopic && (
             <div className="max-w-lg mx-auto w-full">
-              <div className="bg-prism-bg-secondary/90 backdrop-blur-lg border border-prism-border rounded-2xl p-5 mb-4 text-center">
+              <div className="bg-prism-bg-surface/90 backdrop-blur-lg border border-prism-border rounded-2xl p-5 mb-4 text-center">
                 <h2 className="font-display text-xl font-bold text-prism-text-primary mb-2">
                   Welcome to PRISM
                 </h2>
@@ -162,7 +162,7 @@ export default function OnboardingPage() {
               </div>
               <Link
                 href="/signup"
-                className="block w-full py-3 rounded-xl bg-prism-accent-active text-white text-sm font-semibold text-center hover:bg-prism-accent-active/90 transition-colors"
+                className="block w-full py-3 rounded-xl bg-prism-accent-primary text-white text-sm font-semibold text-center hover:bg-prism-accent-primary/90 transition-colors"
               >
                 Get started
               </Link>
@@ -175,7 +175,7 @@ export default function OnboardingPage() {
       {step === "perspectives" && (
         <div className="absolute inset-0 flex flex-col justify-end pb-8 px-4 md:px-6">
           {/* Topic label */}
-          <div className="absolute top-6 left-6 flex items-center gap-2 bg-prism-bg-primary/80 backdrop-blur-md px-3 py-2 rounded-full border border-prism-border z-10">
+          <div className="absolute top-6 left-6 flex items-center gap-2 bg-prism-bg-base/80 backdrop-blur-md px-3 py-2 rounded-full border border-prism-border z-10">
             <span className="w-2 h-2 rounded-full bg-prism-accent-live animate-pulse-slow" />
             <span className="text-xs font-medium text-prism-text-primary">
               {activeTopic?.title}
@@ -184,7 +184,7 @@ export default function OnboardingPage() {
 
           {/* PRISM logo */}
           <div className="absolute top-6 right-6 flex items-center gap-2 z-10">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-prism-accent-active to-prism-community-diaspora flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-prism-accent-primary to-prism-community-diaspora flex items-center justify-center">
               <span className="text-white font-display font-bold text-sm">
                 P
               </span>
@@ -201,7 +201,7 @@ export default function OnboardingPage() {
               return (
                 <div
                   key={perspective.id}
-                  className={`bg-prism-bg-secondary/95 backdrop-blur-lg border border-prism-border rounded-xl p-5 transition-all duration-500 ${
+                  className={`bg-prism-bg-surface/95 backdrop-blur-lg border border-prism-border rounded-xl p-5 transition-all duration-500 ${
                     showPerspectives
                       ? "opacity-100 translate-y-0"
                       : "opacity-0 translate-y-8"
@@ -234,7 +234,7 @@ export default function OnboardingPage() {
                         </span>
                         {perspective.community.verified && (
                           <svg
-                            className="w-3.5 h-3.5 text-prism-accent-verified"
+                            className="w-3.5 h-3.5 text-prism-accent-live"
                             viewBox="0 0 20 20"
                             fill="currentColor"
                           >
@@ -281,7 +281,7 @@ export default function OnboardingPage() {
             >
               <button
                 onClick={() => setStep("signup")}
-                className="w-full py-3 rounded-xl bg-prism-accent-active text-white text-sm font-semibold hover:bg-prism-accent-active/90 transition-colors"
+                className="w-full py-3 rounded-xl bg-prism-accent-primary text-white text-sm font-semibold hover:bg-prism-accent-primary/90 transition-colors"
               >
                 Connect with these communities
               </button>
@@ -299,10 +299,10 @@ export default function OnboardingPage() {
       {/* Step 3: Signup prompt */}
       {step === "signup" && (
         <div className="absolute inset-0 flex items-center justify-center px-4 animate-fade-in">
-          <div className="absolute inset-0 bg-prism-bg-primary/80 backdrop-blur-md" />
+          <div className="absolute inset-0 bg-prism-bg-base/80 backdrop-blur-md" />
 
           <div className="relative max-w-sm w-full text-center">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-prism-accent-active to-prism-community-diaspora mb-5">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-prism-accent-primary to-prism-community-diaspora mb-5">
               <span className="text-white font-display font-bold text-2xl">
                 P
               </span>
@@ -320,14 +320,14 @@ export default function OnboardingPage() {
             <div className="space-y-3">
               <Link
                 href="/signup"
-                className="block w-full py-3 rounded-xl bg-prism-accent-active text-white text-sm font-semibold hover:bg-prism-accent-active/90 transition-colors"
+                className="block w-full py-3 rounded-xl bg-prism-accent-primary text-white text-sm font-semibold hover:bg-prism-accent-primary/90 transition-colors"
               >
                 Create account
               </Link>
 
               <Link
                 href="/login"
-                className="block w-full py-3 rounded-xl bg-prism-bg-secondary border border-prism-border text-prism-text-primary text-sm font-medium hover:bg-prism-bg-elevated transition-colors"
+                className="block w-full py-3 rounded-xl bg-prism-bg-surface border border-prism-border text-prism-text-primary text-sm font-medium hover:bg-prism-bg-elevated transition-colors"
               >
                 Sign in
               </Link>

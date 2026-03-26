@@ -121,7 +121,7 @@ export function PerspectiveCard({
 
   return (
     <motion.div
-      className="rounded-[10px] border border-prism-border bg-prism-bg-secondary p-5 cursor-pointer hover:bg-prism-bg-elevated/50 transition-colors duration-200 group relative hover:shadow-lg hover:shadow-black/20 hover:border-prism-border/80"
+      className="rounded-[10px] border border-prism-border bg-prism-bg-surface p-5 cursor-pointer hover:bg-prism-bg-elevated/50 transition-colors duration-200 group relative hover:shadow-lg hover:shadow-black/20 hover:border-prism-border/80"
       style={{
         borderLeftWidth: "3px",
         borderLeftColor: community.color_hex,
@@ -143,7 +143,7 @@ export function PerspectiveCard({
     >
       {/* NEW TO YOU indicator for Discover tab */}
       {isNew && (
-        <div className="absolute -top-2 -right-2 bg-prism-accent-active text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-lg">
+        <div className="absolute -top-2 -right-2 bg-prism-accent-primary text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-lg">
           NEW TO YOU
         </div>
       )}
@@ -170,7 +170,7 @@ export function PerspectiveCard({
             </span>
             {community.verified && (
               <svg
-                className="w-3.5 h-3.5 text-prism-accent-verified shrink-0"
+                className="w-3.5 h-3.5 text-prism-accent-live shrink-0"
                 viewBox="0 0 20 20"
                 fill="currentColor"
               >
@@ -213,7 +213,7 @@ export function PerspectiveCard({
               onClick={() => handleReaction(type)}
               className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs transition-all duration-150 min-h-[36px] ${
                 activeReaction === type
-                  ? "bg-prism-accent-active/20 text-prism-accent-active scale-105"
+                  ? "bg-prism-accent-primary/20 text-prism-accent-primary scale-105"
                   : "text-prism-text-dim hover:text-prism-text-secondary hover:bg-prism-bg-elevated"
               }`}
               title={label}
@@ -229,7 +229,7 @@ export function PerspectiveCard({
             onClick={handleBookmark}
             className={`ml-1 p-1 rounded transition-all duration-150 ${
               bookmarked
-                ? "text-prism-accent-active"
+                ? "text-prism-accent-primary"
                 : "text-prism-text-dim hover:text-prism-text-secondary"
             }`}
             title={bookmarked ? "Remove bookmark" : "Bookmark"}

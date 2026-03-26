@@ -72,7 +72,7 @@ export default function CommunityPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-prism-bg-primary p-6">
+      <div className="min-h-screen bg-prism-bg-base p-6">
         <div className="max-w-2xl mx-auto space-y-4">
           <div className="flex items-start gap-4">
             <div className="w-14 h-14 rounded-full bg-prism-bg-elevated animate-shimmer shrink-0" />
@@ -93,10 +93,10 @@ export default function CommunityPage() {
 
   if (notFound || !community) {
     return (
-      <div className="min-h-screen bg-prism-bg-primary flex items-center justify-center">
+      <div className="min-h-screen bg-prism-bg-base flex items-center justify-center">
         <div className="text-center">
           <p className="text-prism-text-dim text-sm">Community not found</p>
-          <Link href="/" className="text-prism-accent-active text-sm hover:underline mt-2 block">
+          <Link href="/" className="text-prism-accent-primary text-sm hover:underline mt-2 block">
             Go home
           </Link>
         </div>
@@ -107,8 +107,8 @@ export default function CommunityPage() {
   const color = COMMUNITY_COLORS[community.community_type as CommunityType];
 
   return (
-    <div className="min-h-screen bg-prism-bg-primary">
-      <header className="border-b border-prism-border bg-prism-bg-secondary/95 backdrop-blur-md sticky top-0 z-30">
+    <div className="min-h-screen bg-prism-bg-base">
+      <header className="border-b border-prism-border bg-prism-bg-surface/95 backdrop-blur-md sticky top-0 z-30">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
           <Link href="/" className="text-prism-text-dim hover:text-prism-text-primary transition-colors">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -122,7 +122,7 @@ export default function CommunityPage() {
       <div className="max-w-2xl mx-auto px-4 py-6">
         {/* Community header card */}
         <div
-          className="bg-prism-bg-secondary rounded-2xl border border-prism-border p-6 mb-6"
+          className="bg-prism-bg-surface rounded-2xl border border-prism-border p-6 mb-6"
           style={{ borderLeftWidth: "4px", borderLeftColor: color }}
         >
           <div className="flex items-start gap-4">
@@ -136,7 +136,7 @@ export default function CommunityPage() {
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-semibold text-prism-text-primary">{community.name}</h2>
                 {community.verified && (
-                  <svg className="w-4 h-4 text-prism-accent-verified shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                  <svg className="w-4 h-4 text-prism-accent-live shrink-0" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M16.403 12.652a3 3 0 010-5.304 3 3 0 00-3.75-3.751 3 3 0 00-5.305 0 3 3 0 00-3.751 3.75 3 3 0 000 5.305 3 3 0 003.75 3.751 3 3 0 005.305 0 3 3 0 003.751-3.75zm-2.546-4.46a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
                   </svg>
                 )}
@@ -180,7 +180,7 @@ export default function CommunityPage() {
                 <Link
                   key={topic.id}
                   href={`/topic/${topic.slug}`}
-                  className="bg-prism-bg-secondary rounded-lg border border-prism-border px-3 py-2 hover:bg-prism-bg-elevated transition-colors shrink-0"
+                  className="bg-prism-bg-surface rounded-lg border border-prism-border px-3 py-2 hover:bg-prism-bg-elevated transition-colors shrink-0"
                 >
                   <span className="text-sm text-prism-text-primary whitespace-nowrap">{topic.title}</span>
                 </Link>

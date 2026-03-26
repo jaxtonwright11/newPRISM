@@ -57,7 +57,7 @@ export function PerspectiveDetail({
 
       {/* Modal */}
       <div
-        className="relative bg-prism-bg-secondary border border-prism-border rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-fade-in"
+        className="relative bg-prism-bg-surface border border-prism-border rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-fade-in"
         style={{ borderLeftWidth: "4px", borderLeftColor: community.color_hex }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -94,7 +94,7 @@ export function PerspectiveDetail({
                   {community.name}
                 </span>
                 {community.verified && (
-                  <svg className="w-4 h-4 text-prism-accent-verified" viewBox="0 0 20 20" fill="currentColor">
+                  <svg className="w-4 h-4 text-prism-accent-live" viewBox="0 0 20 20" fill="currentColor">
                     <path
                       fillRule="evenodd"
                       d="M16.403 12.652a3 3 0 010-5.304 3 3 0 00-3.75-3.751 3 3 0 00-5.305 0 3 3 0 00-3.751 3.75 3 3 0 000 5.305 3 3 0 003.75 3.751 3 3 0 005.305 0 3 3 0 003.751-3.75zm-2.546-4.46a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
@@ -157,7 +157,7 @@ export function PerspectiveDetail({
                   onClick={() => handleReaction(type)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all duration-150 ${
                     activeReaction === type
-                      ? "bg-prism-accent-active/20 text-prism-accent-active"
+                      ? "bg-prism-accent-primary/20 text-prism-accent-primary"
                       : "text-prism-text-dim hover:text-prism-text-secondary hover:bg-prism-bg-elevated"
                   }`}
                   title={label}
@@ -174,7 +174,7 @@ export function PerspectiveDetail({
                 onClick={() => setBookmarked(!bookmarked)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all duration-150 ${
                   bookmarked
-                    ? "text-prism-accent-active bg-prism-accent-active/10"
+                    ? "text-prism-accent-primary bg-prism-accent-primary/10"
                     : "text-prism-text-dim hover:text-prism-text-secondary hover:bg-prism-bg-elevated"
                 }`}
                 title={bookmarked ? "Remove bookmark" : "Bookmark"}

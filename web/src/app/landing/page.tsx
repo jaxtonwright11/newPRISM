@@ -12,7 +12,7 @@ function HeroSection() {
     <section className="relative h-screen flex items-center justify-center overflow-hidden">
       {/* Background with noise grain */}
       <div
-        className="absolute inset-0 bg-prism-bg-primary"
+        className="absolute inset-0 bg-prism-bg-base"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E")`,
         }}
@@ -85,7 +85,7 @@ function HeroSection() {
         >
           <Link
             href="/"
-            className="px-8 py-3 rounded-lg bg-prism-accent-active text-white font-medium hover:bg-prism-accent-glow transition-colors shadow-lg shadow-prism-accent-active/20"
+            className="px-8 py-3 rounded-lg bg-prism-accent-primary text-white font-medium hover:bg-prism-accent-glow transition-colors shadow-lg shadow-prism-accent-primary/20"
           >
             Open the App
           </Link>
@@ -115,7 +115,7 @@ function HeroSection() {
 // ─── Problem Section ────────────────────────────────────────────────────────
 function ProblemSection() {
   return (
-    <section className="py-32 md:py-40 px-4 bg-prism-bg-primary">
+    <section className="py-32 md:py-40 px-4 bg-prism-bg-base">
       <div className="max-w-3xl mx-auto text-center">
         <motion.h2
           className="font-display text-3xl md:text-5xl font-bold text-prism-text-primary leading-tight"
@@ -164,7 +164,7 @@ function HowItWorksSection() {
   ];
 
   return (
-    <section id="how-it-works" className="py-24 md:py-32 px-4 bg-prism-bg-secondary">
+    <section id="how-it-works" className="py-24 md:py-32 px-4 bg-prism-bg-surface">
       <div className="max-w-5xl mx-auto">
         <motion.h2
           className="font-body text-2xl md:text-4xl font-bold text-prism-text-primary text-center mb-16"
@@ -233,7 +233,7 @@ function AhaPreviewSection() {
   ];
 
   return (
-    <section className="py-24 md:py-32 px-4 bg-prism-bg-primary">
+    <section className="py-24 md:py-32 px-4 bg-prism-bg-base">
       <div className="max-w-4xl mx-auto">
         <motion.div
           className="text-center mb-12"
@@ -258,7 +258,7 @@ function AhaPreviewSection() {
           {previewPerspectives.map((p, i) => (
             <motion.div
               key={i}
-              className="p-5 rounded-xl bg-prism-bg-secondary border border-prism-border relative overflow-hidden"
+              className="p-5 rounded-xl bg-prism-bg-surface border border-prism-border relative overflow-hidden"
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-100px" }}
@@ -322,7 +322,7 @@ function EarlyAccessSection() {
   };
 
   return (
-    <section className="py-24 md:py-32 px-4 bg-prism-bg-secondary">
+    <section className="py-24 md:py-32 px-4 bg-prism-bg-surface">
       <motion.div
         className="max-w-md mx-auto text-center"
         initial={{ opacity: 0, y: 20 }}
@@ -341,7 +341,7 @@ function EarlyAccessSection() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="p-4 rounded-lg bg-prism-accent-active/10 border border-prism-accent-active/20"
+            className="p-4 rounded-lg bg-prism-accent-primary/10 border border-prism-accent-primary/20"
           >
             <p className="text-sm text-prism-text-primary font-medium">
               You&apos;re in. We&apos;ll be in touch.
@@ -355,12 +355,12 @@ function EarlyAccessSection() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
               required
-              className="flex-1 px-4 py-3 rounded-lg bg-prism-bg-primary border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:ring-2 focus:ring-prism-accent-active/50 focus:border-prism-accent-active transition-all"
+              className="flex-1 px-4 py-3 rounded-lg bg-prism-bg-base border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:ring-2 focus:ring-prism-accent-primary/50 focus:border-prism-accent-primary transition-all"
             />
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-3 rounded-lg bg-prism-accent-active text-white text-sm font-medium hover:bg-prism-accent-glow transition-colors disabled:opacity-50 shrink-0"
+              className="px-6 py-3 rounded-lg bg-prism-accent-primary text-white text-sm font-medium hover:bg-prism-accent-glow transition-colors disabled:opacity-50 shrink-0"
             >
               {loading ? "..." : "Join"}
             </button>
@@ -374,7 +374,7 @@ function EarlyAccessSection() {
 // ─── Footer ─────────────────────────────────────────────────────────────────
 function Footer() {
   return (
-    <footer className="py-12 px-4 border-t border-prism-border bg-prism-bg-primary">
+    <footer className="py-12 px-4 border-t border-prism-border bg-prism-bg-base">
       <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-3">
           <span className="font-display italic text-xl font-bold text-prism-text-primary">
@@ -408,7 +408,7 @@ function Footer() {
 // ─── Landing Page ───────────────────────────────────────────────────────────
 export default function LandingPage() {
   return (
-    <div className="bg-prism-bg-primary min-h-screen">
+    <div className="bg-prism-bg-base min-h-screen">
       <HeroSection />
       <ProblemSection />
       <HowItWorksSection />

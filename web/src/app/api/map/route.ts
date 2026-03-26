@@ -51,7 +51,7 @@ export async function GET(request: Request) {
             type: (p.post_type === "story" ? "story" : "post") as "post" | "story",
             latitude: p.latitude as number,
             longitude: p.longitude as number,
-            color_hex: "#4A9EFF",
+            color_hex: "#3B82F6",
             community_type: "civic" as const,
             activity_level: "medium" as const,
           }))

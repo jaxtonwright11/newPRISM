@@ -54,11 +54,11 @@ export function StoriesBar({ storyGroups, onStorySelect }: StoriesBarProps) {
               }`}
               style={{
                 background: group.hasUnread
-                  ? "linear-gradient(135deg, #C17F4E, #D4955E)"
-                  : "#2A251E",
+                  ? "linear-gradient(135deg, #D4956B, #E8B898)"
+                  : "#262A31",
               }}
             >
-              <div className="w-full h-full rounded-full bg-prism-bg-primary p-[2px]">
+              <div className="w-full h-full rounded-full bg-prism-bg-base p-[2px]">
                 <div
                   className="w-full h-full rounded-full flex items-center justify-center text-xs font-bold"
                   style={{
@@ -74,9 +74,9 @@ export function StoriesBar({ storyGroups, onStorySelect }: StoriesBarProps) {
                 </div>
               </div>
               {group.verified && (
-                <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-prism-bg-primary flex items-center justify-center">
+                <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-prism-bg-base flex items-center justify-center">
                   <svg
-                    className="w-3.5 h-3.5 text-prism-accent-verified"
+                    className="w-3.5 h-3.5 text-prism-accent-live"
                     viewBox="0 0 20 20"
                     fill="currentColor"
                   >
@@ -175,7 +175,7 @@ function StoryViewer({
               </span>
               {group.verified && (
                 <svg
-                  className="w-3.5 h-3.5 text-prism-accent-verified"
+                  className="w-3.5 h-3.5 text-prism-accent-live"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >

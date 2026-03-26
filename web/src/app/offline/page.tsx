@@ -1,7 +1,7 @@
 export default function OfflinePage() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-prism-bg-primary px-6 text-center">
-      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-prism-accent-active to-prism-community-diaspora flex items-center justify-center mb-6">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-prism-bg-base px-6 text-center">
+      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-prism-accent-primary to-prism-community-diaspora flex items-center justify-center mb-6">
         <span className="text-white font-display font-bold text-2xl">P</span>
       </div>
       <h1 className="text-xl font-body font-bold text-prism-text-primary mb-2">

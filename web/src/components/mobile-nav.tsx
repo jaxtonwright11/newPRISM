@@ -53,7 +53,7 @@ export function MobileNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-prism-bg-secondary/95 backdrop-blur-md border-t border-prism-border z-40 safe-area-bottom">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-prism-bg-surface/95 backdrop-blur-md border-t border-prism-border z-40 safe-area-bottom">
       <div className="flex items-center justify-around py-2 px-1">
         {NAV_ITEMS.map((item) => {
           const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
@@ -62,7 +62,7 @@ export function MobileNav() {
               key={item.href}
               href={item.href}
               className={`flex flex-col items-center gap-0.5 px-3 py-1.5 min-h-[44px] min-w-[44px] rounded-lg transition-colors ${
-                isActive ? "text-prism-accent-active" : "text-prism-text-dim"
+                isActive ? "text-prism-accent-primary" : "text-prism-text-dim"
               }`}
               aria-label={item.label}
               aria-current={isActive ? "page" : undefined}

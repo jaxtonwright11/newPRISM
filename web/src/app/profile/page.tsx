@@ -11,8 +11,8 @@ type ProfileTab = "activity" | "communities" | "connections";
 
 const VERIFICATION_LABELS: Record<number, { label: string; description: string; color: string }> = {
   1: { label: "Level 1", description: "Email verified", color: "text-prism-text-secondary" },
-  2: { label: "Level 2", description: "Community verified", color: "text-prism-accent-active" },
-  3: { label: "Level 3", description: "Fully verified", color: "text-prism-accent-verified" },
+  2: { label: "Level 2", description: "Community verified", color: "text-prism-accent-primary" },
+  3: { label: "Level 3", description: "Fully verified", color: "text-prism-accent-live" },
 };
 
 interface ProfileData {
@@ -107,7 +107,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-prism-bg-primary p-6">
+      <div className="min-h-screen bg-prism-bg-base p-6">
         <div className="max-w-2xl mx-auto space-y-6">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-full bg-prism-bg-elevated animate-shimmer" />
@@ -129,9 +129,9 @@ export default function ProfilePage() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-prism-bg-primary">
+    <div className="min-h-screen bg-prism-bg-base">
       {/* Header */}
-      <header className="border-b border-prism-border bg-prism-bg-secondary/95 backdrop-blur-md sticky top-0 z-30">
+      <header className="border-b border-prism-border bg-prism-bg-surface/95 backdrop-blur-md sticky top-0 z-30">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 text-prism-text-dim hover:text-prism-text-primary transition-colors">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -150,10 +150,10 @@ export default function ProfilePage() {
 
       <div className="max-w-2xl mx-auto px-4 py-6">
         {/* Profile card */}
-        <div className="bg-prism-bg-secondary rounded-2xl border border-prism-border p-6 mb-6">
+        <div className="bg-prism-bg-surface rounded-2xl border border-prism-border p-6 mb-6">
           <div className="flex items-start gap-4">
             {/* Avatar */}
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-prism-accent-active to-prism-community-diaspora flex items-center justify-center shrink-0 overflow-hidden">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-prism-accent-primary to-prism-community-diaspora flex items-center justify-center shrink-0 overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               {user.avatar_url ? (
                 <img src={user.avatar_url} alt={user.display_name ?? user.username} className="w-full h-full object-cover" />
@@ -179,7 +179,7 @@ export default function ProfilePage() {
                       setVerifyGateLevel(user.verification_level < 2 ? 2 : 3);
                       setVerifyGateOpen(true);
                     }}
-                    className="text-[10px] font-medium text-prism-accent-active hover:text-prism-accent-active/80 transition-colors"
+                    className="text-[10px] font-medium text-prism-accent-primary hover:text-prism-accent-primary/80 transition-colors"
                   >
                     Upgrade
                   </button>
@@ -220,11 +220,11 @@ export default function ProfilePage() {
         <div className="grid grid-cols-2 gap-3 mb-6">
           <Link
             href="/bookmarks"
-            className="bg-prism-bg-secondary rounded-xl border border-prism-border p-4 hover:bg-prism-bg-elevated transition-colors group"
+            className="bg-prism-bg-surface rounded-xl border border-prism-border p-4 hover:bg-prism-bg-elevated transition-colors group"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-prism-accent-active/10 flex items-center justify-center">
-                <svg className="w-5 h-5 text-prism-accent-active" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <div className="w-10 h-10 rounded-full bg-prism-accent-primary/10 flex items-center justify-center">
+                <svg className="w-5 h-5 text-prism-accent-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
                 </svg>
               </div>
@@ -236,11 +236,11 @@ export default function ProfilePage() {
           </Link>
           <Link
             href="/notifications"
-            className="bg-prism-bg-secondary rounded-xl border border-prism-border p-4 hover:bg-prism-bg-elevated transition-colors group"
+            className="bg-prism-bg-surface rounded-xl border border-prism-border p-4 hover:bg-prism-bg-elevated transition-colors group"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-prism-accent-like/10 flex items-center justify-center relative">
-                <svg className="w-5 h-5 text-prism-accent-like" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <div className="w-10 h-10 rounded-full bg-prism-accent-primary/10 flex items-center justify-center relative">
+                <svg className="w-5 h-5 text-prism-accent-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
                 </svg>
                 <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-prism-accent-live" />
@@ -261,7 +261,7 @@ export default function ProfilePage() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex-1 px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-150 ${
                 activeTab === tab.id
-                  ? "bg-prism-accent-active text-white shadow-sm scale-[1.01]"
+                  ? "bg-prism-accent-primary text-white shadow-sm scale-[1.01]"
                   : "text-prism-text-secondary hover:text-prism-text-primary"
               }`}
             >
@@ -274,7 +274,7 @@ export default function ProfilePage() {
         {activeTab === "activity" && (
           <div className="space-y-3 animate-fade-in">
             {user.recent_posts.length > 0 ? (
-              <div className="bg-prism-bg-secondary rounded-xl border border-prism-border p-4">
+              <div className="bg-prism-bg-surface rounded-xl border border-prism-border p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-xs font-semibold text-prism-text-dim uppercase tracking-wider">Recent Posts</span>
                 </div>
@@ -298,7 +298,7 @@ export default function ProfilePage() {
                 </div>
               </div>
             ) : (
-              <div className="bg-prism-bg-secondary rounded-xl border border-prism-border p-6 text-center">
+              <div className="bg-prism-bg-surface rounded-xl border border-prism-border p-6 text-center">
                 <p className="text-sm text-prism-text-dim">No recent posts yet</p>
                 <p className="text-xs text-prism-text-dim/60 mt-1">Create your first post from the home page</p>
               </div>
@@ -311,7 +311,7 @@ export default function ProfilePage() {
             {user.home_community ? (
               <Link
                 href={`/community/${user.home_community.id}`}
-                className="flex items-center gap-3 bg-prism-bg-secondary rounded-xl border border-prism-border p-4 hover:bg-prism-bg-elevated transition-colors"
+                className="flex items-center gap-3 bg-prism-bg-surface rounded-xl border border-prism-border p-4 hover:bg-prism-bg-elevated transition-colors"
               >
                 <div
                   className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
@@ -326,7 +326,7 @@ export default function ProfilePage() {
                   <div className="flex items-center gap-1.5">
                     <span className="text-sm font-medium text-prism-text-primary truncate">{user.home_community.name}</span>
                     {user.home_community.verified && (
-                      <svg className="w-3.5 h-3.5 text-prism-accent-verified shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                      <svg className="w-3.5 h-3.5 text-prism-accent-live shrink-0" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M16.403 12.652a3 3 0 010-5.304 3 3 0 00-3.75-3.751 3 3 0 00-5.305 0 3 3 0 00-3.751 3.75 3 3 0 000 5.305 3 3 0 003.75 3.751 3 3 0 005.305 0 3 3 0 003.751-3.75zm-2.546-4.46a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
                       </svg>
                     )}
@@ -344,7 +344,7 @@ export default function ProfilePage() {
                 </span>
               </Link>
             ) : (
-              <div className="bg-prism-bg-secondary rounded-xl border border-prism-border p-6 text-center">
+              <div className="bg-prism-bg-surface rounded-xl border border-prism-border p-6 text-center">
                 <p className="text-sm text-prism-text-dim">No community joined yet</p>
               </div>
             )}
@@ -352,7 +352,7 @@ export default function ProfilePage() {
         )}
 
         {activeTab === "connections" && (
-          <div className="bg-prism-bg-secondary rounded-xl border border-prism-border p-6 text-center animate-fade-in">
+          <div className="bg-prism-bg-surface rounded-xl border border-prism-border p-6 text-center animate-fade-in">
             <div className="w-12 h-12 rounded-full bg-prism-bg-elevated flex items-center justify-center mx-auto mb-3">
               <svg className="w-6 h-6 text-prism-text-dim" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />

@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #4A9EFF, #A855F7)",
+          background: "linear-gradient(135deg, #3B82F6, #A855F7)",
           borderRadius: `${s * 0.2}px`,
         }}
       >

@@ -118,7 +118,7 @@ export function VerificationGate({
         onClick={onClose}
       />
       <div className="fixed left-[50%] top-[50%] z-50 w-full max-w-md translate-x-[-50%] translate-y-[-50%] p-4">
-        <div className="bg-prism-bg-secondary border border-prism-border rounded-2xl shadow-2xl overflow-hidden">
+        <div className="bg-prism-bg-surface border border-prism-border rounded-2xl shadow-2xl overflow-hidden">
           {/* Header */}
           <div className="px-5 py-4 border-b border-prism-border">
             <div className="flex items-center justify-between">
@@ -157,9 +157,9 @@ export function VerificationGate({
           <div className="p-5 space-y-4">
             {success ? (
               <div className="text-center py-6">
-                <div className="w-12 h-12 rounded-full bg-prism-accent-verified/10 flex items-center justify-center mx-auto mb-3">
+                <div className="w-12 h-12 rounded-full bg-prism-accent-live/10 flex items-center justify-center mx-auto mb-3">
                   <svg
-                    className="w-6 h-6 text-prism-accent-verified"
+                    className="w-6 h-6 text-prism-accent-live"
                     viewBox="0 0 20 20"
                     fill="currentColor"
                   >
@@ -184,7 +184,7 @@ export function VerificationGate({
                   <select
                     value={selectedCommunity}
                     onChange={(e) => setSelectedCommunity(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl bg-prism-bg-elevated border border-prism-border text-sm text-prism-text-primary focus:outline-none focus:ring-1 focus:ring-prism-accent-active appearance-none"
+                    className="w-full px-4 py-2.5 rounded-xl bg-prism-bg-elevated border border-prism-border text-sm text-prism-text-primary focus:outline-none focus:ring-1 focus:ring-prism-accent-primary appearance-none"
                   >
                     <option value="">Select a community...</option>
                     {communities.map((c) => (
@@ -230,7 +230,7 @@ export function VerificationGate({
                       }
                       placeholder="I live in this neighborhood / I'm part of this organization / I grew up here..."
                       rows={3}
-                      className="w-full px-4 py-3 rounded-xl bg-prism-bg-elevated border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:ring-1 focus:ring-prism-accent-active resize-none leading-relaxed"
+                      className="w-full px-4 py-3 rounded-xl bg-prism-bg-elevated border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:ring-1 focus:ring-prism-accent-primary resize-none leading-relaxed"
                     />
                   </div>
                 ) : (
@@ -245,7 +245,7 @@ export function VerificationGate({
                       }
                       placeholder="Tell us about your role in this community, your perspective, and why you want to contribute official perspective cards..."
                       rows={5}
-                      className="w-full px-4 py-3 rounded-xl bg-prism-bg-elevated border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:ring-1 focus:ring-prism-accent-active resize-none leading-relaxed"
+                      className="w-full px-4 py-3 rounded-xl bg-prism-bg-elevated border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:ring-1 focus:ring-prism-accent-primary resize-none leading-relaxed"
                     />
                     <div className="flex justify-end mt-1">
                       <span
@@ -274,11 +274,11 @@ export function VerificationGate({
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-prism-accent-active" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-prism-accent-primary" />
                       <span
                         className={`text-[11px] ${
                           requiredLevel === 2
-                            ? "text-prism-accent-active font-medium"
+                            ? "text-prism-accent-primary font-medium"
                             : "text-prism-text-secondary"
                         }`}
                       >
@@ -286,11 +286,11 @@ export function VerificationGate({
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-prism-accent-verified" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-prism-accent-live" />
                       <span
                         className={`text-[11px] ${
                           requiredLevel === 3
-                            ? "text-prism-accent-verified font-medium"
+                            ? "text-prism-accent-live font-medium"
                             : "text-prism-text-secondary"
                         }`}
                       >
@@ -321,7 +321,7 @@ export function VerificationGate({
                     ? !locationContext.trim()
                     : applicationMessage.length < 20)
                 }
-                className="w-full py-2.5 rounded-xl bg-prism-accent-active text-white text-sm font-semibold hover:bg-prism-accent-active/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                className="w-full py-2.5 rounded-xl bg-prism-accent-primary text-white text-sm font-semibold hover:bg-prism-accent-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               >
                 {submitting ? (
                   <span className="flex items-center justify-center gap-2">

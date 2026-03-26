@@ -47,15 +47,15 @@ function LoginPageInner() {
   };
 
   return (
-    <div className="min-h-screen bg-prism-bg-primary flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-prism-bg-base flex items-center justify-center p-4 relative overflow-hidden">
       {/* Ambient background glow */}
-      <div className="absolute top-1/4 -left-32 w-64 h-64 rounded-full bg-prism-accent-active/[0.04] blur-3xl" />
+      <div className="absolute top-1/4 -left-32 w-64 h-64 rounded-full bg-prism-accent-primary/[0.04] blur-3xl" />
       <div className="absolute bottom-1/4 -right-32 w-64 h-64 rounded-full bg-prism-community-diaspora/[0.04] blur-3xl" />
 
       <div className="w-full max-w-sm relative z-10">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-prism-accent-active to-prism-community-diaspora mb-4 shadow-lg shadow-prism-accent-active/20">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-prism-accent-primary to-prism-community-diaspora mb-4 shadow-lg shadow-prism-accent-primary/20">
             <span className="text-white font-display font-bold text-xl">P</span>
           </div>
           <h1 className="font-body text-2xl font-bold text-prism-text-primary">
@@ -89,7 +89,7 @@ function LoginPageInner() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
               required
-              className="w-full px-3 py-2.5 rounded-lg bg-prism-bg-secondary border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:ring-2 focus:ring-prism-accent-active/50 focus:border-prism-accent-active transition-all"
+              className="w-full px-3 py-2.5 rounded-lg bg-prism-bg-surface border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:ring-2 focus:ring-prism-accent-primary/50 focus:border-prism-accent-primary transition-all"
             />
           </div>
           <div>
@@ -106,14 +106,14 @@ function LoginPageInner() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               required
-              className="w-full px-3 py-2.5 rounded-lg bg-prism-bg-secondary border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:ring-2 focus:ring-prism-accent-active/50 focus:border-prism-accent-active transition-all"
+              className="w-full px-3 py-2.5 rounded-lg bg-prism-bg-surface border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:ring-2 focus:ring-prism-accent-primary/50 focus:border-prism-accent-primary transition-all"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 rounded-lg bg-prism-accent-active text-white text-sm font-medium hover:bg-prism-accent-active/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-2.5 rounded-lg bg-prism-accent-primary text-white text-sm font-medium hover:bg-prism-accent-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Signing in..." : "Sign in"}
           </button>
@@ -125,7 +125,7 @@ function LoginPageInner() {
             <div className="w-full border-t border-prism-border" />
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="bg-prism-bg-primary px-3 text-prism-text-dim">
+            <span className="bg-prism-bg-base px-3 text-prism-text-dim">
               or continue with
             </span>
           </div>
@@ -135,7 +135,7 @@ function LoginPageInner() {
         <button
           type="button"
           onClick={handleGoogleSignIn}
-          className="w-full py-2.5 rounded-lg bg-prism-bg-secondary border border-prism-border text-sm text-prism-text-primary hover:bg-prism-bg-elevated transition-colors flex items-center justify-center gap-2"
+          className="w-full py-2.5 rounded-lg bg-prism-bg-surface border border-prism-border text-sm text-prism-text-primary hover:bg-prism-bg-elevated transition-colors flex items-center justify-center gap-2"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24">
             <path
@@ -163,7 +163,7 @@ function LoginPageInner() {
           Don&apos;t have an account?{" "}
           <Link
             href="/signup"
-            className="text-prism-accent-active hover:underline"
+            className="text-prism-accent-primary hover:underline"
           >
             Sign up
           </Link>

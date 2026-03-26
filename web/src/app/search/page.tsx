@@ -88,9 +88,9 @@ export default function SearchPage() {
   const showCommunities = activeTab === "all" || activeTab === "communities";
 
   return (
-    <div className="min-h-screen bg-prism-bg-primary">
+    <div className="min-h-screen bg-prism-bg-base">
       {/* Header */}
-      <header className="border-b border-prism-border bg-prism-bg-secondary/95 backdrop-blur-md sticky top-0 z-30">
+      <header className="border-b border-prism-border bg-prism-bg-surface/95 backdrop-blur-md sticky top-0 z-30">
         <div className="max-w-2xl mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
             <Link href="/" className="text-prism-text-dim hover:text-prism-text-primary transition-colors shrink-0">
@@ -109,7 +109,7 @@ export default function SearchPage() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 autoFocus
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-prism-bg-elevated border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:ring-1 focus:ring-prism-accent-active transition-shadow"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-prism-bg-elevated border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:ring-1 focus:ring-prism-accent-primary transition-shadow"
               />
               {query.length > 0 && (
                 <button
@@ -137,7 +137,7 @@ export default function SearchPage() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-150 ${
                     activeTab === tab.id
-                      ? "bg-prism-accent-active text-white"
+                      ? "bg-prism-accent-primary text-white"
                       : "bg-prism-bg-elevated text-prism-text-secondary hover:text-prism-text-primary"
                   }`}
                 >
@@ -149,7 +149,7 @@ export default function SearchPage() {
 
             {searching && (
               <div className="text-center py-8">
-                <div className="w-6 h-6 border-2 border-prism-accent-active border-t-transparent rounded-full animate-spin mx-auto" />
+                <div className="w-6 h-6 border-2 border-prism-accent-primary border-t-transparent rounded-full animate-spin mx-auto" />
               </div>
             )}
 
@@ -171,7 +171,7 @@ export default function SearchPage() {
                     <Link
                       key={community.id}
                       href={`/community/${community.id}`}
-                      className="flex items-center gap-3 bg-prism-bg-secondary rounded-xl border border-prism-border p-3 hover:bg-prism-bg-elevated transition-colors"
+                      className="flex items-center gap-3 bg-prism-bg-surface rounded-xl border border-prism-border p-3 hover:bg-prism-bg-elevated transition-colors"
                     >
                       <div
                         className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
@@ -203,7 +203,7 @@ export default function SearchPage() {
                     <Link
                       key={topic.id}
                       href={`/topic/${topic.slug}`}
-                      className="block bg-prism-bg-secondary rounded-xl border border-prism-border p-3 hover:bg-prism-bg-elevated transition-colors"
+                      className="block bg-prism-bg-surface rounded-xl border border-prism-border p-3 hover:bg-prism-bg-elevated transition-colors"
                     >
                       <h3 className="text-sm font-medium text-prism-text-primary">{topic.title}</h3>
                       {topic.summary && (

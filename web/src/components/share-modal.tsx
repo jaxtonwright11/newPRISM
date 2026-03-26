@@ -78,7 +78,7 @@ export function ShareModal({
     >
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div
-        className="relative bg-prism-bg-secondary border border-prism-border rounded-t-2xl md:rounded-2xl w-full max-w-sm animate-fade-in"
+        className="relative bg-prism-bg-surface border border-prism-border rounded-t-2xl md:rounded-2xl w-full max-w-sm animate-fade-in"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-5">
@@ -119,7 +119,7 @@ export function ShareModal({
                 </span>
                 {option.state && (
                   <svg
-                    className="w-4 h-4 text-prism-accent-verified"
+                    className="w-4 h-4 text-prism-accent-live"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"

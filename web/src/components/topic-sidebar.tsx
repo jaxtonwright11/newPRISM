@@ -6,9 +6,9 @@ import { COMMUNITY_COLORS } from "@/lib/constants";
 import type { TopicStatus, Topic, Community } from "@shared/types";
 
 const STATUS_DOT: Record<TopicStatus, string> = {
-  hot: "bg-prism-accent-active",
-  trending: "bg-prism-accent-active/60",
-  active: "bg-prism-accent-verified/60",
+  hot: "bg-prism-accent-primary",
+  trending: "bg-prism-accent-primary/60",
+  active: "bg-prism-accent-live/60",
   cooling: "bg-prism-text-dim/40",
   archived: "bg-prism-text-dim/20",
 };
@@ -40,11 +40,11 @@ export function TopicSidebar({
   const activeTopics = filteredTopics.filter((t) => t.status === "active");
 
   return (
-    <aside className="w-[260px] h-full bg-prism-bg-secondary border-r border-prism-border flex flex-col shrink-0 hidden md:flex">
+    <aside className="w-[260px] h-full bg-prism-bg-surface border-r border-prism-border flex flex-col shrink-0 hidden md:flex">
       {/* Logo */}
       <div className="p-4 border-b border-prism-border">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-prism-accent-active to-prism-community-diaspora flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-prism-accent-primary to-prism-community-diaspora flex items-center justify-center">
             <span className="text-white font-display font-bold text-sm">P</span>
           </div>
           <div>
@@ -79,7 +79,7 @@ export function TopicSidebar({
             placeholder="Search topics..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 rounded-lg bg-prism-bg-elevated border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:ring-1 focus:ring-prism-accent-active transition-shadow"
+            className="w-full pl-9 pr-3 py-2 rounded-lg bg-prism-bg-elevated border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:ring-1 focus:ring-prism-accent-primary transition-shadow"
           />
         </div>
       </div>
@@ -173,7 +173,7 @@ function TopicItem({
       onClick={() => onSelect(slug)}
       className={`w-full text-left px-3 py-2.5 rounded-lg mb-0.5 transition-all duration-150 ${
         isSelected
-          ? "bg-prism-accent-active/10 border border-prism-accent-active/30"
+          ? "bg-prism-accent-primary/10 border border-prism-accent-primary/30"
           : "hover:bg-prism-bg-elevated border border-transparent"
       }`}
     >

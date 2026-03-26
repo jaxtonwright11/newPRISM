@@ -68,8 +68,8 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-prism-bg-primary">
-        <header className="border-b border-prism-border bg-prism-bg-secondary/95 backdrop-blur-md sticky top-0 z-30">
+      <div className="min-h-screen bg-prism-bg-base">
+        <header className="border-b border-prism-border bg-prism-bg-surface/95 backdrop-blur-md sticky top-0 z-30">
           <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
             <Link href="/profile" className="text-prism-text-dim hover:text-prism-text-primary transition-colors">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -91,8 +91,8 @@ export default function SettingsPage() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-prism-bg-primary">
-      <header className="border-b border-prism-border bg-prism-bg-secondary/95 backdrop-blur-md sticky top-0 z-30">
+    <div className="min-h-screen bg-prism-bg-base">
+      <header className="border-b border-prism-border bg-prism-bg-surface/95 backdrop-blur-md sticky top-0 z-30">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
           <Link href="/profile" className="text-prism-text-dim hover:text-prism-text-primary transition-colors">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -105,7 +105,7 @@ export default function SettingsPage() {
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
         {/* Account */}
-        <section className="bg-prism-bg-secondary rounded-2xl border border-prism-border overflow-hidden">
+        <section className="bg-prism-bg-surface rounded-2xl border border-prism-border overflow-hidden">
           <div className="px-4 py-3 border-b border-prism-border">
             <h2 className="text-sm font-semibold text-prism-text-primary">Account</h2>
           </div>
@@ -118,7 +118,7 @@ export default function SettingsPage() {
         </section>
 
         {/* Privacy */}
-        <section className="bg-prism-bg-secondary rounded-2xl border border-prism-border overflow-hidden">
+        <section className="bg-prism-bg-surface rounded-2xl border border-prism-border overflow-hidden">
           <div className="px-4 py-3 border-b border-prism-border">
             <h2 className="text-sm font-semibold text-prism-text-primary">Privacy</h2>
           </div>
@@ -131,7 +131,7 @@ export default function SettingsPage() {
               <button
                 onClick={toggleGhostMode}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  ghostMode ? "bg-prism-accent-active" : "bg-prism-bg-elevated"
+                  ghostMode ? "bg-prism-accent-primary" : "bg-prism-bg-elevated"
                 }`}
                 role="switch"
                 aria-checked={ghostMode}
@@ -147,7 +147,7 @@ export default function SettingsPage() {
         </section>
 
         {/* Preferences */}
-        <section className="bg-prism-bg-secondary rounded-2xl border border-prism-border overflow-hidden">
+        <section className="bg-prism-bg-surface rounded-2xl border border-prism-border overflow-hidden">
           <div className="px-4 py-3 border-b border-prism-border">
             <h2 className="text-sm font-semibold text-prism-text-primary">Preferences</h2>
           </div>
@@ -162,7 +162,7 @@ export default function SettingsPage() {
                     onClick={() => setDefaultRadius(r)}
                     className={`flex-1 py-2 rounded-lg text-sm font-mono transition-all ${
                       defaultRadius === r
-                        ? "bg-prism-accent-active text-white"
+                        ? "bg-prism-accent-primary text-white"
                         : "bg-prism-bg-elevated text-prism-text-secondary hover:text-prism-text-primary"
                     }`}
                   >
@@ -179,15 +179,15 @@ export default function SettingsPage() {
           onClick={handleSave}
           className={`w-full py-3 rounded-xl font-medium text-sm transition-all ${
             saved
-              ? "bg-prism-accent-verified text-white"
-              : "bg-prism-accent-active text-white hover:bg-prism-accent-active/90"
+              ? "bg-prism-accent-live text-white"
+              : "bg-prism-accent-primary text-white hover:bg-prism-accent-primary/90"
           }`}
         >
           {saved ? "\u2713 Saved" : "Save Changes"}
         </button>
 
         {/* Danger zone */}
-        <section className="bg-prism-bg-secondary rounded-2xl border border-prism-accent-live/20 overflow-hidden">
+        <section className="bg-prism-bg-surface rounded-2xl border border-prism-accent-live/20 overflow-hidden">
           <div className="px-4 py-3 border-b border-prism-accent-live/20">
             <h2 className="text-sm font-semibold text-prism-accent-live">Danger Zone</h2>
           </div>

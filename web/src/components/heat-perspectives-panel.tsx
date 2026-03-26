@@ -33,7 +33,7 @@ export function HeatPerspectivesPanel({
   return (
     <div className="fixed inset-0 z-50">
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="fixed inset-x-0 bottom-0 z-50 max-h-[70vh] overflow-hidden rounded-t-2xl bg-prism-bg-secondary border-t border-prism-border animate-slide-up">
+      <div className="fixed inset-x-0 bottom-0 z-50 max-h-[70vh] overflow-hidden rounded-t-2xl bg-prism-bg-surface border-t border-prism-border animate-slide-up">
         {/* Handle */}
         <div className="flex justify-center py-2">
           <div className="w-10 h-1 rounded-full bg-prism-border" />
@@ -73,7 +73,7 @@ export function HeatPerspectivesPanel({
                           {p.community.name}
                         </span>
                         {p.community.verified && (
-                          <svg className="w-3 h-3 text-prism-accent-verified" viewBox="0 0 20 20" fill="currentColor">
+                          <svg className="w-3 h-3 text-prism-accent-live" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M16.403 12.652a3 3 0 010-5.304 3 3 0 00-3.75-3.751 3 3 0 00-5.305 0 3 3 0 00-3.751 3.75 3 3 0 000 5.305 3 3 0 003.75 3.751 3 3 0 005.305 0 3 3 0 003.751-3.75zm-2.546-4.46a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
                           </svg>
                         )}

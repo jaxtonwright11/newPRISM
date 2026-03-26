@@ -1,10 +1,10 @@
 import type { CommunityType, ReactionType } from "@shared/types";
 
 export const COMMUNITY_COLORS: Record<CommunityType, string> = {
-  civic: "#4A9EFF",
+  civic: "#3B82F6",
   diaspora: "#A855F7",
   rural: "#F59E0B",
-  policy: "#10B981",
+  policy: "#22C55E",
   academic: "#06B6D4",
   cultural: "#F97316",
 };

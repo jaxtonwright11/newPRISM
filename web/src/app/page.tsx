@@ -34,10 +34,10 @@ const MapPlaceholder = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="w-full h-full rounded-xl bg-prism-map-ocean border border-prism-border flex items-center justify-center">
+      <div className="w-full h-full rounded-xl bg-prism-bg-base border border-prism-border flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="w-full max-w-[200px] h-2 bg-prism-bg-elevated rounded-full overflow-hidden">
-            <div className="h-full bg-prism-accent-active/30 rounded-full animate-shimmer" style={{ width: "60%" }} />
+            <div className="h-full bg-prism-accent-primary/30 rounded-full animate-shimmer" style={{ width: "60%" }} />
           </div>
           <span className="text-[10px] text-prism-text-dim">Loading map</span>
         </div>
@@ -265,7 +265,7 @@ export default function Home() {
   ];
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-prism-bg-primary">
+    <div className="flex flex-col h-screen overflow-hidden bg-prism-bg-base">
       <h1 className="sr-only">PRISM — Community Perspectives</h1>
       <EarlyAccessBanner />
       <div className="flex flex-1 min-h-0">
@@ -280,9 +280,9 @@ export default function Home() {
       {/* Main content */}
       <main id="main-content" className="flex-1 flex flex-col min-w-0">
         {/* Mobile header */}
-        <div className="md:hidden flex items-center justify-between px-4 py-3 border-b border-prism-border bg-prism-bg-secondary/95 backdrop-blur-md">
+        <div className="md:hidden flex items-center justify-between px-4 py-3 border-b border-prism-border bg-prism-bg-surface/95 backdrop-blur-md">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-prism-accent-active to-prism-community-diaspora flex items-center justify-center">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-prism-accent-primary to-prism-community-diaspora flex items-center justify-center">
               <span className="text-white font-display font-bold text-xs">
                 P
               </span>
@@ -321,7 +321,7 @@ export default function Home() {
         </div>
 
         {/* Mobile topic pills — horizontal scroll */}
-        <div className="md:hidden overflow-x-auto scrollbar-hide border-b border-prism-border bg-prism-bg-secondary/80">
+        <div className="md:hidden overflow-x-auto scrollbar-hide border-b border-prism-border bg-prism-bg-surface/80">
           <div className="flex gap-2 px-4 py-2.5">
             {topics.filter((t) => t.status !== "archived").map((topic) => (
               <button
@@ -329,7 +329,7 @@ export default function Home() {
                 onClick={() => handleTopicSelect(topic.slug)}
                 className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-150 border ${
                   selectedTopicSlug === topic.slug
-                    ? "bg-prism-accent-active/15 border-prism-accent-active/40 text-prism-accent-active"
+                    ? "bg-prism-accent-primary/15 border-prism-accent-primary/40 text-prism-accent-primary"
                     : "bg-prism-bg-elevated border-prism-border text-prism-text-secondary hover:text-prism-text-primary"
                 }`}
               >
@@ -377,7 +377,7 @@ export default function Home() {
             onClick={() => handleTopicSelect(hotTopic.slug)}
             className="w-full px-3 md:px-4 py-2 bg-prism-bg-elevated/50 border-b border-prism-border flex items-center gap-2 hover:bg-prism-bg-elevated transition-colors group"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-prism-accent-active shrink-0" />
+            <span className="w-1.5 h-1.5 rounded-full bg-prism-accent-primary shrink-0" />
             <span className="text-xs text-prism-text-secondary truncate flex-1 text-left">
               {hotTopic.title}
             </span>
@@ -396,7 +396,7 @@ export default function Home() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`px-3 md:px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-150 ${
                   activeTab === tab.id
-                    ? "bg-prism-accent-active text-white shadow-sm"
+                    ? "bg-prism-accent-primary text-white shadow-sm"
                     : "text-prism-text-secondary hover:text-prism-text-primary"
                 }`}
               >
@@ -416,14 +416,14 @@ export default function Home() {
               onClick={toggleGhostMode}
               className={`hidden md:flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors ${
                 ghostMode
-                  ? "bg-prism-accent-active/10 text-prism-accent-active"
+                  ? "bg-prism-accent-primary/10 text-prism-accent-primary"
                   : "text-prism-text-dim hover:text-prism-text-primary hover:bg-prism-bg-elevated"
               }`}
               aria-label={`Ghost mode ${ghostMode ? "on" : "off"}`}
             >
               <span
                 className={`w-1.5 h-1.5 rounded-full ${
-                  ghostMode ? "bg-prism-accent-active" : "bg-prism-text-dim"
+                  ghostMode ? "bg-prism-accent-primary" : "bg-prism-text-dim"
                 }`}
               />
               Ghost
@@ -536,7 +536,7 @@ export default function Home() {
       {/* Compose FAB */}
       <button
         onClick={() => setComposeOpen(true)}
-        className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-40 w-12 h-12 rounded-full bg-prism-accent-active text-white shadow-lg shadow-prism-accent-active/30 hover:bg-prism-accent-active/90 transition-all flex items-center justify-center hover:scale-105 active:scale-95"
+        className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-40 w-12 h-12 rounded-full bg-prism-accent-primary text-white shadow-lg shadow-prism-accent-primary/30 hover:bg-prism-accent-primary/90 transition-all flex items-center justify-center hover:scale-105 active:scale-95"
         aria-label="Create post"
       >
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>

@@ -185,7 +185,7 @@ function createHeatElement(
   label.style.transform = "translate(-50%, -50%)";
   label.style.fontSize = "10px";
   label.style.fontWeight = "700";
-  label.style.color = "#F2EDE5";
+  label.style.color = "#EDEDEF";
   label.style.textShadow = "0 1px 4px rgba(0,0,0,0.8)";
   label.style.zIndex = "5";
   label.textContent = `${communityCount}`;
@@ -299,7 +299,7 @@ export function MapPlaceholder({
         offset: 12,
         className: "prism-popup",
       }).setHTML(
-        `<div style="background:#0D0B08;border:1px solid #2A251E;border-radius:6px;padding:4px 8px;font-size:10px;color:#F2EDE5;font-family:'DM Sans',sans-serif;">${c.name}</div>`
+        `<div style="background:#0F1114;border:1px solid #262A31;border-radius:6px;padding:4px 8px;font-size:10px;color:#EDEDEF;font-family:'DM Sans',sans-serif;">${c.name}</div>`
       );
 
       el.addEventListener("mouseenter", () => {
@@ -339,13 +339,13 @@ export function MapPlaceholder({
       el.style.width = "6px";
       el.style.height = "6px";
       el.style.borderRadius = "50%";
-      el.style.backgroundColor = "#4A9EFF";
+      el.style.backgroundColor = "#3B82F6";
       el.style.boxShadow = "0 1px 4px rgba(74,158,255,0.5)";
 
       if (post.post_type === "story") {
         el.style.border = "2px solid transparent";
         el.style.backgroundImage =
-          "linear-gradient(#4A9EFF, #4A9EFF), linear-gradient(135deg, #C17F4E, #D4955E)";
+          "linear-gradient(#3B82F6, #3B82F6), linear-gradient(135deg, #D4956B, #E8B898)";
         el.style.backgroundOrigin = "border-box";
         el.style.backgroundClip = "padding-box, border-box";
       }
@@ -371,7 +371,7 @@ export function MapPlaceholder({
       el.style.width = "6px";
       el.style.height = "6px";
       el.style.borderRadius = "50%";
-      el.style.backgroundColor = "#4A9EFF";
+      el.style.backgroundColor = "#3B82F6";
       el.style.boxShadow = "0 1px 4px rgba(74,158,255,0.5)";
 
       const popup = new mapboxgl.Popup({
@@ -380,7 +380,7 @@ export function MapPlaceholder({
         offset: 10,
         className: "prism-popup",
       }).setHTML(
-        `<div style="background:#0D0B08;border:1px solid #2A251E;border-radius:6px;padding:4px 8px;font-size:10px;color:#F2EDE5;font-family:'DM Sans',sans-serif;">You (${homeCommunity.region})</div>`
+        `<div style="background:#0F1114;border:1px solid #262A31;border-radius:6px;padding:4px 8px;font-size:10px;color:#EDEDEF;font-family:'DM Sans',sans-serif;">You (${homeCommunity.region})</div>`
       );
 
       el.addEventListener("mouseenter", () => {
@@ -414,7 +414,7 @@ export function MapPlaceholder({
   // Fallback if no Mapbox token
   if (!MAPBOX_TOKEN) {
     return (
-      <div className="relative w-full h-full rounded-xl overflow-hidden bg-prism-map-ocean border border-prism-border shadow-inner flex items-center justify-center">
+      <div className="relative w-full h-full rounded-xl overflow-hidden bg-prism-bg-base border border-prism-border shadow-inner flex items-center justify-center">
         <p className="text-sm text-prism-text-dim">
           Add NEXT_PUBLIC_MAPBOX_TOKEN for live map
         </p>
@@ -430,10 +430,10 @@ export function MapPlaceholder({
       {/* Map status */}
 
       {/* Privacy status */}
-      <div className="absolute top-11 right-3 bg-prism-bg-primary/80 backdrop-blur-sm px-2.5 py-1 rounded-full z-10 border border-prism-border/60">
+      <div className="absolute top-11 right-3 bg-prism-bg-base/80 backdrop-blur-sm px-2.5 py-1 rounded-full z-10 border border-prism-border/60">
         <span
           className={`text-[10px] font-medium ${
-            ghostMode ? "text-prism-accent-active" : "text-prism-text-secondary"
+            ghostMode ? "text-prism-accent-primary" : "text-prism-text-secondary"
           }`}
         >
           {ghostMode ? "Ghost mode on" : "Visible mode"}
@@ -441,7 +441,7 @@ export function MapPlaceholder({
       </div>
 
       {/* Community count */}
-      <div className="absolute top-3 left-3 bg-prism-bg-primary/80 backdrop-blur-sm px-2.5 py-1 rounded-full z-10">
+      <div className="absolute top-3 left-3 bg-prism-bg-base/80 backdrop-blur-sm px-2.5 py-1 rounded-full z-10">
         <span className="text-[10px] font-mono text-prism-text-secondary">
           {communitiesProp.filter((c) => c.latitude != null).length} communities
           active
@@ -450,10 +450,10 @@ export function MapPlaceholder({
 
       {/* Loading state */}
       {!mapLoaded && (
-        <div className="absolute inset-0 bg-prism-map-ocean flex items-center justify-center z-20">
+        <div className="absolute inset-0 bg-prism-bg-base flex items-center justify-center z-20">
           <div className="flex flex-col items-center gap-3">
             <div className="w-full max-w-[200px] h-2 bg-prism-bg-elevated rounded-full overflow-hidden">
-              <div className="h-full bg-prism-accent-active/30 rounded-full animate-shimmer" style={{ width: "60%" }} />
+              <div className="h-full bg-prism-accent-primary/30 rounded-full animate-shimmer" style={{ width: "60%" }} />
             </div>
             <span className="text-[10px] text-prism-text-dim">Loading map</span>
           </div>

@@ -104,9 +104,9 @@ export function CreatePostModal({
         <div className="fixed inset-0 z-50">
           <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" onClick={() => onOpenChange(false)} />
           <div className="fixed left-[50%] top-[50%] z-50 w-full max-w-sm translate-x-[-50%] translate-y-[-50%] p-4">
-            <div className="bg-prism-bg-secondary border border-prism-border rounded-2xl shadow-2xl p-6 text-center">
-              <div className="w-12 h-12 rounded-full bg-prism-accent-active/10 flex items-center justify-center mx-auto mb-4">
-                <svg className="w-6 h-6 text-prism-accent-active" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <div className="bg-prism-bg-surface border border-prism-border rounded-2xl shadow-2xl p-6 text-center">
+              <div className="w-12 h-12 rounded-full bg-prism-accent-primary/10 flex items-center justify-center mx-auto mb-4">
+                <svg className="w-6 h-6 text-prism-accent-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
                 </svg>
               </div>
@@ -118,7 +118,7 @@ export function CreatePostModal({
               </p>
               <button
                 onClick={() => setShowVerifyGate(true)}
-                className="w-full py-2.5 rounded-xl bg-prism-accent-active text-white text-sm font-semibold hover:bg-prism-accent-active/90 transition-colors"
+                className="w-full py-2.5 rounded-xl bg-prism-accent-primary text-white text-sm font-semibold hover:bg-prism-accent-primary/90 transition-colors"
               >
                 Verify Now
               </button>
@@ -151,7 +151,7 @@ export function CreatePostModal({
 
       {/* Modal */}
       <div className="fixed left-[50%] top-[50%] z-50 w-full max-w-md translate-x-[-50%] translate-y-[-50%] p-4">
-        <div className="bg-prism-bg-secondary border border-prism-border rounded-2xl shadow-2xl overflow-hidden">
+        <div className="bg-prism-bg-surface border border-prism-border rounded-2xl shadow-2xl overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-prism-border">
             <h2 className="text-sm font-semibold text-prism-text-primary">
@@ -177,7 +177,7 @@ export function CreatePostModal({
                 placeholder="Share your perspective..."
                 rows={4}
                 autoFocus
-                className="w-full px-4 py-3 rounded-xl bg-prism-bg-elevated border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:ring-1 focus:ring-prism-accent-active resize-none leading-relaxed"
+                className="w-full px-4 py-3 rounded-xl bg-prism-bg-elevated border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:ring-1 focus:ring-prism-accent-primary resize-none leading-relaxed"
               />
               <div className="flex justify-end mt-1">
                 <span
@@ -202,7 +202,7 @@ export function CreatePostModal({
                   onClick={() => setPostType("permanent")}
                   className={`flex-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-150 ${
                     postType === "permanent"
-                      ? "bg-prism-accent-active text-white shadow-sm"
+                      ? "bg-prism-accent-primary text-white shadow-sm"
                       : "text-prism-text-secondary hover:text-prism-text-primary"
                   }`}
                 >
@@ -212,7 +212,7 @@ export function CreatePostModal({
                   onClick={() => setPostType("story")}
                   className={`flex-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-150 flex items-center justify-center gap-1.5 ${
                     postType === "story"
-                      ? "bg-gradient-to-r from-prism-accent-like to-amber-500 text-white shadow-sm"
+                      ? "bg-gradient-to-r from-prism-accent-primary to-amber-500 text-white shadow-sm"
                       : "text-prism-text-secondary hover:text-prism-text-primary"
                   }`}
                 >
@@ -236,7 +236,7 @@ export function CreatePostModal({
                     onClick={() => setRadiusMiles(r)}
                     className={`flex-1 py-2 rounded-xl text-xs font-mono font-medium transition-all duration-150 border ${
                       radiusMiles === r
-                        ? "bg-prism-accent-active/10 border-prism-accent-active text-prism-accent-active"
+                        ? "bg-prism-accent-primary/10 border-prism-accent-primary text-prism-accent-primary"
                         : "bg-prism-bg-elevated border-prism-border text-prism-text-secondary hover:border-prism-text-dim"
                     }`}
                   >
@@ -266,7 +266,7 @@ export function CreatePostModal({
             <button
               onClick={handleSubmit}
               disabled={!content.trim() || !session || submitting}
-              className="w-full py-2.5 rounded-xl bg-prism-accent-active text-white text-sm font-semibold hover:bg-prism-accent-active/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              className="w-full py-2.5 rounded-xl bg-prism-accent-primary text-white text-sm font-semibold hover:bg-prism-accent-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
             >
               {submitting ? (
                 <span className="flex items-center justify-center gap-2">

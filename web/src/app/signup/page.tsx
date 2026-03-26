@@ -48,11 +48,11 @@ export default function SignupPage() {
 
   if (step === "check-email") {
     return (
-      <div className="min-h-screen bg-prism-bg-primary flex items-center justify-center p-4">
+      <div className="min-h-screen bg-prism-bg-base flex items-center justify-center p-4">
         <div className="w-full max-w-sm text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-prism-accent-active/10 mb-6">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-prism-accent-primary/10 mb-6">
             <svg
-              className="w-8 h-8 text-prism-accent-active"
+              className="w-8 h-8 text-prism-accent-primary"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -75,7 +75,7 @@ export default function SignupPage() {
 
           <Link
             href="/login"
-            className="inline-flex px-6 py-2.5 rounded-lg bg-prism-accent-active text-white text-sm font-medium hover:bg-prism-accent-active/90 transition-colors"
+            className="inline-flex px-6 py-2.5 rounded-lg bg-prism-accent-primary text-white text-sm font-medium hover:bg-prism-accent-primary/90 transition-colors"
           >
             Go to Sign In
           </Link>
@@ -90,11 +90,11 @@ export default function SignupPage() {
 
   if (step === "community") {
     return (
-      <div className="min-h-screen bg-prism-bg-primary flex items-center justify-center p-4">
+      <div className="min-h-screen bg-prism-bg-base flex items-center justify-center p-4">
         <div className="w-full max-w-sm text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-prism-accent-verified/10 mb-6">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-prism-accent-live/10 mb-6">
             <svg
-              className="w-8 h-8 text-prism-accent-verified"
+              className="w-8 h-8 text-prism-accent-live"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -115,7 +115,7 @@ export default function SignupPage() {
             perspectives from communities across the country.
           </p>
 
-          <div className="bg-prism-bg-secondary border border-prism-border rounded-lg p-4 mb-6 text-left">
+          <div className="bg-prism-bg-surface border border-prism-border rounded-lg p-4 mb-6 text-left">
             <p className="text-xs font-semibold text-prism-text-dim uppercase tracking-wider mb-2">
               What you can do now
             </p>
@@ -131,7 +131,7 @@ export default function SignupPage() {
                   className="flex items-start gap-2 text-sm text-prism-text-primary"
                 >
                   <svg
-                    className="w-4 h-4 text-prism-accent-verified mt-0.5 shrink-0"
+                    className="w-4 h-4 text-prism-accent-live mt-0.5 shrink-0"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -151,7 +151,7 @@ export default function SignupPage() {
 
           <Link
             href="/onboarding"
-            className="inline-flex px-6 py-2.5 rounded-lg bg-prism-accent-active text-white text-sm font-medium hover:bg-prism-accent-active/90 transition-colors"
+            className="inline-flex px-6 py-2.5 rounded-lg bg-prism-accent-primary text-white text-sm font-medium hover:bg-prism-accent-primary/90 transition-colors"
           >
             Continue to Onboarding
           </Link>
@@ -165,15 +165,15 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-prism-bg-primary flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-prism-bg-base flex items-center justify-center p-4 relative overflow-hidden">
       {/* Ambient background glow */}
       <div className="absolute top-1/3 -right-32 w-64 h-64 rounded-full bg-prism-community-diaspora/[0.04] blur-3xl" />
-      <div className="absolute bottom-1/3 -left-32 w-64 h-64 rounded-full bg-prism-accent-active/[0.04] blur-3xl" />
+      <div className="absolute bottom-1/3 -left-32 w-64 h-64 rounded-full bg-prism-accent-primary/[0.04] blur-3xl" />
 
       <div className="w-full max-w-sm relative z-10">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-prism-accent-active to-prism-community-diaspora mb-4 shadow-lg shadow-prism-accent-active/20">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-prism-accent-primary to-prism-community-diaspora mb-4 shadow-lg shadow-prism-accent-primary/20">
             <span className="text-white font-display font-bold text-xl">P</span>
           </div>
           <h1 className="font-body text-2xl font-bold text-prism-text-primary">
@@ -207,7 +207,7 @@ export default function SignupPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
               required
-              className="w-full px-3 py-2.5 rounded-lg bg-prism-bg-secondary border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:ring-2 focus:ring-prism-accent-active/50 focus:border-prism-accent-active transition-all"
+              className="w-full px-3 py-2.5 rounded-lg bg-prism-bg-surface border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:ring-2 focus:ring-prism-accent-primary/50 focus:border-prism-accent-primary transition-all"
             />
           </div>
           <div>
@@ -224,7 +224,7 @@ export default function SignupPage() {
               onChange={(e) => setUsername(e.target.value)}
               placeholder="yourusername"
               required
-              className="w-full px-3 py-2.5 rounded-lg bg-prism-bg-secondary border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:ring-2 focus:ring-prism-accent-active/50 focus:border-prism-accent-active transition-all"
+              className="w-full px-3 py-2.5 rounded-lg bg-prism-bg-surface border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:ring-2 focus:ring-prism-accent-primary/50 focus:border-prism-accent-primary transition-all"
             />
           </div>
           <div>
@@ -242,7 +242,7 @@ export default function SignupPage() {
               placeholder="••••••••"
               required
               minLength={8}
-              className="w-full px-3 py-2.5 rounded-lg bg-prism-bg-secondary border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:ring-2 focus:ring-prism-accent-active/50 focus:border-prism-accent-active transition-all"
+              className="w-full px-3 py-2.5 rounded-lg bg-prism-bg-surface border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:ring-2 focus:ring-prism-accent-primary/50 focus:border-prism-accent-primary transition-all"
             />
             <p className="text-[11px] text-prism-text-dim mt-1">
               At least 8 characters
@@ -252,7 +252,7 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 rounded-lg bg-prism-accent-active text-white text-sm font-medium hover:bg-prism-accent-active/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-2.5 rounded-lg bg-prism-accent-primary text-white text-sm font-medium hover:bg-prism-accent-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Creating account..." : "Create account"}
           </button>
@@ -264,7 +264,7 @@ export default function SignupPage() {
             <div className="w-full border-t border-prism-border" />
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="bg-prism-bg-primary px-3 text-prism-text-dim">
+            <span className="bg-prism-bg-base px-3 text-prism-text-dim">
               or continue with
             </span>
           </div>
@@ -274,7 +274,7 @@ export default function SignupPage() {
         <button
           type="button"
           onClick={handleGoogleSignIn}
-          className="w-full py-2.5 rounded-lg bg-prism-bg-secondary border border-prism-border text-sm text-prism-text-primary hover:bg-prism-bg-elevated transition-colors flex items-center justify-center gap-2"
+          className="w-full py-2.5 rounded-lg bg-prism-bg-surface border border-prism-border text-sm text-prism-text-primary hover:bg-prism-bg-elevated transition-colors flex items-center justify-center gap-2"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24">
             <path
@@ -302,7 +302,7 @@ export default function SignupPage() {
           Already have an account?{" "}
           <Link
             href="/login"
-            className="text-prism-accent-active hover:underline"
+            className="text-prism-accent-primary hover:underline"
           >
             Sign in
           </Link>

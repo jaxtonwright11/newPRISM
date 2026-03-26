@@ -63,7 +63,7 @@ export function PWAInstallPrompt() {
       </button>
 
       <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-prism-accent-active to-prism-community-diaspora flex items-center justify-center shrink-0">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-prism-accent-primary to-prism-community-diaspora flex items-center justify-center shrink-0">
           <span className="text-white font-display font-bold text-sm">P</span>
         </div>
         <div className="flex-1 min-w-0">
@@ -75,7 +75,7 @@ export function PWAInstallPrompt() {
               </p>
               <button
                 onClick={install}
-                className="w-full py-2 rounded-lg bg-prism-accent-active text-white text-sm font-medium hover:bg-prism-accent-active/90 transition-colors"
+                className="w-full py-2 rounded-lg bg-prism-accent-primary text-white text-sm font-medium hover:bg-prism-accent-primary/90 transition-colors"
               >
                 Install App
               </button>

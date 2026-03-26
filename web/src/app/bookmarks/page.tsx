@@ -79,8 +79,8 @@ export default function BookmarksPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-prism-bg-primary">
-        <header className="border-b border-prism-border bg-prism-bg-secondary/95 backdrop-blur-md sticky top-0 z-30">
+      <div className="min-h-screen bg-prism-bg-base">
+        <header className="border-b border-prism-border bg-prism-bg-surface/95 backdrop-blur-md sticky top-0 z-30">
           <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
             <Link href="/" className="text-prism-text-dim hover:text-prism-text-primary transition-colors">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -100,9 +100,9 @@ export default function BookmarksPage() {
   }
 
   return (
-    <div className="min-h-screen bg-prism-bg-primary">
+    <div className="min-h-screen bg-prism-bg-base">
       {/* Header */}
-      <header className="border-b border-prism-border bg-prism-bg-secondary/95 backdrop-blur-md sticky top-0 z-30">
+      <header className="border-b border-prism-border bg-prism-bg-surface/95 backdrop-blur-md sticky top-0 z-30">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
           <Link href="/" className="text-prism-text-dim hover:text-prism-text-primary transition-colors">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -122,7 +122,7 @@ export default function BookmarksPage() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex-1 flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-150 ${
                 activeTab === tab.id
-                  ? "bg-prism-accent-active text-white shadow-sm"
+                  ? "bg-prism-accent-primary text-white shadow-sm"
                   : "text-prism-text-secondary hover:text-prism-text-primary"
               }`}
             >
@@ -164,7 +164,7 @@ export default function BookmarksPage() {
                 <Link
                   key={topic.id}
                   href={`/topic/${topic.slug}`}
-                  className="block bg-prism-bg-secondary rounded-xl border border-prism-border p-4 hover:bg-prism-bg-elevated transition-colors"
+                  className="block bg-prism-bg-surface rounded-xl border border-prism-border p-4 hover:bg-prism-bg-elevated transition-colors"
                 >
                   <h2 className="text-sm font-medium text-prism-text-primary mb-1">{topic.title}</h2>
                   {topic.summary && (

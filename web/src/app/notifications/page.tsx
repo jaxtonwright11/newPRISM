@@ -7,11 +7,11 @@ import { useRealtime } from "@/lib/use-realtime";
 import type { Notification } from "@shared/types";
 
 const NOTIF_ICONS: Record<Notification["type"], { emoji: string; color: string }> = {
-  reaction: { emoji: "💡", color: "bg-prism-accent-active/10" },
+  reaction: { emoji: "💡", color: "bg-prism-accent-primary/10" },
   connection_request: { emoji: "🤝", color: "bg-prism-community-diaspora/10" },
-  connection_accepted: { emoji: "✓", color: "bg-prism-accent-verified/10" },
+  connection_accepted: { emoji: "✓", color: "bg-prism-accent-live/10" },
   new_perspective: { emoji: "📝", color: "bg-prism-community-cultural/10" },
-  community_milestone: { emoji: "🎉", color: "bg-prism-accent-like/10" },
+  community_milestone: { emoji: "🎉", color: "bg-prism-accent-primary/10" },
 };
 
 export default function NotificationsPage() {
@@ -103,8 +103,8 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-prism-bg-primary">
-      <header className="border-b border-prism-border bg-prism-bg-secondary/95 backdrop-blur-md sticky top-0 z-30">
+    <div className="min-h-screen bg-prism-bg-base">
+      <header className="border-b border-prism-border bg-prism-bg-surface/95 backdrop-blur-md sticky top-0 z-30">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link href="/" className="text-prism-text-dim hover:text-prism-text-primary transition-colors">
@@ -124,7 +124,7 @@ export default function NotificationsPage() {
           {unreadCount > 0 && (
             <button
               onClick={markAllRead}
-              className="text-xs text-prism-accent-active hover:underline"
+              className="text-xs text-prism-accent-primary hover:underline"
             >
               Mark all read
             </button>
@@ -154,7 +154,7 @@ export default function NotificationsPage() {
                   key={notif.id}
                   onClick={() => markRead(notif.id)}
                   className={`w-full text-left px-4 py-4 flex items-start gap-3 transition-colors ${
-                    notif.read ? "opacity-60" : "bg-prism-accent-active/[0.03]"
+                    notif.read ? "opacity-60" : "bg-prism-accent-primary/[0.03]"
                   } hover:bg-prism-bg-elevated`}
                 >
                   <div className={`w-10 h-10 rounded-full ${icon.color} flex items-center justify-center shrink-0 text-base`}>
@@ -164,7 +164,7 @@ export default function NotificationsPage() {
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium text-prism-text-primary">{notif.title}</span>
                       {!notif.read && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-prism-accent-active shrink-0" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-prism-accent-primary shrink-0" />
                       )}
                     </div>
                     <p className="text-xs text-prism-text-secondary mt-0.5 leading-relaxed">{notif.body}</p>

@@ -77,14 +77,14 @@ export function CommunityPulse({ isOpen, onClose }: CommunityPulseProps) {
         onClick={onClose}
       />
 
-      <div className="relative w-full max-w-sm bg-prism-bg-secondary border border-prism-border rounded-2xl shadow-2xl animate-slide-in-right overflow-hidden mt-12 md:mt-0">
+      <div className="relative w-full max-w-sm bg-prism-bg-surface border border-prism-border rounded-2xl shadow-2xl animate-slide-in-right overflow-hidden mt-12 md:mt-0">
         {/* Header */}
         <div className="p-4 border-b border-prism-border bg-prism-bg-elevated/50">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-prism-accent-active/15 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-prism-accent-primary/15 flex items-center justify-center">
                 <svg
-                  className="w-4 h-4 text-prism-accent-active"
+                  className="w-4 h-4 text-prism-accent-primary"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -133,9 +133,9 @@ export function CommunityPulse({ isOpen, onClose }: CommunityPulseProps) {
             <div className="space-y-4 py-4">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="bg-prism-bg-elevated rounded-xl p-4 space-y-2">
-                  <div className="h-3 bg-prism-bg-secondary rounded-full w-1/3 animate-shimmer" />
-                  <div className="h-4 bg-prism-bg-secondary rounded-full w-2/3 animate-shimmer" />
-                  <div className="h-3 bg-prism-bg-secondary rounded-full w-1/2 animate-shimmer" />
+                  <div className="h-3 bg-prism-bg-surface rounded-full w-1/3 animate-shimmer" />
+                  <div className="h-4 bg-prism-bg-surface rounded-full w-2/3 animate-shimmer" />
+                  <div className="h-3 bg-prism-bg-surface rounded-full w-1/2 animate-shimmer" />
                 </div>
               ))}
             </div>
@@ -172,7 +172,7 @@ export function CommunityPulse({ isOpen, onClose }: CommunityPulseProps) {
               {mostReacted && (
                 <PulseSection
                   icon={
-                    <svg className="w-4 h-4 text-prism-accent-verified" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <svg className="w-4 h-4 text-prism-accent-live" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
                     </svg>
                   }
@@ -197,7 +197,7 @@ export function CommunityPulse({ isOpen, onClose }: CommunityPulseProps) {
                       <span className="text-[10px] text-prism-text-dim">
                         {mostReacted.community.name}
                       </span>
-                      <span className="text-[10px] font-mono text-prism-accent-active">
+                      <span className="text-[10px] font-mono text-prism-accent-primary">
                         {mostReacted.reaction_count} reactions
                       </span>
                     </div>
@@ -239,7 +239,7 @@ export function CommunityPulse({ isOpen, onClose }: CommunityPulseProps) {
                           </span>
                         </div>
                         {c.verified && (
-                          <svg className="w-3.5 h-3.5 text-prism-accent-verified shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                          <svg className="w-3.5 h-3.5 text-prism-accent-live shrink-0" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M16.403 12.652a3 3 0 010-5.304 3 3 0 00-3.75-3.751 3 3 0 00-5.305 0 3 3 0 00-3.751 3.75 3 3 0 000 5.305 3 3 0 003.75 3.751 3 3 0 005.305 0 3 3 0 003.751-3.75zm-2.546-4.46a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
                           </svg>
                         )}

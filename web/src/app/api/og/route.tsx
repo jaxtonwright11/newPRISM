@@ -13,7 +13,7 @@ export async function GET() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #0D0B08 0%, #15120E 50%, #0A0908 100%)",
+          background: "linear-gradient(135deg, #0F1114 0%, #181B20 50%, #0A0908 100%)",
           fontFamily: "system-ui, sans-serif",
         }}
       >
@@ -26,7 +26,7 @@ export async function GET() {
             width: "12px",
             height: "12px",
             borderRadius: "50%",
-            background: "#4A9EFF",
+            background: "#3B82F6",
             boxShadow: "0 0 20px 8px rgba(74,158,255,0.4)",
           }}
         />
@@ -62,7 +62,7 @@ export async function GET() {
             width: "10px",
             height: "10px",
             borderRadius: "50%",
-            background: "#10B981",
+            background: "#22C55E",
             boxShadow: "0 0 16px 6px rgba(16,185,129,0.4)",
           }}
         />
@@ -80,7 +80,7 @@ export async function GET() {
               width: "56px",
               height: "56px",
               borderRadius: "16px",
-              background: "linear-gradient(135deg, #4A9EFF, #A855F7)",
+              background: "linear-gradient(135deg, #3B82F6, #A855F7)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -92,7 +92,7 @@ export async function GET() {
             style={{
               fontSize: "48px",
               fontWeight: 700,
-              color: "#F2EDE5",
+              color: "#EDEDEF",
               letterSpacing: "4px",
             }}
           >
@@ -103,7 +103,7 @@ export async function GET() {
         <p
           style={{
             fontSize: "22px",
-            color: "#B8A88E",
+            color: "#9CA3AF",
             maxWidth: "600px",
             textAlign: "center",
             lineHeight: 1.5,

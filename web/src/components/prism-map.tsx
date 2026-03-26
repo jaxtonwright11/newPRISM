@@ -106,9 +106,9 @@ export function PrismMap({ communities }: PrismMapProps) {
 
             const popup = new mapboxgl.Popup({ offset: 15, closeButton: false })
               .setHTML(
-                `<div style="padding:6px 10px;font-size:12px;color:#F2EDE5;background:#15120E;border-radius:8px;border:1px solid #2A251E;">
+                `<div style="padding:6px 10px;font-size:12px;color:#EDEDEF;background:#181B20;border-radius:8px;border:1px solid #262A31;">
                   <strong>${community.name}</strong><br/>
-                  <span style="opacity:0.6;color:#B8A88E">${community.region}</span>
+                  <span style="opacity:0.6;color:#9CA3AF">${community.region}</span>
                 </div>`
               );
 
@@ -140,10 +140,10 @@ export function PrismMap({ communities }: PrismMapProps) {
 
   if (mapError) {
     return (
-      <div className="absolute inset-0 bg-prism-bg-primary flex items-center justify-center rounded-xl">
+      <div className="absolute inset-0 bg-prism-bg-base flex items-center justify-center rounded-xl">
         <div className="text-center max-w-md px-4">
-          <div className="w-12 h-12 rounded-full bg-prism-accent-active/10 flex items-center justify-center mx-auto mb-3">
-            <span className="text-prism-accent-active text-xl">!</span>
+          <div className="w-12 h-12 rounded-full bg-prism-accent-primary/10 flex items-center justify-center mx-auto mb-3">
+            <span className="text-prism-accent-primary text-xl">!</span>
           </div>
           <p className="text-sm text-prism-text-secondary">{mapError}</p>
           <p className="text-xs text-prism-text-dim mt-2">
@@ -166,10 +166,10 @@ export function PrismMap({ communities }: PrismMapProps) {
       `}</style>
       <div ref={mapContainer} className="absolute inset-0 rounded-xl overflow-hidden" />
       {!mapLoaded && (
-        <div className="absolute inset-0 bg-prism-bg-primary rounded-xl flex items-center justify-center">
+        <div className="absolute inset-0 bg-prism-bg-base rounded-xl flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
             <div className="w-full max-w-[200px] h-2 bg-prism-bg-elevated rounded-full overflow-hidden">
-              <div className="h-full bg-prism-accent-active/30 rounded-full animate-shimmer" style={{ width: "60%" }} />
+              <div className="h-full bg-prism-accent-primary/30 rounded-full animate-shimmer" style={{ width: "60%" }} />
             </div>
             <span className="text-xs text-prism-text-dim">Loading map</span>
           </div>

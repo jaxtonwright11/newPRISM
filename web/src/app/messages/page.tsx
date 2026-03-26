@@ -154,7 +154,7 @@ function MessageThread({
   return (
     <div className="flex flex-col h-full">
       {/* Thread header */}
-      <div className="px-4 py-3 border-b border-prism-border flex items-center gap-3 bg-prism-bg-secondary">
+      <div className="px-4 py-3 border-b border-prism-border flex items-center gap-3 bg-prism-bg-surface">
         <div
           className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
           style={{ backgroundColor: color + "20", color }}
@@ -202,7 +202,7 @@ function MessageThread({
                 <div
                   className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm leading-relaxed ${
                     isMe
-                      ? "bg-prism-accent-active text-white rounded-br-sm"
+                      ? "bg-prism-accent-primary text-white rounded-br-sm"
                       : "bg-prism-bg-elevated text-prism-text-primary border border-prism-border rounded-bl-sm"
                   }`}
                 >
@@ -223,7 +223,7 @@ function MessageThread({
       </div>
 
       {/* Compose */}
-      <div className="p-3 border-t border-prism-border bg-prism-bg-secondary">
+      <div className="p-3 border-t border-prism-border bg-prism-bg-surface">
         <div className="flex items-end gap-2">
           <textarea
             value={draft}
@@ -236,12 +236,12 @@ function MessageThread({
                 send();
               }
             }}
-            className="flex-1 px-3 py-2 rounded-xl bg-prism-bg-elevated border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:ring-1 focus:ring-prism-accent-active resize-none"
+            className="flex-1 px-3 py-2 rounded-xl bg-prism-bg-elevated border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:ring-1 focus:ring-prism-accent-primary resize-none"
           />
           <button
             onClick={send}
             disabled={!draft.trim()}
-            className="p-2.5 rounded-xl bg-prism-accent-active text-white disabled:opacity-40 transition-opacity shrink-0"
+            className="p-2.5 rounded-xl bg-prism-accent-primary text-white disabled:opacity-40 transition-opacity shrink-0"
             aria-label="Send"
           >
             <svg
@@ -319,9 +319,9 @@ export default function MessagesPage() {
   const activeConnection = connections.find((c) => c.id === activeConnectionId);
 
   return (
-    <div className="min-h-screen bg-prism-bg-primary flex flex-col">
+    <div className="min-h-screen bg-prism-bg-base flex flex-col">
       {/* Header */}
-      <header className="bg-prism-bg-secondary border-b border-prism-border sticky top-0 z-10">
+      <header className="bg-prism-bg-surface border-b border-prism-border sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3">
           <Link
             href="/"
@@ -346,7 +346,7 @@ export default function MessagesPage() {
         <div
           className={`${
             activeConnection ? "hidden md:flex" : "flex"
-          } flex-col w-full md:w-80 border-r border-prism-border bg-prism-bg-secondary shrink-0`}
+          } flex-col w-full md:w-80 border-r border-prism-border bg-prism-bg-surface shrink-0`}
         >
           <div className="p-4">
             <p className="text-xs text-prism-text-dim mb-4">
@@ -388,7 +388,7 @@ export default function MessagesPage() {
                       onClick={() => setActiveConnectionId(conn.id)}
                       className={`w-full text-left p-3 rounded-xl transition-colors ${
                         activeConnectionId === conn.id
-                          ? "bg-prism-accent-active/10 border border-prism-accent-active/30"
+                          ? "bg-prism-accent-primary/10 border border-prism-accent-primary/30"
                           : "hover:bg-prism-bg-elevated border border-transparent"
                       }`}
                     >

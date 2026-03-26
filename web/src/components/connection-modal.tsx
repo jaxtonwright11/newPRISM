@@ -85,12 +85,12 @@ export function ConnectionModal({
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
         <div
-          className="relative bg-prism-bg-secondary border border-prism-border rounded-2xl max-w-sm w-full p-6 text-center animate-fade-in"
+          className="relative bg-prism-bg-surface border border-prism-border rounded-2xl max-w-sm w-full p-6 text-center animate-fade-in"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="w-14 h-14 rounded-full bg-prism-accent-verified/15 flex items-center justify-center mx-auto mb-4">
+          <div className="w-14 h-14 rounded-full bg-prism-accent-live/15 flex items-center justify-center mx-auto mb-4">
             <svg
-              className="w-7 h-7 text-prism-accent-verified"
+              className="w-7 h-7 text-prism-accent-live"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -121,7 +121,7 @@ export function ConnectionModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div
-        className="relative bg-prism-bg-secondary border border-prism-border rounded-2xl max-w-sm w-full animate-fade-in"
+        className="relative bg-prism-bg-surface border border-prism-border rounded-2xl max-w-sm w-full animate-fade-in"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close */}
@@ -205,7 +205,7 @@ export function ConnectionModal({
               placeholder={`Share what brought you to this perspective${topicTitle ? ` on "${topicTitle}"` : ""} and what you'd like to understand better...`}
               rows={4}
               autoFocus
-              className="w-full px-3 py-2.5 rounded-lg bg-prism-bg-elevated border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:ring-1 focus:ring-prism-accent-active resize-none transition-shadow"
+              className="w-full px-3 py-2.5 rounded-lg bg-prism-bg-elevated border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:ring-1 focus:ring-prism-accent-primary resize-none transition-shadow"
             />
             <div className="flex items-center justify-between mt-1">
               <span className="text-[10px] text-prism-text-dim">
@@ -246,7 +246,7 @@ export function ConnectionModal({
             <button
               onClick={handleSend}
               disabled={message.trim().length === 0 || submitting}
-              className="flex-1 py-2.5 rounded-lg bg-prism-accent-active text-white text-sm font-medium hover:bg-prism-accent-active/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex-1 py-2.5 rounded-lg bg-prism-accent-primary text-white text-sm font-medium hover:bg-prism-accent-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {submitting ? (
                 <span className="flex items-center justify-center gap-2">

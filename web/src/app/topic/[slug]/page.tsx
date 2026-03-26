@@ -12,9 +12,9 @@ import { COMMUNITY_COLORS } from "@/lib/constants";
 import type { Topic, Community, CommunityAlignment, CommunityType, TopicStatus } from "@shared/types";
 
 const STATUS_DOT: Record<TopicStatus, string> = {
-  hot: "bg-prism-accent-active",
-  trending: "bg-prism-accent-active/60",
-  active: "bg-prism-accent-verified/60",
+  hot: "bg-prism-accent-primary",
+  trending: "bg-prism-accent-primary/60",
+  active: "bg-prism-accent-live/60",
   cooling: "bg-prism-text-dim/40",
   archived: "bg-prism-text-dim/20",
 };
@@ -101,7 +101,7 @@ export default function TopicDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-prism-bg-primary p-6">
+      <div className="min-h-screen bg-prism-bg-base p-6">
         <div className="max-w-2xl mx-auto space-y-4">
           <div className="h-6 bg-prism-bg-elevated rounded-full w-1/4 animate-shimmer" />
           <div className="h-8 bg-prism-bg-elevated rounded-full w-2/3 animate-shimmer" />
@@ -118,7 +118,7 @@ export default function TopicDetailPage() {
 
   if (notFound || !topic) {
     return (
-      <div className="min-h-screen bg-prism-bg-primary flex items-center justify-center">
+      <div className="min-h-screen bg-prism-bg-base flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-xl font-body font-bold text-prism-text-primary mb-2">
             Topic Not Found
@@ -128,7 +128,7 @@ export default function TopicDetailPage() {
           </p>
           <Link
             href="/"
-            className="text-sm text-prism-accent-active hover:underline"
+            className="text-sm text-prism-accent-primary hover:underline"
           >
             &larr; Back to home
           </Link>
@@ -140,11 +140,11 @@ export default function TopicDetailPage() {
   const dotColor = STATUS_DOT[topic.status];
 
   return (
-    <div className="flex h-screen overflow-hidden bg-prism-bg-primary">
+    <div className="flex h-screen overflow-hidden bg-prism-bg-base">
       {/* Main content */}
       <main className="flex-1 flex flex-col min-w-0">
         {/* Topic header */}
-        <header className="p-4 md:p-6 border-b border-prism-border bg-prism-bg-secondary">
+        <header className="p-4 md:p-6 border-b border-prism-border bg-prism-bg-surface">
           <div className="flex items-center gap-3 mb-3">
             <Link
               href="/"
