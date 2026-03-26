@@ -34,7 +34,6 @@ export function PerspectiveCard({
   category_tag,
   reaction_count,
   bookmark_count = 0,
-  isNew = false,
   onSelect,
   animationDelay = 0,
 }: PerspectiveCardProps) {
@@ -47,7 +46,6 @@ export function PerspectiveCard({
     async (type: ReactionType) => {
       const wasActive = activeReaction === type;
 
-      // Optimistic update
       if (wasActive) {
         setActiveReaction(null);
         setLocalReactionDelta((d) => d - 1);
@@ -62,14 +60,12 @@ export function PerspectiveCard({
 
       try {
         if (wasActive) {
-          // Remove reaction
           const res = await fetch(`/api/perspectives/${id}/react`, {
             method: "DELETE",
             headers: { Authorization: `Bearer ${session.access_token}` },
           });
           if (!res.ok) throw new Error();
         } else {
-          // Set reaction
           const res = await fetch(`/api/perspectives/${id}/react`, {
             method: "POST",
             headers: {
@@ -81,7 +77,6 @@ export function PerspectiveCard({
           if (!res.ok) throw new Error();
         }
       } catch {
-        // Rollback on failure
         if (wasActive) {
           setActiveReaction(type);
           setLocalReactionDelta((d) => d + 1);
@@ -119,17 +114,14 @@ export function PerspectiveCard({
     }
   }, [bookmarked, id, session?.access_token]);
 
+  const totalReactions = reaction_count + localReactionDelta;
+
   return (
     <motion.div
-      className="rounded-[10px] border border-prism-border bg-prism-bg-surface p-5 cursor-pointer hover:bg-prism-bg-elevated/50 transition-colors duration-200 group relative hover:shadow-lg hover:shadow-black/20 hover:border-prism-border/80"
-      style={{
-        borderLeftWidth: "3px",
-        borderLeftColor: community.color_hex,
-      }}
-      initial={{ opacity: 0, y: 16 }}
+      className="rounded-xl bg-[var(--bg-surface)] p-4 cursor-pointer hover:bg-[var(--bg-elevated)] transition-colors duration-200 group"
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: animationDelay / 1000, ease: "easeOut" }}
-      whileHover={{ y: -2 }}
+      transition={{ duration: 0.3, delay: animationDelay / 1000, ease: "easeOut" }}
       onClick={() => onSelect?.(id)}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -141,67 +133,40 @@ export function PerspectiveCard({
       tabIndex={0}
       aria-label={`Perspective from ${community.name}: ${quote.slice(0, 80)}`}
     >
-      {/* NEW TO YOU indicator for Discover tab */}
-      {isNew && (
-        <div className="absolute -top-2 -right-2 bg-prism-accent-primary text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-lg">
-          NEW TO YOU
-        </div>
-      )}
-
       {/* Community header */}
       <div className="flex items-center gap-2.5 mb-3">
         <div
-          className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-          style={{
-            backgroundColor: community.color_hex + "20",
-            color: community.color_hex,
-          }}
-        >
-          {community.name
-            .split(" ")
-            .map((w) => w[0])
-            .slice(0, 2)
-            .join("")}
-        </div>
+          className="w-2 h-2 rounded-full shrink-0"
+          style={{ backgroundColor: community.color_hex }}
+        />
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm font-medium text-prism-text-primary truncate">
-              {community.name}
-            </span>
-            {community.verified && (
-              <svg
-                className="w-3.5 h-3.5 text-prism-accent-live shrink-0"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M16.403 12.652a3 3 0 010-5.304 3 3 0 00-3.75-3.751 3 3 0 00-5.305 0 3 3 0 00-3.751 3.75 3 3 0 000 5.305 3 3 0 003.75 3.751 3 3 0 005.305 0 3 3 0 003.751-3.75zm-2.546-4.46a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            )}
-          </div>
-          <span className="text-xs text-prism-text-dim">{community.region}</span>
+          <span className="text-sm font-medium font-body text-[var(--text-primary)] truncate">
+            {community.name}
+          </span>
+          <span className="text-xs text-[var(--text-dim)] ml-2">{community.region}</span>
         </div>
       </div>
 
-      {/* Quote — the most important element */}
-      <blockquote className="font-body text-base leading-relaxed text-prism-text-primary mb-3">
+      {/* Quote */}
+      <p className="font-body text-base leading-relaxed text-[var(--text-primary)] mb-3">
         &ldquo;{quote}&rdquo;
-      </blockquote>
+      </p>
 
       {/* Context */}
-      <p className="text-[13px] text-prism-text-secondary leading-snug mb-4">
-        {context}
-      </p>
+      {context && (
+        <p className="text-[13px] text-[var(--text-secondary)] leading-snug mb-4">
+          {context}
+        </p>
+      )}
 
       {/* Footer: category tag + reactions */}
       <div className="flex items-center justify-between">
-        <span className="text-xs px-2 py-0.5 rounded-full bg-prism-bg-elevated text-prism-text-dim">
-          {category_tag}
-        </span>
-        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+        {category_tag && (
+          <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-dim)] font-body">
+            {category_tag}
+          </span>
+        )}
+        <div className="flex items-center gap-1 ml-auto" onClick={(e) => e.stopPropagation()}>
           {(
             Object.entries(REACTION_LABELS) as [
               ReactionType,
@@ -211,26 +176,26 @@ export function PerspectiveCard({
             <button
               key={type}
               onClick={() => handleReaction(type)}
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs transition-all duration-150 min-h-[36px] ${
+              className={`flex items-center gap-1 px-2 py-1.5 rounded-full text-xs transition-all duration-150 min-h-[36px] ${
                 activeReaction === type
-                  ? "bg-prism-accent-primary/20 text-prism-accent-primary scale-105"
-                  : "text-prism-text-dim hover:text-prism-text-secondary hover:bg-prism-bg-elevated"
+                  ? "bg-[var(--accent-primary)]/20 text-[var(--accent-primary)] scale-105"
+                  : "text-[var(--text-dim)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)]"
               }`}
               title={label}
               aria-label={label}
             >
               <span>{emoji}</span>
-              <span className="font-mono text-[10px]">
-                {reaction_count + localReactionDelta}
-              </span>
+              {totalReactions > 0 && (
+                <span className="font-mono text-[10px]">{totalReactions}</span>
+              )}
             </button>
           ))}
           <button
             onClick={handleBookmark}
-            className={`ml-1 p-1 rounded transition-all duration-150 ${
+            className={`p-1.5 rounded transition-all duration-150 ${
               bookmarked
-                ? "text-prism-accent-primary"
-                : "text-prism-text-dim hover:text-prism-text-secondary"
+                ? "text-[var(--accent-primary)]"
+                : "text-[var(--text-dim)] hover:text-[var(--text-secondary)]"
             }`}
             title={bookmarked ? "Remove bookmark" : "Bookmark"}
             aria-label={bookmarked ? "Remove bookmark" : "Bookmark"}
@@ -244,11 +209,6 @@ export function PerspectiveCard({
             >
               <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
             </svg>
-            {bookmark_count > 0 && (
-              <span className="font-mono text-[10px] ml-0.5">
-                {bookmark_count + (bookmarked ? 1 : 0)}
-              </span>
-            )}
           </button>
           <button
             onClick={() => {
@@ -258,7 +218,7 @@ export function PerspectiveCard({
                 navigator.clipboard.writeText(quote).catch(() => {});
               }
             }}
-            className="p-1 rounded text-prism-text-dim hover:text-prism-text-secondary transition-all duration-150"
+            className="p-1.5 rounded text-[var(--text-dim)] hover:text-[var(--text-secondary)] transition-all duration-150"
             title="Share"
             aria-label="Share"
           >
