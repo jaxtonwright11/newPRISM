@@ -21,7 +21,7 @@ export default function CreatePage() {
   const [submitting, setSubmitting] = useState(false);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
-  const { session, user } = useAuth();
+  const { session } = useAuth();
   const router = useRouter();
 
   // Fetch active topics for prompts

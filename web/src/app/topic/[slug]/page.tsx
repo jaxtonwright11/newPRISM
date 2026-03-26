@@ -8,7 +8,7 @@ import { PerspectiveCard } from "@/components/perspective-card";
 import { PerspectiveDetail } from "@/components/perspective-detail";
 import { COMMUNITY_COLORS } from "@/lib/constants";
 import { EmptyState, EMPTY_STATES } from "@/components/empty-state";
-import type { Topic, Community, CommunityAlignment, CommunityType, TopicStatus } from "@shared/types";
+import type { Topic, Community, CommunityType, TopicStatus } from "@shared/types";
 
 const STATUS_DOT: Record<TopicStatus, string> = {
   hot: "bg-prism-accent-primary",
@@ -42,7 +42,6 @@ export default function TopicDetailPage() {
 
   const [topic, setTopic] = useState<Topic | null>(null);
   const [perspectives, setPerspectives] = useState<TopicPerspective[]>([]);
-  const [alignments, setAlignments] = useState<CommunityAlignment[]>([]);
   const [allCommunities, setAllCommunities] = useState<Community[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -69,7 +68,6 @@ export default function TopicDetailPage() {
         const commData = await communitiesRes.json();
         setTopic(data.topic ?? null);
         setPerspectives(data.perspectives ?? []);
-        setAlignments(data.alignments ?? []);
         setAllCommunities(commData.communities ?? []);
         if (!data.topic) setNotFound(true);
       } catch {

@@ -35,6 +35,7 @@ export function PerspectiveCard({
   context,
   category_tag,
   reaction_count,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   bookmark_count = 0,
   onSelect,
   animationDelay = 0,
