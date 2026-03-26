@@ -51,14 +51,14 @@ export default function OnboardingPage() {
         },
         body: JSON.stringify({
           content: perspective,
-          post_type: "perspective",
+          post_type: "permanent",
         }),
       });
     } catch {
       // ignore
     } finally {
       setSubmitting(false);
-      router.push("/feed");
+      setStep(3);
     }
   }
 
@@ -176,14 +176,20 @@ export default function OnboardingPage() {
             <h1 className="font-display font-bold text-2xl text-[var(--text-primary)] mb-2">
               Welcome to PRISM.
             </h1>
-            <p className="text-base text-[var(--text-secondary)] font-body mb-8 max-w-sm">
-              Explore perspectives from communities across the country.
+            <p className="text-base text-[var(--text-secondary)] font-body mb-4 max-w-sm">
+              Your perspective is live. Now see how other communities experience the same world differently.
             </p>
             <button
-              onClick={() => router.push("/feed")}
-              className="w-full max-w-sm py-3 rounded-xl bg-[var(--accent-primary)] text-white font-body font-medium text-base"
+              onClick={() => router.push("/")}
+              className="w-full max-w-sm py-3 rounded-xl bg-[var(--accent-primary)] text-white font-body font-medium text-base mb-3"
             >
-              Start exploring
+              Open the Map
+            </button>
+            <button
+              onClick={() => router.push("/feed")}
+              className="text-sm text-[var(--text-secondary)] font-body hover:text-[var(--text-primary)] transition-colors"
+            >
+              Go to feed instead
             </button>
           </div>
         )}
