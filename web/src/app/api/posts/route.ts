@@ -15,26 +15,52 @@ export async function GET(request: Request) {
   const rateLimitResponse = applyRateLimit(request, "posts-get");
   if (rateLimitResponse) return rateLimitResponse;
 
-  try {
-    const supabase = getSupabaseWithAuth(
-      request.headers.get("authorization")?.replace("Bearer ", "") ?? ""
-    );
-    if (supabase) {
-      // Filter out posts from ghost mode users and expired stories at DB level
-      const now = new Date().toISOString();
-      const { data, error } = await supabase
-        .from("posts")
-        .select("*, users!inner(ghost_mode, username, display_name)")
-        .eq("users.ghost_mode", false)
-        .or(`expires_at.is.null,expires_at.gt.${now}`)
-        .order("created_at", { ascending: false })
-        .limit(20);
+  const url = new URL(request.url);
+  const ownOnly = url.searchParams.get("own") === "true";
 
-      if (!error && data) {
-        return NextResponse.json({
-          data,
-          meta: { total: data.length, page: 1, limit: 20 },
-        });
+  try {
+    const token = request.headers.get("authorization")?.replace("Bearer ", "") ?? "";
+    const supabase = getSupabaseWithAuth(token);
+    if (supabase) {
+      const now = new Date().toISOString();
+
+      if (ownOnly && token) {
+        // Fetch only the current user's posts
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError || !user) {
+          return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const { data, error } = await supabase
+          .from("posts")
+          .select("*")
+          .eq("user_id", user.id)
+          .or(`expires_at.is.null,expires_at.gt.${now}`)
+          .order("created_at", { ascending: false })
+          .limit(50);
+
+        if (!error && data) {
+          return NextResponse.json({
+            posts: data,
+            meta: { total: data.length },
+          });
+        }
+      } else {
+        // Filter out posts from ghost mode users and expired stories at DB level
+        const { data, error } = await supabase
+          .from("posts")
+          .select("*, users!inner(ghost_mode, username, display_name)")
+          .eq("users.ghost_mode", false)
+          .or(`expires_at.is.null,expires_at.gt.${now}`)
+          .order("created_at", { ascending: false })
+          .limit(20);
+
+        if (!error && data) {
+          return NextResponse.json({
+            data,
+            meta: { total: data.length, page: 1, limit: 20 },
+          });
+        }
       }
     }
   } catch {
@@ -43,6 +69,7 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     data: [],
+    posts: [],
     meta: { total: 0, page: 1, limit: 20 },
   });
 }

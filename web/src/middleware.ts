@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // Routes that require authentication
-const protectedRoutes = ['/settings', '/profile', '/messages', '/bookmarks'];
+const protectedRoutes = ['/settings', '/profile', '/messages', '/bookmarks', '/notifications'];
 
 // Routes that are always public
 const publicRoutes = ['/', '/login', '/signup', '/onboarding', '/search', '/landing', '/apply', '/admin'];

@@ -3,10 +3,26 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import Link from "next/link";
+import { PerspectiveCard } from "@/components/perspective-card";
 import { EmptyState, EMPTY_STATES } from "@/components/empty-state";
 import { getStreak, getStreakMessage } from "@/lib/streak";
+import type { CommunityType } from "@shared/types";
 
 type ProfileTab = "perspectives" | "saved" | "settings";
+
+interface UserPost {
+  id: string;
+  content: string;
+  post_type: string;
+  created_at: string;
+  community?: {
+    name: string;
+    region: string;
+    community_type: CommunityType;
+    color_hex: string;
+    verified: boolean;
+  };
+}
 
 export default function ProfilePage() {
   const { session, user } = useAuth();
@@ -15,6 +31,8 @@ export default function ProfilePage() {
   const [streakMessage, setStreakMessage] = useState<string | null>(null);
   const [bio, setBio] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string | null>(null);
+  const [userPosts, setUserPosts] = useState<UserPost[]>([]);
+  const [postsLoading, setPostsLoading] = useState(true);
 
   useEffect(() => {
     const data = getStreak();
@@ -22,12 +40,12 @@ export default function ProfilePage() {
     setStreakMessage(getStreakMessage(data.count));
   }, []);
 
-  // Fetch profile data including bio
+  // Fetch profile data including bio and user posts
   useEffect(() => {
     if (!session?.access_token) return;
-    fetch("/api/user/profile", {
-      headers: { Authorization: `Bearer ${session.access_token}` },
-    })
+    const headers = { Authorization: `Bearer ${session.access_token}` };
+
+    fetch("/api/user/profile", { headers })
       .then((res) => res.json())
       .then((data) => {
         if (data.data) {
@@ -37,6 +55,12 @@ export default function ProfilePage() {
         }
       })
       .catch(() => {});
+
+    fetch("/api/posts?own=true", { headers })
+      .then((res) => res.json())
+      .then((data) => setUserPosts(data.posts ?? data.data ?? []))
+      .catch(() => {})
+      .finally(() => setPostsLoading(false));
   }, [session?.access_token]);
 
   if (!session) {
@@ -125,10 +149,42 @@ export default function ProfilePage() {
       {/* Tab content */}
       <div className="flex-1 overflow-y-auto p-4">
         {activeTab === "perspectives" && (
-          <EmptyState {...EMPTY_STATES.profile} />
+          postsLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-24 bg-[var(--bg-elevated)] rounded-xl animate-shimmer" />
+              ))}
+            </div>
+          ) : userPosts.length > 0 ? (
+            <div className="space-y-3">
+              {userPosts.map((post) => (
+                <div key={post.id} className="bg-[var(--bg-surface)] rounded-xl border border-[var(--bg-elevated)] p-4">
+                  <p className="text-sm text-[var(--text-primary)] leading-relaxed">{post.content}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-[10px] font-mono text-[var(--text-dim)]">
+                      {new Date(post.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                    </span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-dim)]">
+                      {post.post_type}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState {...EMPTY_STATES.profile} />
+          )
         )}
         {activeTab === "saved" && (
-          <EmptyState {...EMPTY_STATES.bookmarksPerspectives} />
+          <div className="flex flex-col items-center justify-center py-12">
+            <p className="text-sm text-[var(--text-secondary)] mb-4">Your saved perspectives and topics are in one place.</p>
+            <Link
+              href="/bookmarks"
+              className="px-6 py-2.5 rounded-xl bg-[var(--accent-primary)] text-white font-body font-medium text-sm transition-opacity hover:opacity-90"
+            >
+              View Saved
+            </Link>
+          </div>
         )}
         {activeTab === "settings" && (
           <div className="flex flex-col gap-3">
