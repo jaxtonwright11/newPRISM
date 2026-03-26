@@ -6,8 +6,6 @@ import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { PerspectiveCard } from "@/components/perspective-card";
 import { PerspectiveDetail } from "@/components/perspective-detail";
-import { AlignmentPanel } from "@/components/alignment-panel";
-import { MobileNav } from "@/components/mobile-nav";
 import { COMMUNITY_COLORS } from "@/lib/constants";
 import type { Topic, Community, CommunityAlignment, CommunityType, TopicStatus } from "@shared/types";
 
@@ -238,12 +236,6 @@ export default function TopicDetailPage() {
           )}
         </div>
       </main>
-
-      {/* Alignment panel */}
-      <AlignmentPanel alignments={alignments} topicTitle={topic.title} communities={allCommunities} />
-
-      {/* Mobile bottom nav */}
-      <MobileNav />
 
       {/* Perspective detail modal */}
       {selectedPerspective && (
