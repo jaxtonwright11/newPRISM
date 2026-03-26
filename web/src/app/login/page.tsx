@@ -49,18 +49,19 @@ function LoginPageInner() {
 
   return (
     <div className="min-h-screen bg-prism-bg-base flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Ambient background glow */}
-      <div className="absolute top-1/4 -left-32 w-64 h-64 rounded-full bg-prism-accent-primary/[0.04] blur-3xl" />
-      <div className="absolute bottom-1/4 -right-32 w-64 h-64 rounded-full bg-prism-community-diaspora/[0.04] blur-3xl" />
+      {/* Ambient background glows — community colors */}
+      <div className="absolute top-1/4 -left-24 w-80 h-80 rounded-full bg-prism-accent-primary/[0.08] blur-3xl animate-pulse" style={{ animationDuration: "8s" }} />
+      <div className="absolute bottom-1/4 -right-24 w-72 h-72 rounded-full bg-prism-community-diaspora/[0.08] blur-3xl animate-pulse" style={{ animationDuration: "10s", animationDelay: "2s" }} />
+      <div className="absolute top-2/3 left-1/4 w-48 h-48 rounded-full bg-prism-community-civic/[0.05] blur-3xl" />
 
       <div className="w-full max-w-sm relative z-10">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
           <PrismWordmark size="lg" />
-          <h1 className="font-body text-2xl font-bold text-prism-text-primary mt-6">
+          <h1 className="font-display text-2xl font-bold text-prism-text-primary mt-6 tracking-tight">
             Welcome back
           </h1>
-          <p className="text-sm text-prism-text-secondary mt-1">
+          <p className="text-sm text-prism-text-secondary mt-1 font-body">
             Sign in to continue exploring perspectives
           </p>
         </div>
@@ -88,7 +89,7 @@ function LoginPageInner() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
               required
-              className="w-full px-3 py-2.5 rounded-lg bg-prism-bg-surface border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:ring-2 focus:ring-prism-accent-primary/50 focus:border-prism-accent-primary transition-all"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-prism-bg-surface border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:border-prism-accent-primary focus:bg-prism-bg-elevated/50 focus:shadow-[0_0_0_3px_rgba(212,149,107,0.1)] transition-all"
             />
           </div>
           <div>
@@ -105,14 +106,14 @@ function LoginPageInner() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               required
-              className="w-full px-3 py-2.5 rounded-lg bg-prism-bg-surface border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:ring-2 focus:ring-prism-accent-primary/50 focus:border-prism-accent-primary transition-all"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-prism-bg-surface border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:border-prism-accent-primary focus:bg-prism-bg-elevated/50 focus:shadow-[0_0_0_3px_rgba(212,149,107,0.1)] transition-all"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 rounded-lg bg-prism-accent-primary text-white text-sm font-medium hover:bg-prism-accent-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-2.5 rounded-xl bg-prism-accent-primary text-white text-sm font-medium hover:shadow-[0_0_24px_rgba(212,149,107,0.3)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Signing in..." : "Sign in"}
           </button>
@@ -134,7 +135,7 @@ function LoginPageInner() {
         <button
           type="button"
           onClick={handleGoogleSignIn}
-          className="w-full py-2.5 rounded-lg bg-prism-bg-surface border border-prism-border text-sm text-prism-text-primary hover:bg-prism-bg-elevated transition-colors flex items-center justify-center gap-2"
+          className="w-full py-2.5 rounded-xl bg-prism-bg-surface border border-prism-border text-sm text-prism-text-primary hover:bg-prism-bg-elevated hover:border-prism-text-dim/30 transition-all flex items-center justify-center gap-2"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24">
             <path
