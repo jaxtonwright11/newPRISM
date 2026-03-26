@@ -9,8 +9,8 @@ import { PrismWordmark } from "@/components/prism-wordmark";
 import { EmptyState, EMPTY_STATES } from "@/components/empty-state";
 import { useAuth } from "@/lib/auth-context";
 import { useRealtime } from "@/lib/use-realtime";
-import { recordPost } from "@/lib/streak";
-import type { Community, CommunityType } from "@shared/types";
+import type { Community, CommunityType, Topic } from "@shared/types";
+import Link from "next/link";
 
 const MapPlaceholder = dynamic(
   () => import("@/components/map-placeholder").then((mod) => mod.MapPlaceholder),
@@ -47,12 +47,22 @@ export default function FeedPage() {
   const [selectedPerspectiveId, setSelectedPerspectiveId] = useState<string | null>(null);
   const [mapExpanded, setMapExpanded] = useState(false);
   const [communities, setCommunities] = useState<Community[]>([]);
+  const [trendingTopics, setTrendingTopics] = useState<Topic[]>([]);
   const { session } = useAuth();
 
   useEffect(() => {
     fetch("/api/communities")
       .then((res) => res.json())
       .then((data) => setCommunities(data.communities ?? data ?? []))
+      .catch(() => {});
+    fetch("/api/topics")
+      .then((res) => res.json())
+      .then((data) => {
+        const active = (data.topics ?? []).filter(
+          (t: Topic) => t.status === "hot" || t.status === "trending" || t.status === "active"
+        );
+        setTrendingTopics(active.slice(0, 6));
+      })
       .catch(() => {});
   }, []);
 
@@ -152,6 +162,26 @@ export default function FeedPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Trending topics */}
+      {trendingTopics.length > 0 && (
+        <div className="px-4 py-2.5 border-b border-[var(--bg-elevated)] overflow-x-auto no-scrollbar">
+          <div className="flex gap-2 max-w-2xl mx-auto">
+            {trendingTopics.map((topic) => (
+              <Link
+                key={topic.id}
+                href={`/topic/${topic.slug}`}
+                className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--bg-elevated)] hover:bg-[var(--bg-overlay)] border border-transparent hover:border-[var(--accent-primary)]/20 transition-all text-xs"
+              >
+                {(topic.status === "hot" || topic.status === "trending") && (
+                  <span className={`w-1.5 h-1.5 rounded-full ${topic.status === "hot" ? "bg-prism-accent-primary" : "bg-prism-accent-primary/60"}`} />
+                )}
+                <span className="text-prism-text-primary whitespace-nowrap">{topic.title}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Feed */}
       <div className="flex-1 overflow-y-auto p-3 md:p-6">
