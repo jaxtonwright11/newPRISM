@@ -116,26 +116,23 @@ export async function POST(request: Request) {
     radius_miles = 40,
   } = parsedBody.data;
 
-  // Look up approximate lat/lng from the user's home community
+  // Look up approximate lat/lng from the user's home community (single joined query)
   let latitude: number | null = null;
   let longitude: number | null = null;
 
   const { data: profile } = await supabase
     .from("users")
-    .select("home_community_id")
+    .select("home_community_id, home_community:communities(latitude, longitude)")
     .eq("id", user.id)
     .single();
 
-  if (profile?.home_community_id) {
-    const { data: community } = await supabase
-      .from("communities")
-      .select("latitude, longitude")
-      .eq("id", profile.home_community_id)
-      .single();
-
-    if (community) {
-      latitude = community.latitude;
-      longitude = community.longitude;
+  if (profile) {
+    const homeCommunity = Array.isArray(profile.home_community)
+      ? profile.home_community[0]
+      : profile.home_community;
+    if (homeCommunity) {
+      latitude = (homeCommunity as { latitude: number | null; longitude: number | null }).latitude;
+      longitude = (homeCommunity as { latitude: number | null; longitude: number | null }).longitude;
     }
   }
 

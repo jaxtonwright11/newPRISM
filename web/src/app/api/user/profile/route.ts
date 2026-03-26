@@ -81,29 +81,38 @@ export async function PATCH(request: Request) {
     );
   }
 
-  // Update display_name on users table
-  if (parsed.data.display_name !== undefined) {
-    const { error } = await supabase
-      .from("users")
-      .update({ display_name: parsed.data.display_name })
-      .eq("id", user.id);
+  // Run independent updates in parallel
+  const updates: Promise<{ error: unknown }>[] = [];
 
-    if (error) {
-      return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
-    }
+  if (parsed.data.display_name !== undefined) {
+    updates.push(
+      Promise.resolve(
+        supabase
+          .from("users")
+          .update({ display_name: parsed.data.display_name })
+          .eq("id", user.id)
+      ).then(({ error }) => ({ error }))
+    );
   }
 
-  // Update bio on user_profiles table
   if (parsed.data.bio !== undefined) {
-    const { error } = await supabase
-      .from("user_profiles")
-      .upsert(
-        { id: user.id, bio: parsed.data.bio },
-        { onConflict: "id" }
-      );
+    updates.push(
+      Promise.resolve(
+        supabase
+          .from("user_profiles")
+          .upsert(
+            { id: user.id, bio: parsed.data.bio },
+            { onConflict: "id" }
+          )
+      ).then(({ error }) => ({ error }))
+    );
+  }
 
-    if (error) {
-      return NextResponse.json({ error: "Failed to update bio" }, { status: 500 });
+  if (updates.length > 0) {
+    const results = await Promise.all(updates);
+    const failed = results.find((r) => r.error);
+    if (failed) {
+      return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
     }
   }
 

@@ -35,22 +35,18 @@ export async function GET(request: Request) {
         if (user) {
           const { data: userData } = await supabase
             .from("users")
-            .select("default_radius_miles, home_community_id")
+            .select("default_radius_miles, home_community_id, home_community:communities(latitude, longitude)")
             .eq("id", user.id)
             .single();
 
           if (userData) {
             userRadius = userData.default_radius_miles ?? 40;
-            if (userData.home_community_id) {
-              const { data: comm } = await supabase
-                .from("communities")
-                .select("latitude, longitude")
-                .eq("id", userData.home_community_id)
-                .single();
-              if (comm) {
-                userLat = comm.latitude;
-                userLng = comm.longitude;
-              }
+            const homeCommunity = Array.isArray(userData.home_community)
+              ? userData.home_community[0]
+              : userData.home_community;
+            if (homeCommunity) {
+              userLat = (homeCommunity as { latitude: number | null; longitude: number | null }).latitude;
+              userLng = (homeCommunity as { latitude: number | null; longitude: number | null }).longitude;
             }
           }
         }
