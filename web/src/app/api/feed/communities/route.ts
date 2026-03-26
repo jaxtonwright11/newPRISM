@@ -30,24 +30,24 @@ export async function GET(request: Request) {
       if (token) {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          // Get explicitly followed communities
-          const { data: follows } = await supabase
-            .from("community_follows")
-            .select("community_id")
-            .eq("user_id", user.id);
+          // Fetch follows and home community in parallel
+          const [{ data: follows }, { data: userData }] = await Promise.all([
+            supabase
+              .from("community_follows")
+              .select("community_id")
+              .eq("user_id", user.id),
+            supabase
+              .from("users")
+              .select("home_community_id")
+              .eq("id", user.id)
+              .single(),
+          ]);
 
           if (follows) {
             for (const f of follows) {
               followedCommunityIds.push(f.community_id);
             }
           }
-
-          // Also include home community
-          const { data: userData } = await supabase
-            .from("users")
-            .select("home_community_id")
-            .eq("id", user.id)
-            .single();
 
           if (userData?.home_community_id && !followedCommunityIds.includes(userData.home_community_id)) {
             followedCommunityIds.push(userData.home_community_id);
