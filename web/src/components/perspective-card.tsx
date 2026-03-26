@@ -118,7 +118,7 @@ export function PerspectiveCard({
 
   return (
     <motion.div
-      className="rounded-xl bg-[var(--bg-surface)] p-4 cursor-pointer hover:bg-[var(--bg-elevated)] transition-colors duration-200 group"
+      className="relative rounded-xl bg-[var(--bg-surface)] overflow-hidden cursor-pointer group transition-all duration-200 hover:bg-[var(--bg-elevated)] hover:shadow-lg hover:shadow-black/20"
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: animationDelay / 1000, ease: "easeOut" }}
@@ -133,31 +133,38 @@ export function PerspectiveCard({
       tabIndex={0}
       aria-label={`Perspective from ${community.name}: ${quote.slice(0, 80)}`}
     >
-      {/* Community header */}
-      <div className="flex items-center gap-2.5 mb-3">
-        <div
-          className="w-2 h-2 rounded-full shrink-0"
-          style={{ backgroundColor: community.color_hex }}
-        />
-        <div className="flex-1 min-w-0">
-          <span className="text-sm font-medium font-body text-[var(--text-primary)] truncate">
-            {community.name}
-          </span>
-          <span className="text-xs text-[var(--text-dim)] ml-2">{community.region}</span>
+      {/* Community color accent bar */}
+      <div
+        className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl"
+        style={{ backgroundColor: community.color_hex }}
+      />
+
+      <div className="p-4 pl-5">
+        {/* Community header */}
+        <div className="flex items-center gap-2.5 mb-3">
+          <div
+            className="w-2 h-2 rounded-full shrink-0 ring-2 ring-current/10"
+            style={{ backgroundColor: community.color_hex, color: community.color_hex }}
+          />
+          <div className="flex-1 min-w-0">
+            <span className="text-sm font-semibold font-body text-[var(--text-primary)] truncate">
+              {community.name}
+            </span>
+            <span className="text-xs text-[var(--text-dim)] ml-2 font-body">{community.region}</span>
+          </div>
         </div>
-      </div>
 
-      {/* Quote */}
-      <p className="font-body text-base leading-relaxed text-[var(--text-primary)] mb-3">
-        &ldquo;{quote}&rdquo;
-      </p>
-
-      {/* Context */}
-      {context && (
-        <p className="text-[13px] text-[var(--text-secondary)] leading-snug mb-4">
-          {context}
+        {/* Quote */}
+        <p className="font-body text-[15px] leading-[1.65] text-[var(--text-primary)] mb-3">
+          &ldquo;{quote}&rdquo;
         </p>
-      )}
+
+        {/* Context */}
+        {context && (
+          <p className="text-[13px] text-[var(--text-secondary)] leading-snug mb-4">
+            {context}
+          </p>
+        )}
 
       {/* Footer: category tag + reactions */}
       <div className="flex items-center justify-between">
@@ -227,6 +234,7 @@ export function PerspectiveCard({
             </svg>
           </button>
         </div>
+      </div>
       </div>
     </motion.div>
   );

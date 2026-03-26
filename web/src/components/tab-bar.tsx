@@ -37,7 +37,7 @@ export function TabBar() {
               <Link
                 key={tab.href}
                 href={tab.href}
-                className="flex items-center justify-center w-12 h-12 rounded-full bg-[var(--accent-primary)] text-white shadow-lg shadow-[var(--accent-primary)]/20 active:scale-95 transition-transform"
+                className="flex items-center justify-center w-12 h-12 rounded-full bg-[var(--accent-primary)] text-white shadow-lg shadow-[var(--accent-primary)]/25 hover:shadow-xl hover:shadow-[var(--accent-primary)]/30 active:scale-95 hover:scale-105 transition-all duration-200"
                 role="tab"
                 aria-label="Create perspective"
               >
@@ -50,10 +50,10 @@ export function TabBar() {
             <Link
               key={tab.href}
               href={tab.href}
-              className={`flex flex-col items-center justify-center min-w-[48px] min-h-[48px] gap-0.5 transition-colors ${
+              className={`flex flex-col items-center justify-center min-w-[48px] min-h-[48px] gap-0.5 rounded-xl transition-all duration-200 ${
                 isActive
                   ? "text-[var(--accent-primary)]"
-                  : "text-[var(--text-secondary)]"
+                  : "text-[var(--text-dim)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)]/50"
               }`}
               role="tab"
               aria-selected={isActive}
