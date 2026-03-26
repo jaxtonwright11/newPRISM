@@ -37,58 +37,46 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
       type: "vector",
       url: "mapbox://mapbox.mapbox-streets-v8",
     },
-    "mapbox-terrain": {
-      type: "vector",
-      url: "mapbox://mapbox.mapbox-terrain-v2",
-    },
   },
   layers: [
-    // Ocean background
+    // Background = land color (fills everything first)
     {
       id: "background",
       type: "background",
-      paint: { "background-color": "#0A0908" },
+      paint: { "background-color": "#181B20" },
     },
-    // Land fill — using terrain source which has the landcover layer
-    {
-      id: "land",
-      type: "fill",
-      source: "mapbox-terrain",
-      "source-layer": "landcover",
-      paint: { "fill-color": "#131110" },
-    },
-    // Water
+    // Water on top (oceans, lakes, rivers)
     {
       id: "water",
       type: "fill",
       source: "mapbox-streets",
       "source-layer": "water",
-      paint: { "fill-color": "#0A0908" },
+      paint: { "fill-color": "#0F1114" },
     },
-    // Admin boundaries — barely visible
+    // Country borders — very subtle
     {
-      id: "admin-borders",
+      id: "admin-0-boundary",
       type: "line",
       source: "mapbox-streets",
       "source-layer": "admin",
       filter: ["==", ["get", "admin_level"], 0],
       paint: {
-        "line-color": "#2A251E",
-        "line-width": 0.5,
-        "line-opacity": 0.4,
+        "line-color": "#262A31",
+        "line-width": 0.8,
+        "line-opacity": 0.5,
       },
     },
-    // State/province boundaries — even more subtle
+    // State/province borders — even subtler
     {
-      id: "admin-state",
+      id: "admin-1-boundary",
       type: "line",
       source: "mapbox-streets",
       "source-layer": "admin",
       filter: ["==", ["get", "admin_level"], 1],
       paint: {
-        "line-color": "#15120E",
-        "line-width": 0.3,
-        "line-opacity": 0.25,
+        "line-color": "#262A31",
+        "line-width": 0.4,
+        "line-opacity": 0.3,
       },
     },
   ],
@@ -254,7 +242,9 @@ export function MapPlaceholder({
       antialias: true,
     });
 
-    // Disable labels
+    map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'bottom-right');
+    map.addControl(new mapboxgl.AttributionControl({ compact: true }), 'bottom-left');
+
     map.on("load", () => {
       setMapLoaded(true);
     });
