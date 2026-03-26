@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import type { CommunityType, TopicStatus } from "@shared/types";
 
-type AdminTab = "communities" | "topics";
+type AdminTab = "communities" | "topics" | "reports";
 
 interface AdminCommunity {
   id: string;
@@ -31,6 +31,34 @@ interface AdminTopic {
   created_at: string;
 }
 
+type ReportContentType = "perspective" | "post" | "community";
+type ReportReason = "harassment" | "misinformation" | "spam" | "hate_speech" | "other";
+
+interface AdminReport {
+  id: string;
+  reporter_id: string;
+  content_type: ReportContentType;
+  content_id: string;
+  reason: ReportReason;
+  details: string | null;
+  status: string;
+  created_at: string;
+}
+
+const CONTENT_TYPE_COLORS: Record<ReportContentType, string> = {
+  perspective: "bg-prism-accent-primary/15 text-prism-accent-primary",
+  post: "bg-blue-500/15 text-blue-400",
+  community: "bg-purple-500/15 text-purple-400",
+};
+
+const REASON_COLORS: Record<ReportReason, string> = {
+  harassment: "bg-prism-accent-destructive/15 text-prism-accent-destructive",
+  misinformation: "bg-yellow-500/15 text-yellow-400",
+  spam: "bg-prism-text-dim/15 text-prism-text-dim",
+  hate_speech: "bg-red-600/15 text-red-400",
+  other: "bg-prism-bg-elevated text-prism-text-secondary",
+};
+
 const COMMUNITY_TYPE_LABELS: Record<CommunityType, string> = {
   civic: "Civic",
   diaspora: "Diaspora",
@@ -53,6 +81,9 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>("communities");
   const [communities, setCommunities] = useState<AdminCommunity[]>([]);
   const [topics, setTopics] = useState<AdminTopic[]>([]);
+  const [reports, setReports] = useState<AdminReport[]>([]);
+  const [reportsLoading, setReportsLoading] = useState(false);
+  const [reportsLoaded, setReportsLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -97,9 +128,32 @@ export default function AdminPage() {
     }
   }, [headers]);
 
+  const fetchReports = useCallback(async () => {
+    if (reportsLoaded) return;
+    setReportsLoading(true);
+    try {
+      const res = await fetch("/api/admin/reports", { headers: headers() });
+      if (res.ok) {
+        const data = await res.json();
+        setReports(data.reports ?? []);
+        setReportsLoaded(true);
+      }
+    } catch {
+      // silent
+    } finally {
+      setReportsLoading(false);
+    }
+  }, [headers, reportsLoaded]);
+
   useEffect(() => {
     if (session?.access_token) fetchData();
   }, [session?.access_token, fetchData]);
+
+  useEffect(() => {
+    if (activeTab === "reports" && session?.access_token && !reportsLoaded) {
+      fetchReports();
+    }
+  }, [activeTab, session?.access_token, reportsLoaded, fetchReports]);
 
   const handleCommunityAction = async (id: string, action: "approve" | "reject") => {
     setActionLoading(id);
@@ -173,6 +227,21 @@ export default function AdminPage() {
     }
   };
 
+  const handleReportAction = async (id: string, status: "dismissed" | "actioned") => {
+    // Optimistic removal
+    setReports((prev) => prev.filter((r) => r.id !== id));
+    try {
+      await fetch("/api/admin/reports", {
+        method: "PATCH",
+        headers: headers(),
+        body: JSON.stringify({ id, status }),
+      });
+    } catch {
+      // Re-fetch on error to restore state
+      setReportsLoaded(false);
+    }
+  };
+
   if (!session) {
     return (
       <div className="min-h-screen bg-prism-bg-base flex flex-col items-center justify-center px-6 text-center">
@@ -194,6 +263,7 @@ export default function AdminPage() {
   const tabs: { id: AdminTab; label: string; count: number }[] = [
     { id: "communities", label: "Communities", count: pendingCommunities.length },
     { id: "topics", label: "Topics", count: topics.length },
+    { id: "reports", label: "Reports", count: reports.filter((r) => r.status === "pending").length },
   ];
 
   return (
@@ -428,6 +498,72 @@ export default function AdminPage() {
                 ) : (
                   <p className="text-sm text-prism-text-dim py-6 text-center">
                     No topics yet. Create one above.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Reports tab */}
+            {activeTab === "reports" && (
+              <div className="space-y-6">
+                <h2 className="text-xs font-semibold uppercase tracking-wider text-prism-accent-primary">
+                  Pending Reports ({reports.filter((r) => r.status === "pending").length})
+                </h2>
+                {reportsLoading ? (
+                  <div className="space-y-3">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="h-24 bg-prism-bg-elevated rounded-xl animate-shimmer" />
+                    ))}
+                  </div>
+                ) : reports.filter((r) => r.status === "pending").length > 0 ? (
+                  <div className="space-y-2">
+                    {reports
+                      .filter((r) => r.status === "pending")
+                      .map((r) => (
+                        <div
+                          key={r.id}
+                          className="bg-prism-bg-surface border border-prism-border rounded-xl p-4"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${CONTENT_TYPE_COLORS[r.content_type]}`}>
+                                  {r.content_type.toUpperCase()}
+                                </span>
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${REASON_COLORS[r.reason]}`}>
+                                  {r.reason.replace("_", " ").toUpperCase()}
+                                </span>
+                              </div>
+                              {r.details && (
+                                <p className="text-xs text-prism-text-secondary mb-2 leading-relaxed">
+                                  {r.details}
+                                </p>
+                              )}
+                              <p className="text-[10px] font-mono text-prism-text-dim">
+                                {r.content_id.slice(0, 8)}&hellip; &middot; {new Date(r.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <div className="flex gap-2 shrink-0">
+                              <button
+                                onClick={() => handleReportAction(r.id, "dismissed")}
+                                className="px-3 py-1.5 rounded-lg bg-prism-text-dim/15 text-prism-text-secondary text-xs font-medium hover:bg-prism-text-dim/25 transition-colors"
+                              >
+                                Dismiss
+                              </button>
+                              <button
+                                onClick={() => handleReportAction(r.id, "actioned")}
+                                className="px-3 py-1.5 rounded-lg bg-prism-accent-destructive/15 text-prism-accent-destructive text-xs font-medium hover:bg-prism-accent-destructive/25 transition-colors"
+                              >
+                                Action
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-prism-text-dim py-6 text-center">
+                    No pending reports.
                   </p>
                 )}
               </div>
