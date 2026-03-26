@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
-import { applyRateLimit, parseParams, slugSchema } from "@/lib/api";
+import { applyRateLimit, parseParams } from "@/lib/api";
 import { getSupabase } from "@/lib/supabase";
-
 import { z } from "zod";
 
-const perspectiveIdParamsSchema = z.object({
-  id: slugSchema,
+const paramsSchema = z.object({
+  id: z.string().uuid(),
 });
 
 export async function GET(
@@ -15,7 +14,7 @@ export async function GET(
   const rateLimitResponse = applyRateLimit(request, "perspective-by-id");
   if (rateLimitResponse) return rateLimitResponse;
 
-  const parsedParams = parseParams(await params, perspectiveIdParamsSchema);
+  const parsedParams = parseParams(await params, paramsSchema);
   if (!parsedParams.success) return parsedParams.response;
 
   const { id } = parsedParams.data;
@@ -25,7 +24,7 @@ export async function GET(
     if (supabase) {
       const { data, error } = await supabase
         .from("perspectives")
-        .select("*, community:communities(id, name, region, community_type, color_hex, verified)")
+        .select("*, community:communities(id, name, region, community_type, color_hex, verified), topic:topics(id, title, slug)")
         .eq("id", id)
         .single();
 
