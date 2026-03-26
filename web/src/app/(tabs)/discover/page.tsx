@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { PerspectiveCard } from "@/components/perspective-card";
+import { PerspectiveComparison } from "@/components/perspective-comparison";
 import { FeedSkeleton } from "@/components/skeleton";
 import { EmptyState, EMPTY_STATES } from "@/components/empty-state";
 import { useAuth } from "@/lib/auth-context";
@@ -90,6 +91,12 @@ export default function DiscoverPage() {
     ? topics.filter((t) => t.title.toLowerCase().includes(searchQuery.toLowerCase()))
     : topics;
 
+  const selectedTopicTitle = topics.find((t) => t.slug === selectedTopicSlug)?.title ?? "";
+
+  // Show comparison view when we have perspectives from 2+ unique communities
+  const uniqueCommunities = new Set(perspectives.map((p) => p.community.name));
+  const showComparison = perspectives.length >= 2 && uniqueCommunities.size >= 2;
+
   return (
     <div className="flex flex-col h-full">
       {/* Search header */}
@@ -137,7 +144,14 @@ export default function DiscoverPage() {
         {loading ? (
           <FeedSkeleton count={4} />
         ) : perspectives.length > 0 ? (
-          <div className="flex flex-col gap-2 animate-fade-in">
+          <div className="flex flex-col gap-3 animate-fade-in">
+            {showComparison && (
+              <PerspectiveComparison
+                topicTitle={selectedTopicTitle}
+                perspectives={perspectives}
+                onSelectPerspective={setSelectedPerspectiveId}
+              />
+            )}
             {perspectives.map((p, i) => (
               <PerspectiveCard
                 key={p.id}
