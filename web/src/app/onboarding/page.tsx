@@ -90,7 +90,7 @@ export default function OnboardingPage() {
         {step === 1 && (
           <div className="flex flex-col items-center text-center flex-1">
             <h1 className="font-display font-bold text-2xl text-[var(--text-primary)] mb-2">
-              What neighborhood are you in?
+              What city are you in?
             </h1>
             <p className="text-base text-[var(--text-secondary)] font-body mb-8 max-w-sm">
               PRISM connects you to perspectives from your community and beyond.
@@ -101,7 +101,7 @@ export default function OnboardingPage() {
                 type="text"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                placeholder={detecting ? "Detecting your location..." : "Enter your neighborhood or city"}
+                placeholder={detecting ? "Detecting your location..." : "Enter your city"}
                 className="w-full px-4 py-3 rounded-xl bg-[var(--bg-surface)] border border-[var(--bg-elevated)] text-[var(--text-primary)] font-body placeholder:text-[var(--text-dim)] focus:outline-none focus:border-[var(--accent-primary)]/50 transition-colors"
               />
             </div>
@@ -126,7 +126,7 @@ export default function OnboardingPage() {
         {step === 2 && (
           <div className="flex flex-col items-center text-center flex-1">
             <h1 className="font-display font-bold text-2xl text-[var(--text-primary)] mb-2">
-              What&apos;s one thing about your neighborhood that outsiders don&apos;t understand?
+              What&apos;s one thing about your city that outsiders don&apos;t understand?
             </h1>
             <p className="text-base text-[var(--text-secondary)] font-body mb-4 max-w-sm">
               This becomes your first perspective on PRISM.
