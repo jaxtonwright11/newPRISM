@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { applyRateLimit } from "@/lib/api";
 import { getSupabaseWithAuth } from "@/lib/supabase";
 
@@ -36,4 +37,75 @@ export async function GET(request: Request) {
   }
 
   return NextResponse.json({ data: null });
+}
+
+const updateSchema = z.object({
+  display_name: z.string().trim().min(1).max(50).optional(),
+  bio: z.string().trim().max(160).optional(),
+});
+
+export async function PATCH(request: Request) {
+  const rateLimitResponse = applyRateLimit(request, "user-profile-update");
+  if (rateLimitResponse) return rateLimitResponse;
+
+  const token = request.headers.get("authorization")?.replace("Bearer ", "");
+  if (!token) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const supabase = getSupabaseWithAuth(token);
+  if (!supabase) {
+    return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
+  }
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  const parsed = updateSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Invalid input" },
+      { status: 400 }
+    );
+  }
+
+  // Update display_name on users table
+  if (parsed.data.display_name !== undefined) {
+    const { error } = await supabase
+      .from("users")
+      .update({ display_name: parsed.data.display_name })
+      .eq("id", user.id);
+
+    if (error) {
+      return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
+    }
+  }
+
+  // Update bio on user_profiles table
+  if (parsed.data.bio !== undefined) {
+    const { error } = await supabase
+      .from("user_profiles")
+      .upsert(
+        { user_id: user.id, bio: parsed.data.bio },
+        { onConflict: "user_id" }
+      );
+
+    if (error) {
+      return NextResponse.json({ error: "Failed to update bio" }, { status: 500 });
+    }
+  }
+
+  return NextResponse.json({ message: "Profile updated" });
 }

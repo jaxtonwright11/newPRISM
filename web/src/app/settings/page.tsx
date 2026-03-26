@@ -10,6 +10,7 @@ interface SettingsUser {
   email: string;
   username: string;
   display_name: string | null;
+  bio: string | null;
   verification_level: number;
   default_radius_miles: RadiusMiles;
 }
@@ -19,8 +20,11 @@ export default function SettingsPage() {
   const { ghostMode, toggleGhostMode } = useGhostMode();
   const [user, setUser] = useState<SettingsUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [displayName, setDisplayName] = useState("");
+  const [bio, setBio] = useState("");
   const [defaultRadius, setDefaultRadius] = useState<RadiusMiles>(20);
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     async function fetchUser() {
@@ -31,13 +35,17 @@ export default function SettingsPage() {
           });
           const { data } = await res.json();
           if (data) {
+            const profile = Array.isArray(data.profile) ? data.profile[0] : data.profile;
             setUser({
               email: data.email ?? "",
               username: data.username ?? "",
               display_name: data.display_name ?? null,
+              bio: profile?.bio ?? null,
               verification_level: data.verification_level ?? 1,
               default_radius_miles: data.default_radius_miles ?? 20,
             });
+            setDisplayName(data.display_name ?? "");
+            setBio(profile?.bio ?? "");
             setDefaultRadius(data.default_radius_miles ?? 20);
             setLoading(false);
             return;
@@ -51,6 +59,7 @@ export default function SettingsPage() {
         email: "",
         username: "",
         display_name: null,
+        bio: null,
         verification_level: 1,
         default_radius_miles: 20,
       });
@@ -59,9 +68,31 @@ export default function SettingsPage() {
     fetchUser();
   }, [session?.access_token]);
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  const handleSave = async () => {
+    if (!session?.access_token) return;
+    setSaving(true);
+    try {
+      const payload: Record<string, string> = {};
+      if (displayName.trim()) payload.display_name = displayName.trim();
+      if (bio !== (user?.bio ?? "")) payload.bio = bio.trim();
+
+      if (Object.keys(payload).length > 0) {
+        await fetch("/api/user/profile", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify(payload),
+        });
+      }
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch {
+      // silently fail
+    } finally {
+      setSaving(false);
+    }
   };
 
   const radiusOptions: RadiusMiles[] = [10, 20, 30, 40];
@@ -112,7 +143,27 @@ export default function SettingsPage() {
           <div className="divide-y divide-prism-border">
             <SettingRow label="Email" value={user.email || "Not set"} />
             <SettingRow label="Username" value={user.username ? `@${user.username}` : "Not set"} />
-            <SettingRow label="Display Name" value={user.display_name ?? "Not set"} />
+            <div className="px-4 py-3">
+              <label className="text-sm text-prism-text-secondary block mb-1.5">Display Name</label>
+              <input
+                type="text"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value.slice(0, 50))}
+                placeholder="Your display name"
+                className="w-full px-3 py-2 rounded-lg bg-prism-bg-elevated border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:border-prism-accent-primary/50"
+              />
+            </div>
+            <div className="px-4 py-3">
+              <label className="text-sm text-prism-text-secondary block mb-1.5">Bio</label>
+              <textarea
+                value={bio}
+                onChange={(e) => setBio(e.target.value.slice(0, 160))}
+                placeholder="Tell people about yourself"
+                rows={3}
+                className="w-full px-3 py-2 rounded-lg bg-prism-bg-elevated border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:border-prism-accent-primary/50 resize-none"
+              />
+              <span className="text-[10px] text-prism-text-dim font-mono mt-1 block text-right">{bio.length}/160</span>
+            </div>
             <SettingRow label="Verification" value={`Level ${user.verification_level}`} />
           </div>
         </section>
@@ -183,7 +234,7 @@ export default function SettingsPage() {
               : "bg-prism-accent-primary text-white hover:bg-prism-accent-primary/90"
           }`}
         >
-          {saved ? "\u2713 Saved" : "Save Changes"}
+          {saved ? "\u2713 Saved" : saving ? "Saving..." : "Save Changes"}
         </button>
 
         {/* Danger zone */}

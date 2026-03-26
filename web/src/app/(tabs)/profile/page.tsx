@@ -13,12 +13,31 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<ProfileTab>("perspectives");
   const [streak, setStreak] = useState(0);
   const [streakMessage, setStreakMessage] = useState<string | null>(null);
+  const [bio, setBio] = useState<string | null>(null);
+  const [displayName, setDisplayName] = useState<string | null>(null);
 
   useEffect(() => {
     const data = getStreak();
     setStreak(data.count);
     setStreakMessage(getStreakMessage(data.count));
   }, []);
+
+  // Fetch profile data including bio
+  useEffect(() => {
+    if (!session?.access_token) return;
+    fetch("/api/user/profile", {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.data) {
+          setDisplayName(data.data.display_name ?? null);
+          const profile = Array.isArray(data.data.profile) ? data.data.profile[0] : data.data.profile;
+          setBio(profile?.bio ?? null);
+        }
+      })
+      .catch(() => {});
+  }, [session?.access_token]);
 
   if (!session) {
     return (
@@ -57,11 +76,17 @@ export default function ProfilePage() {
           </div>
           <div className="flex-1">
             <h1 className="font-display font-bold text-lg text-[var(--text-primary)]">
-              {user?.user_metadata?.display_name ?? user?.email?.split("@")[0] ?? "User"}
+              {displayName ?? user?.user_metadata?.display_name ?? user?.email?.split("@")[0] ?? "User"}
             </h1>
-            <p className="text-sm text-[var(--text-secondary)]">
-              {user?.user_metadata?.location ?? "Location not set"}
-            </p>
+            {bio ? (
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{bio}</p>
+            ) : (
+              <p className="text-sm text-[var(--text-dim)]">
+                <Link href="/settings" className="hover:text-[var(--accent-primary)] transition-colors">
+                  Add a bio →
+                </Link>
+              </p>
+            )}
           </div>
         </div>
 
