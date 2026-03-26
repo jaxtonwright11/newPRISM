@@ -1,347 +1,193 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
-import { MapPlaceholder } from "@/components/map-placeholder";
-import { COMMUNITY_COLORS } from "@/lib/constants";
-import type { Community, CommunityType, Topic } from "@shared/types";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
+import { PrismWordmark } from "@/components/prism-wordmark";
 
-type OnboardingStep = "map" | "perspectives" | "signup";
-
-interface OnboardingPerspective {
-  id: string;
-  community: {
-    name: string;
-    region: string;
-    community_type: CommunityType;
-    color_hex: string;
-    verified: boolean;
-  };
-  quote: string;
-}
+type Step = 1 | 2 | 3;
 
 export default function OnboardingPage() {
-  const [step, setStep] = useState<OnboardingStep>("map");
-  const [activeTopic, setActiveTopic] = useState<Topic | null>(null);
-  const [topicPerspectives, setTopicPerspectives] = useState<OnboardingPerspective[]>([]);
-  const [communities, setCommunities] = useState<Community[]>([]);
-  const [showPerspectives, setShowPerspectives] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [step, setStep] = useState<Step>(1);
+  const [location, setLocation] = useState("");
+  const [detecting, setDetecting] = useState(false);
+  const [perspective, setPerspective] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const { session } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
-    async function fetchOnboardingData() {
-      try {
-        const [topicsRes, communitiesRes] = await Promise.all([
-          fetch("/api/topics"),
-          fetch("/api/communities"),
-        ]);
-        const topicsData = await topicsRes.json();
-        const communitiesData = await communitiesRes.json();
-
-        const fetchedTopics: Topic[] = topicsData.topics ?? [];
-        const fetchedCommunities: Community[] = communitiesData.communities ?? [];
-        setCommunities(fetchedCommunities);
-
-        const hotTopic = fetchedTopics.find((t) => t.status === "hot") ?? fetchedTopics[0] ?? null;
-        setActiveTopic(hotTopic);
-
-        if (hotTopic) {
+    if ("geolocation" in navigator) {
+      setDetecting(true);
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
           try {
-            const perspRes = await fetch(`/api/topics/${hotTopic.slug}`);
-            const perspData = await perspRes.json();
-            setTopicPerspectives((perspData.perspectives ?? []).slice(0, 2));
+            const res = await fetch(
+              `https://api.mapbox.com/geocoding/v5/mapbox.places/${pos.coords.longitude},${pos.coords.latitude}.json?types=neighborhood,place&access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`
+            );
+            const data = await res.json();
+            const place = data.features?.[0]?.text || data.features?.[0]?.place_name;
+            if (place) setLocation(place);
           } catch {
-            // no perspectives available
+            // ignore
+          } finally {
+            setDetecting(false);
           }
-        }
-      } catch {
-        // API unavailable
-      } finally {
-        setLoading(false);
-      }
+        },
+        () => setDetecting(false)
+      );
     }
-    fetchOnboardingData();
   }, []);
 
-  useEffect(() => {
-    if (step === "perspectives") {
-      const timer = setTimeout(() => setShowPerspectives(true), 300);
-      return () => clearTimeout(timer);
+  async function handlePostPerspective() {
+    if (!perspective.trim() || !session?.access_token) return;
+    setSubmitting(true);
+    try {
+      await fetch("/api/posts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          content: perspective,
+          post_type: "perspective",
+        }),
+      });
+    } catch {
+      // ignore
+    } finally {
+      setSubmitting(false);
+      router.push("/feed");
     }
-  }, [step]);
+  }
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-prism-bg-base">
-      {/* Full-screen map */}
-      <div className="absolute inset-0">
-        <MapPlaceholder communities={communities} showPersonalPin={false} />
+    <div className="min-h-screen bg-[var(--bg-base)] flex flex-col">
+      {/* Header */}
+      <header className="flex items-center justify-center pt-8 pb-4">
+        <PrismWordmark size="md" />
+      </header>
+
+      {/* Progress dots */}
+      <div className="flex items-center justify-center gap-2 mb-8">
+        {[1, 2, 3].map((s) => (
+          <div
+            key={s}
+            className={`w-2 h-2 rounded-full transition-colors ${
+              s === step
+                ? "bg-[var(--accent-primary)]"
+                : s < step
+                  ? "bg-[var(--accent-primary)]/40"
+                  : "bg-[var(--bg-elevated)]"
+            }`}
+          />
+        ))}
       </div>
 
-      {/* Dark gradient overlay from bottom */}
-      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-prism-bg-base via-prism-bg-base/80 to-transparent pointer-events-none" />
+      {/* Step content */}
+      <div className="flex-1 px-6 flex flex-col">
+        {step === 1 && (
+          <div className="flex flex-col items-center text-center flex-1">
+            <h1 className="font-display font-bold text-2xl text-[var(--text-primary)] mb-2">
+              What neighborhood are you in?
+            </h1>
+            <p className="text-base text-[var(--text-secondary)] font-body mb-8 max-w-sm">
+              PRISM connects you to perspectives from your community and beyond.
+            </p>
 
-      {/* Step 1: Map with active topic prompt */}
-      {step === "map" && (
-        <div className="absolute inset-0 flex flex-col justify-end pb-12 px-6 animate-fade-in">
-          {/* Active topic indicator */}
-          <div className="absolute top-6 left-6 flex items-center gap-2 bg-prism-bg-base/80 backdrop-blur-md px-3 py-2 rounded-full border border-prism-border z-10">
-            <span className="w-1.5 h-1.5 rounded-full bg-prism-accent-primary" />
-            <span className="text-xs font-medium text-prism-text-secondary uppercase tracking-wide">
-              Communities discussing
-            </span>
-          </div>
-
-          {/* PRISM logo */}
-          <div className="absolute top-6 right-6 flex items-center gap-2 z-10">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-prism-accent-primary to-prism-community-diaspora flex items-center justify-center">
-              <span className="text-white font-display font-bold text-sm">
-                P
-              </span>
+            <div className="w-full max-w-sm mb-6">
+              <input
+                type="text"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder={detecting ? "Detecting your location..." : "Enter your neighborhood or city"}
+                className="w-full px-4 py-3 rounded-xl bg-[var(--bg-surface)] border border-[var(--bg-elevated)] text-[var(--text-primary)] font-body placeholder:text-[var(--text-dim)] focus:outline-none focus:border-[var(--accent-primary)]/50 transition-colors"
+              />
             </div>
-            <span className="font-display text-base font-bold text-prism-text-primary">
-              PRISM
-            </span>
+
+            <button
+              onClick={() => setStep(2)}
+              disabled={!location.trim()}
+              className="w-full max-w-sm py-3 rounded-xl bg-[var(--accent-primary)] text-white font-body font-medium text-base disabled:opacity-40 transition-opacity"
+            >
+              This is me
+            </button>
+
+            <button
+              onClick={() => setStep(2)}
+              className="mt-3 text-sm text-[var(--text-secondary)] font-body hover:text-[var(--text-primary)] transition-colors"
+            >
+              Skip for now
+            </button>
           </div>
+        )}
 
-          {/* Topic card */}
-          {!loading && activeTopic && (
-            <div className="max-w-lg mx-auto w-full">
-              <div className="bg-prism-bg-surface/90 backdrop-blur-lg border border-prism-border rounded-2xl p-5 mb-4">
-                <p className="text-[10px] font-medium uppercase tracking-wider text-prism-accent-primary mb-2">
-                  Being discussed
-                </p>
-                <h2 className="font-body text-xl font-bold text-prism-text-primary mb-2">
-                  {activeTopic.title}
-                </h2>
-                <p className="text-sm text-prism-text-secondary leading-relaxed mb-3">
-                  {activeTopic.summary}
-                </p>
-                <div className="flex items-center gap-3 text-xs text-prism-text-dim font-mono">
-                  <span>{activeTopic.community_count} communities</span>
-                  <span>·</span>
-                  <span>
-                    {activeTopic.perspective_count} perspectives
-                  </span>
-                </div>
-              </div>
+        {step === 2 && (
+          <div className="flex flex-col items-center text-center flex-1">
+            <h1 className="font-display font-bold text-2xl text-[var(--text-primary)] mb-2">
+              What&apos;s one thing about your neighborhood that outsiders don&apos;t understand?
+            </h1>
+            <p className="text-base text-[var(--text-secondary)] font-body mb-8 max-w-sm">
+              This becomes your first perspective on PRISM.
+            </p>
 
-              <button
-                onClick={() => setStep("perspectives")}
-                className="w-full py-3 rounded-xl bg-prism-accent-primary text-white text-sm font-semibold hover:bg-prism-accent-primary/90 transition-colors flex items-center justify-center gap-2"
-              >
-                <span>
-                  See how {activeTopic.community_count} communities experience
-                  this
-                </span>
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
-                  />
+            {location && (
+              <div className="flex items-center gap-1.5 mb-4 text-xs text-[var(--text-dim)]">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+                  <circle cx="12" cy="9" r="2.5" />
                 </svg>
-              </button>
-            </div>
-          )}
-
-          {!loading && !activeTopic && (
-            <div className="max-w-lg mx-auto w-full">
-              <div className="bg-prism-bg-surface/90 backdrop-blur-lg border border-prism-border rounded-2xl p-5 mb-4 text-center">
-                <h2 className="font-display text-xl font-bold text-prism-text-primary mb-2">
-                  Welcome to PRISM
-                </h2>
-                <p className="text-sm text-prism-text-secondary leading-relaxed">
-                  Discover diverse perspectives from communities around the world.
-                </p>
-              </div>
-              <Link
-                href="/signup"
-                className="block w-full py-3 rounded-xl bg-prism-accent-primary text-white text-sm font-semibold text-center hover:bg-prism-accent-primary/90 transition-colors"
-              >
-                Get started
-              </Link>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Step 2: Perspectives slide up */}
-      {step === "perspectives" && (
-        <div className="absolute inset-0 flex flex-col justify-end pb-8 px-4 md:px-6">
-          {/* Topic label */}
-          <div className="absolute top-6 left-6 flex items-center gap-2 bg-prism-bg-base/80 backdrop-blur-md px-3 py-2 rounded-full border border-prism-border z-10">
-            <span className="w-2 h-2 rounded-full bg-prism-accent-live animate-pulse-slow" />
-            <span className="text-xs font-medium text-prism-text-primary">
-              {activeTopic?.title}
-            </span>
-          </div>
-
-          {/* PRISM logo */}
-          <div className="absolute top-6 right-6 flex items-center gap-2 z-10">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-prism-accent-primary to-prism-community-diaspora flex items-center justify-center">
-              <span className="text-white font-display font-bold text-sm">
-                P
-              </span>
-            </div>
-          </div>
-
-          {/* Perspective cards */}
-          <div className="max-w-lg mx-auto w-full space-y-3">
-            {topicPerspectives.map((perspective, i) => {
-              const color =
-                COMMUNITY_COLORS[
-                  perspective.community.community_type as CommunityType
-                ];
-              return (
-                <div
-                  key={perspective.id}
-                  className={`bg-prism-bg-surface/95 backdrop-blur-lg border border-prism-border rounded-xl p-5 transition-all duration-500 ${
-                    showPerspectives
-                      ? "opacity-100 translate-y-0"
-                      : "opacity-0 translate-y-8"
-                  }`}
-                  style={{
-                    borderLeftWidth: "3px",
-                    borderLeftColor: color,
-                    transitionDelay: `${i * 150}ms`,
-                  }}
-                >
-                  {/* Community header */}
-                  <div className="flex items-center gap-2 mb-3">
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold"
-                      style={{
-                        backgroundColor: color + "20",
-                        color: color,
-                      }}
-                    >
-                      {perspective.community.name
-                        .split(" ")
-                        .map((w) => w[0])
-                        .slice(0, 2)
-                        .join("")}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-sm font-medium text-prism-text-primary">
-                          {perspective.community.name}
-                        </span>
-                        {perspective.community.verified && (
-                          <svg
-                            className="w-3.5 h-3.5 text-prism-accent-live"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M16.403 12.652a3 3 0 010-5.304 3 3 0 00-3.75-3.751 3 3 0 00-5.305 0 3 3 0 00-3.751 3.75 3 3 0 000 5.305 3 3 0 003.75 3.751 3 3 0 005.305 0 3 3 0 003.751-3.75zm-2.546-4.46a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        )}
-                      </div>
-                      <span className="text-[11px] text-prism-text-dim">
-                        {perspective.community.region}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Quote */}
-                  <blockquote className="font-body text-base leading-relaxed text-prism-text-primary">
-                    &ldquo;{perspective.quote}&rdquo;
-                  </blockquote>
-                </div>
-              );
-            })}
-
-            {topicPerspectives.length === 0 && (
-              <div
-                className={`text-center py-8 transition-all duration-500 ${
-                  showPerspectives ? "opacity-100" : "opacity-0"
-                }`}
-              >
-                <p className="text-sm text-prism-text-dim">No perspectives available yet.</p>
+                {location}
               </div>
             )}
 
-            {/* CTA to signup */}
-            <div
-              className={`text-center pt-4 transition-all duration-500 ${
-                showPerspectives
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-4"
-              }`}
-              style={{ transitionDelay: "400ms" }}
+            <textarea
+              value={perspective}
+              onChange={(e) => setPerspective(e.target.value.slice(0, 500))}
+              placeholder="Everyone thinks this place is... but actually..."
+              className="w-full max-w-sm h-32 resize-none px-4 py-3 rounded-xl bg-[var(--bg-surface)] border border-[var(--bg-elevated)] text-[var(--text-primary)] font-body placeholder:text-[var(--text-dim)] focus:outline-none focus:border-[var(--accent-primary)]/50 transition-colors mb-4"
+              autoFocus
+            />
+
+            <div className="flex items-center gap-2 text-xs text-[var(--text-dim)] mb-6 font-mono">
+              {perspective.length}/500
+            </div>
+
+            <button
+              onClick={session ? handlePostPerspective : () => router.push("/signup")}
+              disabled={!perspective.trim() || submitting}
+              className="w-full max-w-sm py-3 rounded-xl bg-[var(--accent-primary)] text-white font-body font-medium text-base disabled:opacity-40 transition-opacity"
             >
-              <button
-                onClick={() => setStep("signup")}
-                className="w-full py-3 rounded-xl bg-prism-accent-primary text-white text-sm font-semibold hover:bg-prism-accent-primary/90 transition-colors"
-              >
-                Connect with these communities
-              </button>
-              <Link
-                href="/"
-                className="inline-block mt-3 text-xs text-prism-text-dim hover:text-prism-text-secondary transition-colors"
-              >
-                Continue exploring without an account
-              </Link>
-            </div>
+              {submitting ? "Posting..." : session ? "Post" : "Sign up to post"}
+            </button>
+
+            <button
+              onClick={() => router.push("/feed")}
+              className="mt-3 text-sm text-[var(--text-secondary)] font-body hover:text-[var(--text-primary)] transition-colors"
+            >
+              Skip for now
+            </button>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Step 3: Signup prompt */}
-      {step === "signup" && (
-        <div className="absolute inset-0 flex items-center justify-center px-4 animate-fade-in">
-          <div className="absolute inset-0 bg-prism-bg-base/80 backdrop-blur-md" />
-
-          <div className="relative max-w-sm w-full text-center">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-prism-accent-primary to-prism-community-diaspora mb-5">
-              <span className="text-white font-display font-bold text-2xl">
-                P
-              </span>
-            </div>
-
-            <h2 className="font-body text-2xl font-bold text-prism-text-primary mb-2">
-              See every perspective
-            </h2>
-            <p className="text-sm text-prism-text-secondary mb-8 leading-relaxed">
-              Create a free account to follow communities, react to
-              perspectives, and connect with people who see the world
-              differently.
+        {step === 3 && (
+          <div className="flex flex-col items-center text-center flex-1 justify-center">
+            <h1 className="font-display font-bold text-2xl text-[var(--text-primary)] mb-2">
+              Welcome to PRISM.
+            </h1>
+            <p className="text-base text-[var(--text-secondary)] font-body mb-8 max-w-sm">
+              Explore perspectives from communities across the country.
             </p>
-
-            <div className="space-y-3">
-              <Link
-                href="/signup"
-                className="block w-full py-3 rounded-xl bg-prism-accent-primary text-white text-sm font-semibold hover:bg-prism-accent-primary/90 transition-colors"
-              >
-                Create account
-              </Link>
-
-              <Link
-                href="/login"
-                className="block w-full py-3 rounded-xl bg-prism-bg-surface border border-prism-border text-prism-text-primary text-sm font-medium hover:bg-prism-bg-elevated transition-colors"
-              >
-                Sign in
-              </Link>
-            </div>
-
-            <Link
-              href="/"
-              className="inline-block mt-6 text-xs text-prism-text-dim hover:text-prism-text-secondary transition-colors"
+            <button
+              onClick={() => router.push("/feed")}
+              className="w-full max-w-sm py-3 rounded-xl bg-[var(--accent-primary)] text-white font-body font-medium text-base"
             >
-              &larr; Keep exploring without an account
-            </Link>
+              Start exploring
+            </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
