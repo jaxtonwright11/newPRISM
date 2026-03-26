@@ -60,12 +60,14 @@ export const EMPTY_STATES = {
     body: "When communities share how they experience the world, their perspectives show up here. You're early — be the first voice.",
     ctaLabel: "Share a perspective",
     ctaHref: "/create",
+    secondaryLabel: "Register a community",
+    secondaryHref: "/apply",
   },
   map: {
     heading: "The map is waiting.",
     body: "Every dot on this map represents a real community sharing their perspective. Right now it's quiet — your community could be the first.",
-    ctaLabel: "Share a perspective",
-    ctaHref: "/create",
+    ctaLabel: "Register a community",
+    ctaHref: "/apply",
   },
   discover: {
     heading: "Nothing to discover yet.",
