@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { applyRateLimit, parseJsonBody, slugSchema } from "@/lib/api";
+import { applyRateLimit, parseJsonBody } from "@/lib/api";
 import { getSupabaseWithAuth } from "@/lib/supabase";
 import { z } from "zod";
 
 const postCreateBodySchema = z.object({
   content: z.string().trim().min(1).max(1000),
-  topic_id: slugSchema.optional().nullable(),
-  community_id: slugSchema.optional(),
+  topic_id: z.string().uuid().optional().nullable(),
+  community_id: z.string().uuid().optional(),
   post_type: z.enum(["permanent", "story"]).optional(),
   radius_miles: z.number().positive().max(500).optional(),
 });
