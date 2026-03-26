@@ -75,7 +75,7 @@ export default function FeedPage() {
       }
       try {
         const endpoint = activeTab === "for-you"
-          ? "/api/feed/discover"
+          ? "/api/feed/for-you"
           : activeTab === "following"
             ? "/api/feed/communities"
             : "/api/feed/nearby";
