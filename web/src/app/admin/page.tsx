@@ -110,6 +110,7 @@ export default function AdminPage() {
   const [error, setError] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   // Topic creation form
   const [newTopicTitle, setNewTopicTitle] = useState("");
@@ -267,9 +268,12 @@ export default function AdminPage() {
         setNewTopicTitle("");
         setNewTopicSummary("");
         setNewTopicStatus("active");
+        showSuccess(`Created topic: ${data.topic.title}`);
+      } else {
+        showError(data.error ?? "Failed to create topic");
       }
     } catch {
-      // silent
+      showError("Network error — check your connection");
     } finally {
       setActionLoading(null);
     }
@@ -312,7 +316,14 @@ export default function AdminPage() {
 
   const showSuccess = (msg: string) => {
     setSuccessMessage(msg);
+    setErrorMessage("");
     setTimeout(() => setSuccessMessage(""), 3000);
+  };
+
+  const showError = (msg: string) => {
+    setErrorMessage(msg);
+    setSuccessMessage("");
+    setTimeout(() => setErrorMessage(""), 5000);
   };
 
   const handleCreateCommunity = async (e: React.FormEvent) => {
@@ -340,8 +351,10 @@ export default function AdminPage() {
         setNewCommName(""); setNewCommRegion(""); setNewCommCountry("");
         setNewCommType("civic"); setNewCommDesc(""); setNewCommLat(""); setNewCommLng("");
         showSuccess(`Created community: ${data.community.name}`);
+      } else {
+        showError(data.error ?? "Failed to create community");
       }
-    } catch { /* silent */ } finally { setActionLoading(null); }
+    } catch { showError("Network error — check your connection"); } finally { setActionLoading(null); }
   };
 
   const handleCreatePrompt = async (e: React.FormEvent) => {
@@ -368,8 +381,10 @@ export default function AdminPage() {
         }
         setNewPromptText(""); setNewPromptDesc(""); setNewPromptTopicId(""); setNewPromptActive(false);
         showSuccess("Prompt created");
+      } else {
+        showError(data.error ?? "Failed to create prompt");
       }
-    } catch { /* silent */ } finally { setActionLoading(null); }
+    } catch { showError("Network error — check your connection"); } finally { setActionLoading(null); }
   };
 
   const handleTogglePrompt = async (id: string, active: boolean) => {
@@ -411,8 +426,10 @@ export default function AdminPage() {
       if (res.ok && data.perspective) {
         setNewPerspQuote(""); setNewPerspContext(""); setNewPerspCommunityId(""); setNewPerspTopicId("");
         showSuccess("Perspective created");
+      } else {
+        showError(data.error ?? "Failed to create perspective");
       }
-    } catch { /* silent */ } finally { setActionLoading(null); }
+    } catch { showError("Network error — check your connection"); } finally { setActionLoading(null); }
   };
 
   const handleSendPush = async (e: React.FormEvent) => {
@@ -498,6 +515,13 @@ export default function AdminPage() {
             {successMessage && (
               <div className="fixed top-4 right-4 z-50 px-4 py-2.5 rounded-xl bg-prism-accent-live/90 text-white text-sm font-medium shadow-lg animate-fade-in">
                 {successMessage}
+              </div>
+            )}
+
+            {/* Error toast */}
+            {errorMessage && (
+              <div className="fixed top-4 right-4 z-50 px-4 py-2.5 rounded-xl bg-prism-accent-destructive/90 text-white text-sm font-medium shadow-lg animate-fade-in">
+                {errorMessage}
               </div>
             )}
 
