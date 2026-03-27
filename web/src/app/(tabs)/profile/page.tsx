@@ -383,7 +383,7 @@ export default function ProfilePage() {
               </svg>
             </Link>
             <Link
-              href="/landing"
+              href="/settings#invite"
               className="flex items-center justify-between px-4 py-3 rounded-xl bg-[var(--bg-surface)] text-[var(--text-primary)] font-body text-sm"
             >
               Invite Friends

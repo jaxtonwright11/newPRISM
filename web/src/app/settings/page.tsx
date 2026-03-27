@@ -5,7 +5,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useGhostMode } from "@/lib/use-ghost-mode";
+import { isPushSupported, isPushSubscribed, subscribeToPush, unsubscribeFromPush } from "@/lib/push";
 import type { RadiusMiles } from "@shared/types";
+
+interface NotifPrefs {
+  push_new_perspective: boolean;
+  push_reactions: boolean;
+  push_messages: boolean;
+  push_community_activity: boolean;
+  push_weekly_digest: boolean;
+  email_weekly_digest: boolean;
+}
 
 interface SettingsUser {
   email: string;
@@ -27,6 +37,35 @@ export default function SettingsPage() {
   const [defaultRadius, setDefaultRadius] = useState<RadiusMiles>(20);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [notifPrefs, setNotifPrefs] = useState<NotifPrefs>({
+    push_new_perspective: true,
+    push_reactions: true,
+    push_messages: true,
+    push_community_activity: true,
+    push_weekly_digest: true,
+    email_weekly_digest: true,
+  });
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushSupported, setPushSupported] = useState(false);
+  const [inviteUrl, setInviteUrl] = useState<string | null>(null);
+  const [inviteLoading, setInviteLoading] = useState(false);
+
+  // Check push notification status
+  useEffect(() => {
+    isPushSupported().then(setPushSupported).catch(() => {});
+    isPushSubscribed().then(setPushEnabled).catch(() => {});
+  }, []);
+
+  // Fetch notification preferences
+  useEffect(() => {
+    if (!session?.access_token) return;
+    fetch("/api/notifications/preferences", {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    })
+      .then((r) => r.json())
+      .then((data) => { if (data.preferences) setNotifPrefs(data.preferences); })
+      .catch(() => {});
+  }, [session?.access_token]);
 
   useEffect(() => {
     async function fetchUser() {
@@ -94,6 +133,48 @@ export default function SettingsPage() {
       // silently fail
     } finally {
       setSaving(false);
+    }
+  };
+
+  const updateNotifPref = async (key: keyof NotifPrefs, value: boolean) => {
+    setNotifPrefs((prev) => ({ ...prev, [key]: value }));
+    if (!session?.access_token) return;
+    fetch("/api/notifications/preferences", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify({ [key]: value }),
+    }).catch(() => {});
+  };
+
+  const togglePush = async () => {
+    if (!session?.access_token) return;
+    if (pushEnabled) {
+      await unsubscribeFromPush(session.access_token).catch(() => {});
+      setPushEnabled(false);
+    } else {
+      await subscribeToPush(session.access_token).catch(() => {});
+      setPushEnabled(true);
+    }
+  };
+
+  const generateInvite = async () => {
+    if (!session?.access_token || inviteLoading) return;
+    setInviteLoading(true);
+    try {
+      const res = await fetch("/api/invites", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json();
+      if (data.url) {
+        setInviteUrl(data.url);
+        await navigator.clipboard?.writeText(data.url).catch(() => {});
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setInviteLoading(false);
     }
   };
 
@@ -199,6 +280,95 @@ export default function SettingsPage() {
           </div>
         </section>
 
+        {/* Notifications */}
+        <section className="bg-prism-bg-surface rounded-2xl border border-prism-border overflow-hidden">
+          <div className="px-4 py-3 border-b border-prism-border">
+            <h2 className="text-sm font-semibold text-prism-text-primary">Notifications</h2>
+          </div>
+          <div className="divide-y divide-prism-border">
+            {pushSupported && (
+              <ToggleRow
+                label="Push Notifications"
+                description="Receive notifications on this device"
+                enabled={pushEnabled}
+                onToggle={togglePush}
+              />
+            )}
+            <ToggleRow
+              label="New Perspectives"
+              description="When communities you follow share perspectives"
+              enabled={notifPrefs.push_new_perspective}
+              onToggle={(v) => updateNotifPref("push_new_perspective", v)}
+            />
+            <ToggleRow
+              label="Reactions"
+              description="When someone reacts to your posts"
+              enabled={notifPrefs.push_reactions}
+              onToggle={(v) => updateNotifPref("push_reactions", v)}
+            />
+            <ToggleRow
+              label="Messages"
+              description="Direct message notifications"
+              enabled={notifPrefs.push_messages}
+              onToggle={(v) => updateNotifPref("push_messages", v)}
+            />
+            <ToggleRow
+              label="Community Activity"
+              description="Highlights from your communities"
+              enabled={notifPrefs.push_community_activity}
+              onToggle={(v) => updateNotifPref("push_community_activity", v)}
+            />
+            <ToggleRow
+              label="Weekly Digest"
+              description="Summary of perspectives and activity"
+              enabled={notifPrefs.push_weekly_digest}
+              onToggle={(v) => updateNotifPref("push_weekly_digest", v)}
+            />
+            <ToggleRow
+              label="Email Digest"
+              description="Weekly email with top perspectives"
+              enabled={notifPrefs.email_weekly_digest}
+              onToggle={(v) => updateNotifPref("email_weekly_digest", v)}
+            />
+          </div>
+        </section>
+
+        {/* Invite Friends */}
+        <section className="bg-prism-bg-surface rounded-2xl border border-prism-border overflow-hidden">
+          <div className="px-4 py-3 border-b border-prism-border">
+            <h2 className="text-sm font-semibold text-prism-text-primary">Invite Friends</h2>
+          </div>
+          <div className="p-4">
+            <p className="text-xs text-prism-text-dim mb-3">
+              Share your invite link. It expires in 30 days.
+            </p>
+            {inviteUrl ? (
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={inviteUrl}
+                  className="flex-1 px-3 py-2 rounded-lg bg-prism-bg-elevated border border-prism-border text-xs text-prism-text-primary font-mono truncate"
+                />
+                <button
+                  onClick={() => navigator.clipboard?.writeText(inviteUrl)}
+                  className="px-3 py-2 rounded-lg bg-prism-accent-primary text-white text-xs font-medium shrink-0"
+                >
+                  Copy
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={generateInvite}
+                disabled={inviteLoading}
+                className="w-full py-2.5 rounded-lg bg-prism-accent-primary text-white text-sm font-medium disabled:opacity-50 transition-opacity"
+              >
+                {inviteLoading ? "Generating..." : "Generate Invite Link"}
+              </button>
+            )}
+          </div>
+        </section>
+
         {/* Preferences */}
         <section className="bg-prism-bg-surface rounded-2xl border border-prism-border overflow-hidden">
           <div className="px-4 py-3 border-b border-prism-border">
@@ -296,6 +466,37 @@ function SettingRow({ label, value }: { label: string; value: string }) {
     <div className="px-4 py-3 flex items-center justify-between">
       <span className="text-sm text-prism-text-secondary">{label}</span>
       <span className="text-sm text-prism-text-primary font-mono">{value}</span>
+    </div>
+  );
+}
+
+function ToggleRow({ label, description, enabled, onToggle }: {
+  label: string;
+  description: string;
+  enabled: boolean;
+  onToggle: (value: boolean) => void;
+}) {
+  return (
+    <div className="px-4 py-3 flex items-center justify-between gap-3">
+      <div className="flex-1 min-w-0">
+        <span className="text-sm text-prism-text-primary">{label}</span>
+        <p className="text-xs text-prism-text-dim mt-0.5">{description}</p>
+      </div>
+      <button
+        onClick={() => onToggle(!enabled)}
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${
+          enabled ? "bg-prism-accent-primary" : "bg-prism-bg-elevated"
+        }`}
+        role="switch"
+        aria-checked={enabled}
+        aria-label={label}
+      >
+        <span
+          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+            enabled ? "translate-x-6" : "translate-x-1"
+          }`}
+        />
+      </button>
     </div>
   );
 }

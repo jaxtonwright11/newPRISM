@@ -104,18 +104,71 @@ export async function GET(request: Request) {
     const followed = (followedRes.data ?? []) as Record<string, unknown>[];
     const discover = (discoverRes.data ?? []) as Record<string, unknown>[];
 
-    // Interleave: 2 followed, 1 discover, repeat — ensures variety
+    // Score and rank perspectives for engagement
+    const scorePerspective = (p: Record<string, unknown>, isFollowed: boolean) => {
+      const reactions = (p.reaction_count as number) || 0;
+      const bookmarks = (p.bookmark_count as number) || 0;
+      const createdAt = p.created_at ? new Date(p.created_at as string).getTime() : 0;
+      const hoursAgo = (Date.now() - createdAt) / (1000 * 60 * 60);
+
+      // Engagement score: reactions weighted higher than bookmarks
+      const engagement = reactions * 2 + bookmarks * 3;
+
+      // Recency decay: lose ~50% score per 24 hours
+      const recencyMultiplier = Math.max(0.1, 1 / (1 + hoursAgo / 24));
+
+      // Followed community boost
+      const followBoost = isFollowed ? 1.5 : 1;
+
+      return engagement * recencyMultiplier * followBoost + recencyMultiplier * 10;
+    };
+
+    // Score all perspectives
+    type Scored = Record<string, unknown> & { _score: number };
+    const scoredFollowed: Scored[] = followed.map((p) => ({ ...p, _score: scorePerspective(p, true) }));
+    const scoredDiscover: Scored[] = discover.map((p) => ({ ...p, _score: scorePerspective(p, false) }));
+
+    // Interleave with diversity: 2 followed, 1 discover, each sorted by score
+    scoredFollowed.sort((a, b) => b._score - a._score);
+    scoredDiscover.sort((a, b) => b._score - a._score);
+
     const blended: Record<string, unknown>[] = [];
+    const seenCommunities = new Set<string>();
     let fi = 0, di = 0;
-    while (fi < followed.length || di < discover.length) {
-      if (fi < followed.length) blended.push(followed[fi++]);
-      if (fi < followed.length) blended.push(followed[fi++]);
-      if (di < discover.length) blended.push(discover[di++]);
+
+    while (fi < scoredFollowed.length || di < scoredDiscover.length) {
+      // Add up to 2 from followed
+      for (let i = 0; i < 2 && fi < scoredFollowed.length; fi++) {
+        const p = scoredFollowed[fi];
+        const communityId = (p.community as Record<string, unknown>)?.id as string;
+        // Soft diversity: deprioritize but don't skip same community in a row
+        if (!seenCommunities.has(communityId) || blended.length < 6) {
+          blended.push(p);
+          seenCommunities.add(communityId);
+          i++;
+        } else {
+          blended.push(p);
+          i++;
+        }
+      }
+      // Add 1 from discover — prefer unseen communities
+      for (let attempts = 0; di < scoredDiscover.length && attempts < 3; di++, attempts++) {
+        const p = scoredDiscover[di];
+        const communityId = (p.community as Record<string, unknown>)?.id as string;
+        blended.push(p);
+        seenCommunities.add(communityId);
+        di++;
+        break;
+      }
     }
 
+    // Strip internal score
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const result = blended.map(({ _score, ...rest }) => rest);
+
     return NextResponse.json({
-      data: blended,
-      meta: { total: blended.length, feed_type: "for-you" },
+      data: result,
+      meta: { total: result.length, feed_type: "for-you" },
     });
   } catch {
     // Supabase unavailable

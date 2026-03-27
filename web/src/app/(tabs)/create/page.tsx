@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { StreakToast } from "@/components/streak-toast";
 import Link from "next/link";
 import type { Topic } from "@shared/types";
 
@@ -22,8 +23,10 @@ export default function CreatePage() {
   const [topics, setTopics] = useState<Topic[]>([]);
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
   const [postType, setPostType] = useState<"permanent" | "story">("permanent");
+  const [streakCount, setStreakCount] = useState<number | null>(null);
   const { session } = useAuth();
   const router = useRouter();
+  const dismissStreak = useCallback(() => setStreakCount(null), []);
 
   // Fetch active topics for prompts
   useEffect(() => {
@@ -96,6 +99,10 @@ export default function CreatePage() {
             count: json.streak,
             lastPostDate: new Date().toISOString().split("T")[0],
           }));
+          setStreakCount(json.streak);
+          // Navigate after showing toast
+          setTimeout(() => router.push("/feed"), 2000);
+          return;
         }
         router.push("/feed");
       }
@@ -255,6 +262,9 @@ export default function CreatePage() {
           </span>
         </div>
       </div>
+      {streakCount !== null && (
+        <StreakToast streak={streakCount} onDismiss={dismissStreak} />
+      )}
     </div>
   );
 }
