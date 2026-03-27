@@ -217,15 +217,15 @@ export default function FeedPage() {
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-3 border-b border-[var(--bg-elevated)] max-w-2xl mx-auto w-full md:px-6">
         <PrismWordmark size="sm" />
-        <div className="flex items-center gap-2">
-        <div className="flex gap-1 bg-[var(--bg-elevated)] rounded-full p-1" role="tablist" aria-label="Feed filters">
+        <div className="flex items-center gap-1">
+        <div className="flex gap-0.5 bg-[var(--bg-elevated)] rounded-full p-0.5" role="tablist" aria-label="Feed filters">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               role="tab"
               aria-selected={activeTab === tab.id}
-              className={`px-3 py-1 rounded-full text-sm font-medium font-body transition-all ${
+              className={`px-2.5 py-1 rounded-full text-xs font-medium font-body transition-all ${
                 activeTab === tab.id
                   ? "bg-[var(--accent-primary)] text-white"
                   : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"

@@ -123,7 +123,7 @@ export default function Home() {
       </div>
 
       {/* Gradient overlay at bottom for readability */}
-      <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-[var(--bg-base)] via-[var(--bg-base)]/80 to-transparent z-10 pointer-events-none" />
+      <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-[var(--bg-base)] via-[var(--bg-base)]/85 to-transparent z-10 pointer-events-none" />
 
       {/* Content overlay */}
       <div className="relative z-20 flex flex-col min-h-screen">
@@ -150,7 +150,7 @@ export default function Home() {
         <div className="flex-1" />
 
         {/* AHA sequence content */}
-        <div className="px-4 pb-6 max-w-lg mx-auto w-full">
+        <div className="px-4 pb-12 max-w-lg mx-auto w-full">
           <AnimatePresence mode="wait">
             {step === "map" && (
               <motion.div
