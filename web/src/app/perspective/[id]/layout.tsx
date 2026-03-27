@@ -19,6 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         const community = data.community?.name ?? "a community";
         const quote = data.quote?.length > 120 ? data.quote.slice(0, 117) + "..." : data.quote;
 
+        const ogImage = `${baseUrl}/api/og/perspective/${id}`;
         return {
           title: `${community} on PRISM`,
           description: `"${quote}"`,
@@ -27,11 +28,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             description: `"${quote}"`,
             type: "article",
             siteName: "PRISM",
+            images: [{ url: ogImage, width: 1200, height: 630 }],
           },
           twitter: {
-            card: "summary",
+            card: "summary_large_image",
             title: `${community} — PRISM Perspective`,
             description: `"${quote}"`,
+            images: [ogImage],
           },
         };
       }
