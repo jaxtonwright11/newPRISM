@@ -44,17 +44,29 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
     {
       id: "background",
       type: "background",
-      paint: { "background-color": "#181B20" },
+      paint: { "background-color": "#1E2128" },
     },
-    // Water on top (oceans, lakes, rivers)
+    // Water on top — clearly darker than land
     {
       id: "water",
       type: "fill",
       source: "mapbox-streets",
       "source-layer": "water",
-      paint: { "fill-color": "#0F1114" },
+      paint: { "fill-color": "#080A0D" },
     },
-    // Country borders — very subtle
+    // Coastline — visible edge where land meets water
+    {
+      id: "coastline",
+      type: "line",
+      source: "mapbox-streets",
+      "source-layer": "water",
+      paint: {
+        "line-color": "#333842",
+        "line-width": 0.8,
+        "line-opacity": 0.5,
+      },
+    },
+    // Country borders — visible
     {
       id: "admin-0-boundary",
       type: "line",
@@ -62,9 +74,9 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
       "source-layer": "admin",
       filter: ["==", ["get", "admin_level"], 0],
       paint: {
-        "line-color": "#262A31",
-        "line-width": 0.8,
-        "line-opacity": 0.5,
+        "line-color": "#333842",
+        "line-width": 1,
+        "line-opacity": 0.7,
       },
     },
     // State/province borders — even subtler
@@ -77,7 +89,7 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
       paint: {
         "line-color": "#262A31",
         "line-width": 0.4,
-        "line-opacity": 0.3,
+        "line-opacity": 0.35,
       },
     },
   ],
