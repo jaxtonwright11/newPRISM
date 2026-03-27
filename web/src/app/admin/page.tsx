@@ -394,7 +394,7 @@ export default function AdminPage() {
 
   const handleCreatePerspective = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newPerspQuote.trim() || !newPerspCommunityId) return;
+    if (!newPerspQuote.trim() || newPerspQuote.trim().length < 20 || !newPerspCommunityId || !newPerspTopicId) return;
     setActionLoading("new-perspective");
     try {
       const res = await fetch("/api/admin/perspectives", {
@@ -404,7 +404,7 @@ export default function AdminPage() {
           quote: newPerspQuote.trim(),
           context: newPerspContext.trim() || undefined,
           community_id: newPerspCommunityId,
-          topic_id: newPerspTopicId || undefined,
+          topic_id: newPerspTopicId,
         }),
       });
       const data = await res.json();
@@ -897,10 +897,10 @@ export default function AdminPage() {
                     Create Perspective
                   </h2>
                   <textarea value={newPerspQuote} onChange={(e) => setNewPerspQuote(e.target.value)}
-                    placeholder="Perspective quote (the actual community voice)" rows={3} maxLength={2000}
+                    placeholder="Perspective quote (20–500 chars, the actual community voice)" rows={3} maxLength={500} minLength={20}
                     className="w-full px-3 py-2 rounded-lg bg-prism-bg-base border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:border-prism-accent-primary/50 resize-none" />
                   <input type="text" value={newPerspContext} onChange={(e) => setNewPerspContext(e.target.value)}
-                    placeholder="Context (optional, e.g. spoken at a town hall)" maxLength={500}
+                    placeholder="Context (optional, e.g. spoken at a town hall)" maxLength={300}
                     className="w-full px-3 py-2 rounded-lg bg-prism-bg-base border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:border-prism-accent-primary/50" />
                   <div className="grid grid-cols-2 gap-3">
                     <select value={newPerspCommunityId} onChange={(e) => setNewPerspCommunityId(e.target.value)}
@@ -911,15 +911,16 @@ export default function AdminPage() {
                       ))}
                     </select>
                     <select value={newPerspTopicId} onChange={(e) => setNewPerspTopicId(e.target.value)}
+                      required
                       className="px-3 py-2 rounded-lg bg-prism-bg-base border border-prism-border text-sm text-prism-text-primary focus:outline-none">
-                      <option value="">No topic</option>
+                      <option value="">Select topic (required)</option>
                       {topics.map((t) => (
                         <option key={t.id} value={t.id}>{t.title}</option>
                       ))}
                     </select>
                   </div>
                   <button type="submit"
-                    disabled={!newPerspQuote.trim() || !newPerspCommunityId || actionLoading === "new-perspective"}
+                    disabled={!newPerspQuote.trim() || newPerspQuote.trim().length < 20 || !newPerspCommunityId || !newPerspTopicId || actionLoading === "new-perspective"}
                     className="px-4 py-2 rounded-lg bg-prism-accent-primary text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
                     {actionLoading === "new-perspective" ? "Creating..." : "Create Perspective"}
                   </button>
