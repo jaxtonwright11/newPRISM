@@ -1,7 +1,8 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { createClient, SupabaseClient, User, Session, AuthError } from '@supabase/supabase-js';
+import { subscribeToPush } from '@/lib/push';
 
 type AuthResult = { error: AuthError | null };
 
@@ -46,10 +47,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+
+      // Auto-subscribe to push on sign in (non-blocking)
+      if (event === 'SIGNED_IN' && session?.access_token) {
+        subscribeToPush(session.access_token).catch(() => {});
+      }
     });
 
     return () => subscription.unsubscribe();

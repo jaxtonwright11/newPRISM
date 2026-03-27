@@ -1,4 +1,5 @@
 import { TabBar } from "@/components/tab-bar";
+import { PushPrompt } from "@/components/push-prompt";
 
 export default function TabsLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -7,6 +8,7 @@ export default function TabsLayout({ children }: { children: React.ReactNode }) 
       <main id="main-content" className="flex-1 overflow-y-auto pb-16 md:pb-0">
         {children}
       </main>
+      <PushPrompt />
     </div>
   );
 }
