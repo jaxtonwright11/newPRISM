@@ -13,6 +13,7 @@ import { useToast } from "@/components/toast";
 import { useRealtime } from "@/lib/use-realtime";
 import { prismEvents } from "@/lib/posthog";
 import type { Topic, Community, CommunityType } from "@shared/types";
+import { ActivityBar } from "@/components/activity-bar";
 
 const PerspectiveDetail = dynamic(
   () => import("@/components/perspective-detail").then((mod) => mod.PerspectiveDetail),
@@ -159,6 +160,7 @@ export default function DiscoverPage() {
 
   return (
     <div className="flex flex-col h-full">
+      <ActivityBar />
       {/* Search header */}
       <header className="px-4 pt-4 pb-2">
         <h1 className="font-display font-bold text-xl text-[var(--text-primary)] mb-3">Discover</h1>

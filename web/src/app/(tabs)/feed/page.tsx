@@ -71,6 +71,15 @@ export default function FeedPage() {
   const [activeNowTopic, setActiveNowTopic] = useState<Topic | null>(null);
   const [welcomeBack, setWelcomeBack] = useState<string | null>(null);
   const [pulseOpen, setPulseOpen] = useState(false);
+  const [activePrompt, setActivePrompt] = useState<{ prompt_text: string; topic_name?: string } | null>(null);
+
+  // Fetch active perspective prompt
+  useEffect(() => {
+    fetch("/api/prompts/active")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => { if (data?.prompt) setActivePrompt(data.prompt); })
+      .catch(() => {});
+  }, []);
 
   // Welcome-back message for returning users
   useEffect(() => {
@@ -331,6 +340,25 @@ export default function FeedPage() {
             ))}
           </div>
         </div>
+      )}
+
+      {/* Active Prompt Banner */}
+      {activePrompt && (
+        <Link
+          href="/create"
+          className="mx-3 mt-2 flex items-center gap-3 px-4 py-3 rounded-xl bg-[var(--accent-primary)]/5 border border-[var(--accent-primary)]/15 hover:bg-[var(--accent-primary)]/10 transition-colors"
+        >
+          <div className="w-8 h-8 rounded-lg bg-[var(--accent-primary)]/10 flex items-center justify-center shrink-0">
+            <svg className="w-4 h-4 text-[var(--accent-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-[var(--accent-primary)] uppercase tracking-wider">This week&apos;s prompt</p>
+            <p className="text-sm text-[var(--text-primary)] truncate">{activePrompt.prompt_text}</p>
+          </div>
+          <span className="text-xs text-[var(--accent-primary)] shrink-0">Respond →</span>
+        </Link>
       )}
 
       {/* Feed */}

@@ -14,9 +14,18 @@ export default function OnboardingPage() {
   const [detecting, setDetecting] = useState(false);
   const [perspective, setPerspective] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [activePrompt, setActivePrompt] = useState<{ prompt_text: string; topic_name?: string } | null>(null);
   const { session } = useAuth();
   const router = useRouter();
   const startTime = useRef(Date.now());
+
+  // Fetch active perspective prompt
+  useEffect(() => {
+    fetch("/api/prompts/active")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => { if (data?.prompt) setActivePrompt(data.prompt); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if ("geolocation" in navigator) {
@@ -145,10 +154,12 @@ export default function OnboardingPage() {
         {step === 2 && (
           <div className="flex flex-col items-center text-center flex-1">
             <h1 className="font-display font-bold text-2xl text-[var(--text-primary)] mb-2">
-              What&apos;s one thing about your city that outsiders don&apos;t understand?
+              {activePrompt ? activePrompt.prompt_text : "What\u2019s one thing about your city that outsiders don\u2019t understand?"}
             </h1>
             <p className="text-base text-[var(--text-secondary)] font-body mb-4 max-w-sm">
-              This becomes your first perspective on PRISM.
+              {activePrompt?.topic_name
+                ? `This week\u2019s topic: ${activePrompt.topic_name}. Share your community\u2019s perspective.`
+                : "This becomes your first perspective on PRISM."}
             </p>
             <p className="text-xs text-[var(--text-dim)] font-body mb-6 max-w-sm">
               A perspective is a firsthand account of how your community experiences an event or issue.
@@ -202,16 +213,16 @@ export default function OnboardingPage() {
               Your perspective is live. Now see how other communities experience the same world differently.
             </p>
             <button
-              onClick={() => router.push("/")}
+              onClick={() => router.push("/feed")}
               className="w-full max-w-sm py-3 rounded-xl bg-[var(--accent-primary)] text-white font-body font-medium text-base mb-3"
             >
-              Open the Map
+              Start exploring
             </button>
             <button
-              onClick={() => router.push("/feed")}
+              onClick={() => router.push("/map")}
               className="text-sm text-[var(--text-secondary)] font-body hover:text-[var(--text-primary)] transition-colors"
             >
-              Go to feed instead
+              Open the map instead
             </button>
 
             <div className="mt-8 pt-6 border-t border-[var(--bg-elevated)] w-full max-w-sm">
