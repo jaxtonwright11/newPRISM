@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { COMMUNITY_COLORS } from "@/lib/constants";
+import { prismEvents } from "@/lib/posthog";
 import type { CommunityType } from "@shared/types";
 
 interface ConnectionModalProps {
@@ -67,6 +68,7 @@ export function ConnectionModal({
         }
 
         setSent(true);
+        prismEvents.connectionRequestSent(communityName, communityRegion);
         onSend?.(message);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Something went wrong");

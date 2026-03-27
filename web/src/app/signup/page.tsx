@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { PrismWordmark } from "@/components/prism-wordmark";
+import { prismEvents } from "@/lib/posthog";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
@@ -31,6 +32,7 @@ export default function SignupPage() {
       // Check if a session was created (email confirmation disabled → auto-login)
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
+        prismEvents.authSignupCompleted("direct");
         router.push('/onboarding');
       } else {
         // Email confirmation required — show check-email step

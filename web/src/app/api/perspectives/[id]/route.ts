@@ -29,6 +29,8 @@ export async function GET(
         .single();
 
       if (!error && data) {
+        // Fire-and-forget: increment view count
+        supabase.rpc("increment_perspective_views", { perspective_id: id }).then(() => {});
         return NextResponse.json({ data });
       }
     }

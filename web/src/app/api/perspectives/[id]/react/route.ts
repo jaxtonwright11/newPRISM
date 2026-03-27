@@ -13,8 +13,45 @@ const perspectiveIdParamsSchema = z.object({
 });
 
 const reactionBodySchema = z.object({
-  reaction_type: z.enum(["i_see_this", "i_didnt_know_this", "i_agree"]),
+  reaction_type: z.enum(["this_resonates", "seeing_differently", "want_to_understand"]),
 });
+
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const rateLimitResponse = applyRateLimit(request, "perspective-react-get");
+  if (rateLimitResponse) return rateLimitResponse;
+
+  const parsedParams = parseParams(await params, perspectiveIdParamsSchema);
+  if (!parsedParams.success) return parsedParams.response;
+
+  const token = request.headers.get("authorization")?.replace("Bearer ", "");
+  if (!token) {
+    return NextResponse.json({ data: null });
+  }
+
+  const supabase = getSupabaseWithAuth(token);
+  if (!supabase) {
+    return NextResponse.json({ data: null });
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ data: null });
+  }
+
+  const { data } = await supabase
+    .from("reactions")
+    .select("reaction_type")
+    .eq("user_id", user.id)
+    .eq("perspective_id", parsedParams.data.id)
+    .maybeSingle();
+
+  return NextResponse.json({ data: data ?? null });
+}
 
 export async function POST(
   request: Request,

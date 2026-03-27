@@ -29,6 +29,21 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Invalid token" }, { status: 401 });
   }
 
+  // Lightweight unread count endpoint for badge display
+  const url = new URL(request.url);
+  if (url.searchParams.get("count_only") === "true") {
+    const { count, error: countErr } = await supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("read", false);
+
+    if (countErr) {
+      return NextResponse.json({ unread_count: 0 });
+    }
+    return NextResponse.json({ unread_count: count ?? 0 });
+  }
+
   const { data, error } = await supabase
     .from("notifications")
     .select("id, type, title, body, read, metadata, created_at")

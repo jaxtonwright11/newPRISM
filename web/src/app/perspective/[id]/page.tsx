@@ -17,6 +17,7 @@ interface PerspectiveData {
   category_tag: string | null;
   reaction_count: number;
   bookmark_count: number;
+  view_count: number;
   created_at: string;
   community: {
     id: string;
@@ -41,6 +42,7 @@ export default function PerspectivePage() {
   const [notFound, setNotFound] = useState(false);
   const [activeReaction, setActiveReaction] = useState<ReactionType | null>(null);
   const [reactionDelta, setReactionDelta] = useState(0);
+  const [bookmarked, setBookmarked] = useState(false);
   const { session } = useAuth();
 
   const handleReaction = useCallback(async (type: ReactionType) => {
@@ -63,6 +65,28 @@ export default function PerspectivePage() {
       setReactionDelta(wasActive ? 1 : 0);
     }
   }, [activeReaction, id, session?.access_token]);
+
+  // Load existing reaction and bookmark state for authenticated users
+  useEffect(() => {
+    if (!session?.access_token) return;
+    const headers = { Authorization: `Bearer ${session.access_token}` };
+
+    fetch(`/api/perspectives/${id}/react`, { headers })
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.data?.reaction_type) {
+          setActiveReaction(json.data.reaction_type);
+        }
+      })
+      .catch(() => {});
+
+    fetch(`/api/perspectives/${id}/bookmark`, { headers })
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.data === true) setBookmarked(true);
+      })
+      .catch(() => {});
+  }, [id, session?.access_token]);
 
   useEffect(() => {
     async function fetchPerspective() {
@@ -210,6 +234,9 @@ export default function PerspectivePage() {
               </Link>
             )}
             <span className="text-xs text-prism-text-dim">{formattedDate}</span>
+            {perspective.view_count > 0 && (
+              <span className="text-xs text-prism-text-dim font-mono">{perspective.view_count} views</span>
+            )}
           </div>
 
           {/* Divider */}
@@ -239,6 +266,31 @@ export default function PerspectivePage() {
               ))}
             </div>
             <div className="flex items-center gap-2">
+              <button
+                onClick={async () => {
+                  if (!session?.access_token) return;
+                  const wasBookmarked = bookmarked;
+                  setBookmarked(!wasBookmarked);
+                  try {
+                    await fetch(`/api/perspectives/${id}/bookmark`, {
+                      method: wasBookmarked ? "DELETE" : "POST",
+                      headers: { Authorization: `Bearer ${session.access_token}` },
+                    });
+                  } catch {
+                    setBookmarked(wasBookmarked);
+                  }
+                }}
+                className={`p-2 rounded-full transition-all ${
+                  bookmarked
+                    ? "text-prism-accent-primary bg-prism-accent-primary/10"
+                    : "text-prism-text-dim hover:text-prism-text-secondary hover:bg-prism-bg-elevated"
+                }`}
+                title={bookmarked ? "Remove bookmark" : "Bookmark"}
+              >
+                <svg className="w-4.5 h-4.5" viewBox="0 0 24 24" fill={bookmarked ? "currentColor" : "none"} stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+                </svg>
+              </button>
               <ShareButton perspectiveId={perspective.id} quote={perspective.quote} />
               <ReportButton contentType="perspective" contentId={perspective.id} />
             </div>

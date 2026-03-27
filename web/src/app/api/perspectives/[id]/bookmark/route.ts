@@ -7,6 +7,43 @@ const perspectiveIdParamsSchema = z.object({
   id: z.string().uuid(),
 });
 
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const rateLimitResponse = applyRateLimit(request, "perspective-bookmark-get");
+  if (rateLimitResponse) return rateLimitResponse;
+
+  const parsedParams = parseParams(await params, perspectiveIdParamsSchema);
+  if (!parsedParams.success) return parsedParams.response;
+
+  const token = request.headers.get("authorization")?.replace("Bearer ", "");
+  if (!token) {
+    return NextResponse.json({ data: null });
+  }
+
+  const supabase = getSupabaseWithAuth(token);
+  if (!supabase) {
+    return NextResponse.json({ data: null });
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ data: null });
+  }
+
+  const { data } = await supabase
+    .from("bookmarks")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("perspective_id", parsedParams.data.id)
+    .maybeSingle();
+
+  return NextResponse.json({ data: data ? true : false });
+}
+
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

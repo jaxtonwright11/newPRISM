@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { PrismWordmark } from "@/components/prism-wordmark";
+import { prismEvents } from "@/lib/posthog";
 
 type Step = 1 | 2 | 3;
 
@@ -15,6 +16,7 @@ export default function OnboardingPage() {
   const [submitting, setSubmitting] = useState(false);
   const { session } = useAuth();
   const router = useRouter();
+  const startTime = useRef(Date.now());
 
   useEffect(() => {
     if ("geolocation" in navigator) {
@@ -58,6 +60,7 @@ export default function OnboardingPage() {
       // ignore
     } finally {
       setSubmitting(false);
+      prismEvents.onboardingAhaMoment(location, Date.now() - startTime.current);
       setStep(3);
     }
   }
@@ -107,7 +110,23 @@ export default function OnboardingPage() {
             </div>
 
             <button
-              onClick={() => setStep(2)}
+              onClick={async () => {
+                if (session?.access_token && location.trim()) {
+                  try {
+                    await fetch("/api/user/profile", {
+                      method: "PATCH",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${session.access_token}`,
+                      },
+                      body: JSON.stringify({ location_text: location.trim() }),
+                    });
+                  } catch {
+                    // Non-critical
+                  }
+                }
+                setStep(2);
+              }}
               disabled={!location.trim()}
               className="w-full max-w-sm py-3 rounded-xl bg-[var(--accent-primary)] text-white font-body font-medium text-base disabled:opacity-40 transition-opacity"
             >

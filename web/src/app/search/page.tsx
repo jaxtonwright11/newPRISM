@@ -8,7 +8,7 @@ import { PerspectiveDetail } from "@/components/perspective-detail";
 import { COMMUNITY_COLORS } from "@/lib/constants";
 import type { CommunityType, Community, Topic } from "@shared/types";
 
-type SearchTab = "all" | "perspectives" | "topics" | "communities";
+type SearchTab = "all" | "perspectives" | "topics" | "communities" | "people";
 
 interface SearchPerspective {
   id: string;
@@ -36,6 +36,7 @@ export default function SearchPage() {
   const [perspectives, setPerspectives] = useState<SearchPerspective[]>([]);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [communities, setCommunities] = useState<Community[]>([]);
+  const [users, setUsers] = useState<{ id: string; username: string; display_name: string | null; avatar_url: string | null; location_text: string | null }[]>([]);
   const [searching, setSearching] = useState(false);
 
   const doSearch = useCallback(async (q: string) => {
@@ -43,6 +44,7 @@ export default function SearchPage() {
       setPerspectives([]);
       setTopics([]);
       setCommunities([]);
+      setUsers([]);
       return;
     }
     setSearching(true);
@@ -56,6 +58,7 @@ export default function SearchPage() {
       setPerspectives(data.perspectives ?? []);
       setTopics(data.topics ?? []);
       setCommunities(data.communities ?? []);
+      setUsers(data.users ?? []);
     } catch {
       // API unavailable
     } finally {
@@ -70,7 +73,7 @@ export default function SearchPage() {
     return () => clearTimeout(timer);
   }, [query, doSearch]);
 
-  const totalResults = perspectives.length + topics.length + communities.length;
+  const totalResults = perspectives.length + topics.length + communities.length + users.length;
 
   const selectedPerspective = selectedPerspectiveId
     ? perspectives.find((p) => p.id === selectedPerspectiveId)
@@ -81,11 +84,13 @@ export default function SearchPage() {
     { id: "perspectives", label: "Perspectives", count: perspectives.length },
     { id: "topics", label: "Topics", count: topics.length },
     { id: "communities", label: "Communities", count: communities.length },
+    { id: "people", label: "People", count: users.length },
   ];
 
   const showPerspectives = activeTab === "all" || activeTab === "perspectives";
   const showTopics = activeTab === "all" || activeTab === "topics";
   const showCommunities = activeTab === "all" || activeTab === "communities";
+  const showPeople = activeTab === "all" || activeTab === "people";
 
   return (
     <div className="min-h-screen bg-prism-bg-base">
@@ -215,6 +220,32 @@ export default function SearchPage() {
               </div>
             )}
 
+            {/* People results */}
+            {!searching && showPeople && users.length > 0 && (
+              <div className="mb-6">
+                {activeTab === "all" && (
+                  <h2 className="text-xs font-semibold text-prism-text-dim uppercase tracking-wider mb-2">People</h2>
+                )}
+                <div className="space-y-2">
+                  {users.map((u) => (
+                    <Link
+                      key={u.id}
+                      href={`/profile/${u.id}`}
+                      className="flex items-center gap-3 bg-prism-bg-surface rounded-xl border border-prism-border p-3 hover:bg-prism-bg-elevated transition-colors"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-prism-bg-elevated flex items-center justify-center text-xs font-bold text-prism-accent-primary shrink-0">
+                        {(u.display_name || u.username)?.[0]?.toUpperCase() ?? "?"}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm font-medium text-prism-text-primary truncate block">{u.display_name || u.username}</span>
+                        <span className="text-xs text-prism-text-dim">@{u.username}{u.location_text ? ` · ${u.location_text}` : ""}</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Perspectives results */}
             {!searching && showPerspectives && perspectives.length > 0 && (
               <div className="mb-6">
@@ -232,6 +263,7 @@ export default function SearchPage() {
                       category_tag={p.category_tag}
                       reaction_count={p.reaction_count}
                       bookmark_count={p.bookmark_count}
+                      created_at={p.created_at}
                       onSelect={setSelectedPerspectiveId}
                       animationDelay={i * 50}
                     />

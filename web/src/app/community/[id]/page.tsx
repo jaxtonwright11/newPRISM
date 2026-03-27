@@ -8,6 +8,7 @@ import { PerspectiveCard } from "@/components/perspective-card";
 import { PerspectiveDetail } from "@/components/perspective-detail";
 import { COMMUNITY_COLORS } from "@/lib/constants";
 import { EmptyState, EMPTY_STATES } from "@/components/empty-state";
+import { useToast } from "@/components/toast";
 import type { Community, CommunityType, Topic } from "@shared/types";
 
 interface CommunityPerspective {
@@ -31,6 +32,7 @@ export default function CommunityPage() {
   const params = useParams();
   const id = params.id as string;
   const { session } = useAuth();
+  const { toast } = useToast();
 
   const [community, setCommunity] = useState<Community | null>(null);
   const [communityPerspectives, setCommunityPerspectives] = useState<CommunityPerspective[]>([]);
@@ -85,6 +87,7 @@ export default function CommunityPage() {
     if (!session?.access_token) return;
     const wasFollowing = following;
     setFollowing(!wasFollowing);
+    toast(wasFollowing ? `Unfollowed ${community?.name ?? "community"}` : `Following ${community?.name ?? "community"}`);
     try {
       const res = await fetch("/api/communities/follow", {
         method: wasFollowing ? "DELETE" : "POST",
@@ -254,6 +257,7 @@ export default function CommunityPage() {
                   category_tag={p.category_tag}
                   reaction_count={p.reaction_count}
                   bookmark_count={p.bookmark_count}
+                  created_at={p.created_at}
                   onSelect={setSelectedPerspectiveId}
                   animationDelay={i * 50}
                 />

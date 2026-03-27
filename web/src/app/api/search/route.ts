@@ -24,12 +24,12 @@ export async function GET(request: Request) {
       const searchPattern = `%${q}%`;
 
       // Search in parallel
-      const [perspectivesRes, topicsRes, communitiesRes] = await Promise.all([
+      const [perspectivesRes, topicsRes, communitiesRes, usersRes] = await Promise.all([
         supabase
           .from("perspectives")
           .select("id, quote, context, category_tag, reaction_count, bookmark_count, created_at, community:communities(name, region, community_type, color_hex, verified)")
           .eq("verified", true)
-          .ilike("quote", searchPattern)
+          .or(`quote.ilike.${searchPattern},context.ilike.${searchPattern}`)
           .order("created_at", { ascending: false })
           .limit(10),
         supabase
@@ -46,12 +46,20 @@ export async function GET(request: Request) {
           .or(`name.ilike.${searchPattern},region.ilike.${searchPattern},description.ilike.${searchPattern}`)
           .order("name")
           .limit(10),
+        supabase
+          .from("users")
+          .select("id, username, display_name, avatar_url, location_text")
+          .eq("ghost_mode", false)
+          .or(`username.ilike.${searchPattern},display_name.ilike.${searchPattern}`)
+          .order("username")
+          .limit(10),
       ]);
 
       return NextResponse.json({
         perspectives: perspectivesRes.data ?? [],
         topics: topicsRes.data ?? [],
         communities: communitiesRes.data ?? [],
+        users: usersRes.data ?? [],
       });
     }
   } catch {
@@ -62,5 +70,6 @@ export async function GET(request: Request) {
     perspectives: [],
     topics: [],
     communities: [],
+    users: [],
   });
 }

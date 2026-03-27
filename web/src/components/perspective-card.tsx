@@ -8,6 +8,7 @@ import type { CommunityType, ReactionType } from "@shared/types";
 import { REACTION_LABELS } from "@/lib/constants";
 import { ShareButton } from "@/components/share-button";
 import { ReportButton } from "@/components/report-button";
+import { timeAgo } from "@/lib/time";
 
 interface PerspectiveCardProps {
   id: string;
@@ -23,6 +24,7 @@ interface PerspectiveCardProps {
   category_tag: string | null;
   reaction_count: number;
   bookmark_count?: number;
+  created_at?: string;
   onSelect?: (id: string) => void;
   animationDelay?: number;
 }
@@ -36,6 +38,7 @@ export function PerspectiveCard({
   reaction_count,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   bookmark_count = 0,
+  created_at,
   onSelect,
   animationDelay = 0,
 }: PerspectiveCardProps) {
@@ -153,6 +156,9 @@ export function PerspectiveCard({
               {community.name}
             </span>
             <span className="text-xs text-[var(--text-dim)] ml-2 font-body">{community.region}</span>
+            {created_at && (
+              <span className="text-[10px] text-[var(--text-dim)] ml-auto font-mono shrink-0">{timeAgo(created_at)}</span>
+            )}
           </div>
         </div>
 

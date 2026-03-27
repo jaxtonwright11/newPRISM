@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useGhostMode } from "@/lib/use-ghost-mode";
 import type { RadiusMiles } from "@shared/types";
@@ -16,8 +17,9 @@ interface SettingsUser {
 }
 
 export default function SettingsPage() {
-  const { session } = useAuth();
+  const { session, signOut } = useAuth();
   const { ghostMode, toggleGhostMode } = useGhostMode();
+  const router = useRouter();
   const [user, setUser] = useState<SettingsUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [displayName, setDisplayName] = useState("");
@@ -237,13 +239,48 @@ export default function SettingsPage() {
           {saved ? "\u2713 Saved" : saving ? "Saving..." : "Save Changes"}
         </button>
 
+        {/* Change Password */}
+        <section className="bg-prism-bg-surface rounded-2xl border border-prism-border overflow-hidden">
+          <div className="px-4 py-3 border-b border-prism-border">
+            <h2 className="text-sm font-semibold text-prism-text-primary">Security</h2>
+          </div>
+          <div className="p-4">
+            <Link
+              href="/forgot-password"
+              className="text-sm text-prism-accent-primary hover:underline"
+            >
+              Change password →
+            </Link>
+            <p className="text-xs text-prism-text-dim mt-1">We&apos;ll send a reset link to your email.</p>
+          </div>
+        </section>
+
+        {/* Sign Out */}
+        <button
+          onClick={async () => {
+            await signOut();
+            router.push("/landing");
+          }}
+          className="w-full py-3 rounded-xl bg-prism-bg-surface border border-prism-border text-sm text-prism-text-secondary hover:text-prism-text-primary hover:border-prism-text-dim/30 transition-all"
+        >
+          Sign out
+        </button>
+
         {/* Danger zone */}
         <section className="bg-prism-bg-surface rounded-2xl border border-prism-accent-destructive/20 overflow-hidden">
           <div className="px-4 py-3 border-b border-prism-accent-destructive/20">
             <h2 className="text-sm font-semibold text-prism-accent-destructive">Danger Zone</h2>
           </div>
           <div className="p-4">
-            <button className="text-sm text-prism-accent-destructive hover:underline">
+            <button
+              onClick={() => {
+                if (window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+                  // TODO: wire to account deletion API
+                  alert("Please contact support to delete your account.");
+                }
+              }}
+              className="text-sm text-prism-accent-destructive hover:underline"
+            >
               Delete Account
             </button>
             <p className="text-xs text-prism-text-dim mt-1">This action cannot be undone.</p>

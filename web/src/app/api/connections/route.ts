@@ -7,7 +7,7 @@ const connectionCreateBodySchema = z.object({
   recipient_id: slugSchema,
   topic_id: slugSchema.optional().nullable(),
   perspective_id: slugSchema.optional().nullable(),
-  intro_message: z.string().trim().max(500).optional().nullable(),
+  intro_message: z.string().trim().min(1).max(500),
 });
 
 export async function GET(request: Request) {
@@ -44,7 +44,7 @@ export async function GET(request: Request) {
   const { data, error } = await supabase
     .from("community_connections")
     .select(
-      "*, requester:users!community_connections_requester_id_fkey(id, username, display_name, avatar_url, home_community_id, verification_tier), recipient:users!community_connections_recipient_id_fkey(id, username, display_name, avatar_url, home_community_id, verification_tier)"
+      "*, requester:users!community_connections_requester_id_fkey(id, username, display_name, avatar_url, home_community_id, verification_level), recipient:users!community_connections_recipient_id_fkey(id, username, display_name, avatar_url, home_community_id, verification_level)"
     )
     .or(`requester_id.eq.${user.id},recipient_id.eq.${user.id}`)
     .order("created_at", { ascending: false })
@@ -128,6 +128,26 @@ export async function POST(request: Request) {
       { error: "Failed to create connection" },
       { status: 500 }
     );
+  }
+
+  // Notify the recipient about the connection request
+  try {
+    const { data: requesterData } = await supabase
+      .from("users")
+      .select("username, display_name")
+      .eq("id", user.id)
+      .single();
+
+    const requesterName = requesterData?.display_name || requesterData?.username || "Someone";
+    await supabase.from("notifications").insert({
+      user_id: recipient_id,
+      type: "connection_request",
+      title: "New connection request",
+      body: `${requesterName} wants to connect with you`,
+      metadata: { connection_id: data.id, requester_id: user.id },
+    });
+  } catch {
+    // Non-critical — don't fail the connection creation
   }
 
   return NextResponse.json({ data }, { status: 201 });

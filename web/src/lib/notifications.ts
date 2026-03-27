@@ -1,6 +1,6 @@
 import { getSupabaseServer } from "@/lib/supabase";
 
-type NotificationType = "reaction" | "connection_request" | "connection_accepted" | "new_perspective" | "community_milestone";
+type NotificationType = "reaction" | "connection_request" | "connection_accepted" | "new_perspective" | "community_milestone" | "comment" | "like";
 
 interface CreateNotificationParams {
   recipientId: string;

@@ -98,5 +98,33 @@ export async function POST(
     return NextResponse.json({ error: "Failed to post comment" }, { status: 500 });
   }
 
+  // Notify the post author about the comment
+  try {
+    const { data: post } = await supabase
+      .from("posts")
+      .select("user_id")
+      .eq("id", parsedId.data)
+      .single();
+
+    if (post && post.user_id !== user.id) {
+      const { data: commenter } = await supabase
+        .from("users")
+        .select("username, display_name")
+        .eq("id", user.id)
+        .single();
+
+      const name = commenter?.display_name || commenter?.username || "Someone";
+      await supabase.from("notifications").insert({
+        user_id: post.user_id,
+        type: "comment",
+        title: "New comment on your post",
+        body: `${name} commented on your post`,
+        metadata: { post_id: parsedId.data, comment_id: data.id, commenter_id: user.id },
+      });
+    }
+  } catch {
+    // Non-critical — don't fail the comment creation
+  }
+
   return NextResponse.json({ data }, { status: 201 });
 }

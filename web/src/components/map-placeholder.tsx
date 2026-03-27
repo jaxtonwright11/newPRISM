@@ -29,7 +29,7 @@ interface MapPlaceholderProps {
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? "";
 
-// PRISM dark map style
+// PRISM dark map style — custom dark with visible geography
 const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
   version: 8,
   name: "PRISM Dark",
@@ -39,22 +39,48 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
       url: "mapbox://mapbox.mapbox-streets-v8",
     },
   },
+  glyphs: "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
+  sprite: "mapbox://sprites/mapbox/dark-v11",
   layers: [
-    // Background = land color (fills everything first)
+    // Background = land color
     {
       id: "background",
       type: "background",
       paint: { "background-color": "#1E2128" },
     },
-    // Water on top — clearly darker than land
+    // Landuse — parks, forests, etc. Subtle but adds geographic character
+    {
+      id: "landuse-park",
+      type: "fill",
+      source: "mapbox-streets",
+      "source-layer": "landuse",
+      filter: ["in", ["get", "class"], ["literal", ["park", "cemetery", "glacier", "pitch", "sand"]]],
+      paint: {
+        "fill-color": "#1A1F25",
+        "fill-opacity": 0.6,
+      },
+    },
+    // Water — clearly darker than land
     {
       id: "water",
       type: "fill",
       source: "mapbox-streets",
       "source-layer": "water",
-      paint: { "fill-color": "#080A0D" },
+      paint: { "fill-color": "#0A0D11" },
     },
-    // Coastline — visible edge where land meets water
+    // Waterway lines (rivers, streams)
+    {
+      id: "waterway",
+      type: "line",
+      source: "mapbox-streets",
+      "source-layer": "waterway",
+      paint: {
+        "line-color": "#0A0D11",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 6, 0.5, 12, 2],
+        "line-opacity": 0.6,
+      },
+    },
+    // Coastline
     {
       id: "coastline",
       type: "line",
@@ -66,7 +92,124 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
         "line-opacity": 0.5,
       },
     },
-    // Country borders — visible
+    // Buildings — visible at higher zoom levels
+    {
+      id: "building",
+      type: "fill",
+      source: "mapbox-streets",
+      "source-layer": "building",
+      minzoom: 12,
+      paint: {
+        "fill-color": "#1A1D22",
+        "fill-opacity": ["interpolate", ["linear"], ["zoom"], 12, 0, 14, 0.5],
+      },
+    },
+    // Roads — tunnel casing
+    {
+      id: "tunnel-street",
+      type: "line",
+      source: "mapbox-streets",
+      "source-layer": "road",
+      filter: ["all", ["==", ["get", "structure"], "tunnel"], ["in", ["get", "class"], ["literal", ["street", "street_limited", "primary_link", "secondary_link", "tertiary_link"]]]],
+      paint: {
+        "line-color": "#1A1D22",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 10, 0.5, 18, 6],
+        "line-dasharray": [3, 3],
+        "line-opacity": 0.3,
+      },
+    },
+    // Roads — minor (service, track)
+    {
+      id: "road-minor",
+      type: "line",
+      source: "mapbox-streets",
+      "source-layer": "road",
+      filter: ["all", ["!=", ["get", "structure"], "tunnel"], ["in", ["get", "class"], ["literal", ["service", "track"]]]],
+      paint: {
+        "line-color": "#252930",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 14, 0.5, 18, 3],
+        "line-opacity": ["interpolate", ["linear"], ["zoom"], 13, 0, 15, 0.4],
+      },
+    },
+    // Roads — street level
+    {
+      id: "road-street",
+      type: "line",
+      source: "mapbox-streets",
+      "source-layer": "road",
+      filter: ["all", ["!=", ["get", "structure"], "tunnel"], ["in", ["get", "class"], ["literal", ["street", "street_limited"]]]],
+      paint: {
+        "line-color": "#282D34",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 10, 0.5, 14, 2, 18, 8],
+        "line-opacity": ["interpolate", ["linear"], ["zoom"], 10, 0, 12, 0.5],
+      },
+    },
+    // Roads — tertiary
+    {
+      id: "road-tertiary",
+      type: "line",
+      source: "mapbox-streets",
+      "source-layer": "road",
+      filter: ["all", ["!=", ["get", "structure"], "tunnel"], ["==", ["get", "class"], "tertiary"]],
+      paint: {
+        "line-color": "#2A2F37",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 8, 0.5, 14, 3, 18, 10],
+        "line-opacity": ["interpolate", ["linear"], ["zoom"], 8, 0, 10, 0.4],
+      },
+    },
+    // Roads — secondary
+    {
+      id: "road-secondary",
+      type: "line",
+      source: "mapbox-streets",
+      "source-layer": "road",
+      filter: ["all", ["!=", ["get", "structure"], "tunnel"], ["==", ["get", "class"], "secondary"]],
+      paint: {
+        "line-color": "#2D323A",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 6, 0.5, 12, 2, 18, 12],
+        "line-opacity": ["interpolate", ["linear"], ["zoom"], 6, 0, 8, 0.5],
+      },
+    },
+    // Roads — primary
+    {
+      id: "road-primary",
+      type: "line",
+      source: "mapbox-streets",
+      "source-layer": "road",
+      filter: ["all", ["!=", ["get", "structure"], "tunnel"], ["==", ["get", "class"], "primary"]],
+      paint: {
+        "line-color": "#313740",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 5, 0.5, 10, 2, 18, 14],
+        "line-opacity": ["interpolate", ["linear"], ["zoom"], 5, 0, 7, 0.5],
+      },
+    },
+    // Roads — motorway/trunk
+    {
+      id: "road-motorway",
+      type: "line",
+      source: "mapbox-streets",
+      "source-layer": "road",
+      filter: ["all", ["!=", ["get", "structure"], "tunnel"], ["in", ["get", "class"], ["literal", ["motorway", "trunk"]]]],
+      paint: {
+        "line-color": "#363C46",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 3, 0.5, 8, 1.5, 14, 5, 18, 16],
+        "line-opacity": ["interpolate", ["linear"], ["zoom"], 3, 0, 5, 0.6],
+      },
+    },
+    // Bridges — slight glow effect on major roads
+    {
+      id: "bridge-major",
+      type: "line",
+      source: "mapbox-streets",
+      "source-layer": "road",
+      filter: ["all", ["==", ["get", "structure"], "bridge"], ["in", ["get", "class"], ["literal", ["motorway", "trunk", "primary", "secondary"]]]],
+      paint: {
+        "line-color": "#3A4050",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 8, 1, 14, 4, 18, 14],
+        "line-opacity": 0.6,
+      },
+    },
+    // Admin boundaries — country borders
     {
       id: "admin-0-boundary",
       type: "line",
@@ -74,12 +217,12 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
       "source-layer": "admin",
       filter: ["==", ["get", "admin_level"], 0],
       paint: {
-        "line-color": "#333842",
-        "line-width": 1,
+        "line-color": "#3D4350",
+        "line-width": 1.2,
         "line-opacity": 0.7,
       },
     },
-    // State/province borders — even subtler
+    // Admin boundaries — state/province
     {
       id: "admin-1-boundary",
       type: "line",
@@ -87,15 +230,98 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
       "source-layer": "admin",
       filter: ["==", ["get", "admin_level"], 1],
       paint: {
-        "line-color": "#262A31",
-        "line-width": 0.4,
-        "line-opacity": 0.35,
+        "line-color": "#2D3340",
+        "line-width": 0.6,
+        "line-opacity": 0.4,
+        "line-dasharray": [3, 2],
+      },
+    },
+    // Place labels — country names (large)
+    {
+      id: "place-country",
+      type: "symbol",
+      source: "mapbox-streets",
+      "source-layer": "place_label",
+      filter: ["==", ["get", "class"], "country"],
+      layout: {
+        "text-field": ["get", "name_en"],
+        "text-font": ["DIN Pro Medium", "Arial Unicode MS Regular"],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 1, 10, 6, 14],
+        "text-transform": "uppercase",
+        "text-letter-spacing": 0.15,
+        "text-max-width": 8,
+      },
+      paint: {
+        "text-color": "#4A5060",
+        "text-halo-color": "#0F1114",
+        "text-halo-width": 1.5,
+        "text-opacity": ["interpolate", ["linear"], ["zoom"], 1, 0.6, 8, 0],
+      },
+    },
+    // Place labels — state/province names
+    {
+      id: "place-state",
+      type: "symbol",
+      source: "mapbox-streets",
+      "source-layer": "place_label",
+      filter: ["==", ["get", "class"], "state"],
+      layout: {
+        "text-field": ["get", "name_en"],
+        "text-font": ["DIN Pro Regular", "Arial Unicode MS Regular"],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 3, 9, 7, 12],
+        "text-transform": "uppercase",
+        "text-letter-spacing": 0.12,
+        "text-max-width": 7,
+      },
+      paint: {
+        "text-color": "#3D4350",
+        "text-halo-color": "#0F1114",
+        "text-halo-width": 1,
+        "text-opacity": ["interpolate", ["linear"], ["zoom"], 3, 0, 4, 0.5, 8, 0],
+      },
+    },
+    // Place labels — city names
+    {
+      id: "place-city",
+      type: "symbol",
+      source: "mapbox-streets",
+      "source-layer": "place_label",
+      filter: ["in", ["get", "class"], ["literal", ["city", "town"]]],
+      layout: {
+        "text-field": ["get", "name_en"],
+        "text-font": ["DIN Pro Medium", "Arial Unicode MS Regular"],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 4, 8, 10, 14, 14, 16],
+        "text-max-width": 8,
+      },
+      paint: {
+        "text-color": "#5C6370",
+        "text-halo-color": "#0F1114",
+        "text-halo-width": 1.5,
+        "text-opacity": ["interpolate", ["linear"], ["zoom"], 4, 0, 6, 0.7, 14, 0.9],
+      },
+    },
+    // Place labels — neighborhoods/suburbs (high zoom)
+    {
+      id: "place-neighborhood",
+      type: "symbol",
+      source: "mapbox-streets",
+      "source-layer": "place_label",
+      filter: ["in", ["get", "class"], ["literal", ["neighbourhood", "suburb"]]],
+      minzoom: 10,
+      layout: {
+        "text-field": ["get", "name_en"],
+        "text-font": ["DIN Pro Regular", "Arial Unicode MS Regular"],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 10, 9, 14, 12],
+        "text-max-width": 7,
+      },
+      paint: {
+        "text-color": "#444B58",
+        "text-halo-color": "#0F1114",
+        "text-halo-width": 1,
+        "text-opacity": ["interpolate", ["linear"], ["zoom"], 10, 0, 12, 0.6],
       },
     },
   ],
-  // No text labels anywhere on the map — per CLAUDE.md
-  glyphs: "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
-  sprite: "mapbox://sprites/mapbox/dark-v11",
 };
 
 function createPulseElement(

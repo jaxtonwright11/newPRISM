@@ -7,6 +7,35 @@ const postIdParamsSchema = z.object({
   id: z.string().uuid(),
 });
 
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const rateLimitResponse = applyRateLimit(request, "post-like-get");
+  if (rateLimitResponse) return rateLimitResponse;
+
+  const parsedParams = parseParams(await params, postIdParamsSchema);
+  if (!parsedParams.success) return parsedParams.response;
+
+  const token = request.headers.get("authorization")?.replace("Bearer ", "");
+  if (!token) return NextResponse.json({ data: false });
+
+  const supabase = getSupabaseWithAuth(token);
+  if (!supabase) return NextResponse.json({ data: false });
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ data: false });
+
+  const { data } = await supabase
+    .from("post_likes")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("post_id", parsedParams.data.id)
+    .maybeSingle();
+
+  return NextResponse.json({ data: !!data });
+}
+
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -49,6 +78,34 @@ export async function POST(
       { error: "Failed to like post"},
       { status: 500 }
     );
+  }
+
+  // Notify the post author about the like
+  try {
+    const { data: post } = await supabase
+      .from("posts")
+      .select("user_id")
+      .eq("id", id)
+      .single();
+
+    if (post && post.user_id !== user.id) {
+      const { data: liker } = await supabase
+        .from("users")
+        .select("username, display_name")
+        .eq("id", user.id)
+        .single();
+
+      const name = liker?.display_name || liker?.username || "Someone";
+      await supabase.from("notifications").insert({
+        user_id: post.user_id,
+        type: "like",
+        title: "Someone liked your post",
+        body: `${name} liked your post`,
+        metadata: { post_id: id, liker_id: user.id },
+      });
+    }
+  } catch {
+    // Non-critical
   }
 
   return NextResponse.json({ data });

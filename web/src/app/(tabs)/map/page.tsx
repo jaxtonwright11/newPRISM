@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { MapPlaceholder } from "@/components/map-placeholder";
 import { useAuth } from "@/lib/auth-context";
+import { prismEvents } from "@/lib/posthog";
 import type { Community, Topic } from "@shared/types";
 
 export default function MapPage() {
@@ -36,6 +37,7 @@ export default function MapPage() {
         <Link
           href={`/topic/${activeTopic.slug}`}
           className="absolute top-4 left-4 right-4 z-20 max-w-sm"
+          onClick={() => prismEvents.mapTopicSelected(activeTopic.title, communities.length)}
         >
           <div className="bg-prism-bg-surface/95 backdrop-blur-md rounded-xl border border-prism-border p-3 shadow-lg shadow-black/30 hover:bg-prism-bg-elevated/95 transition-colors">
             <div className="flex items-center gap-2 mb-1">

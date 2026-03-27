@@ -6,6 +6,10 @@ export async function GET(request: Request) {
   const rateLimitResponse = applyRateLimit(request, "feed-for-you");
   if (rateLimitResponse) return rateLimitResponse;
 
+  const url = new URL(request.url);
+  const offset = Math.max(0, parseInt(url.searchParams.get("offset") ?? "0") || 0);
+  const limit = Math.min(50, Math.max(1, parseInt(url.searchParams.get("limit") ?? "30") || 30));
+
   try {
     const token = request.headers.get("authorization")?.replace("Bearer ", "");
     const supabase = token ? getSupabaseWithAuth(token) : getSupabase();
@@ -21,7 +25,7 @@ export async function GET(request: Request) {
         .select("*, community:communities!inner(id, name, region, community_type, color_hex, verified)")
         .eq("verified", true)
         .order("created_at", { ascending: false })
-        .limit(30);
+        .range(offset, offset + limit - 1);
 
       if (!error && data) {
         return NextResponse.json({
@@ -40,7 +44,7 @@ export async function GET(request: Request) {
         .select("*, community:communities!inner(id, name, region, community_type, color_hex, verified)")
         .eq("verified", true)
         .order("created_at", { ascending: false })
-        .limit(30);
+        .range(offset, offset + limit - 1);
 
       return NextResponse.json({
         data: data ?? [],

@@ -22,7 +22,7 @@ export async function GET(request: Request) {
         if (user) {
           const { data, error } = await supabase
             .from("users")
-            .select("id, username, display_name, avatar_url, email, home_community_id, ghost_mode, verification_tier, default_radius_miles, created_at, profile:user_profiles(id, bio, interests, social_links)")
+            .select("id, username, display_name, avatar_url, email, home_community_id, ghost_mode, verification_level, default_radius_miles, location_text, created_at, profile:user_profiles(id, bio, interests, social_links, streak_count, streak_last_date)")
             .eq("id", user.id)
             .single();
 
@@ -42,6 +42,7 @@ export async function GET(request: Request) {
 const updateSchema = z.object({
   display_name: z.string().trim().min(1).max(50).optional(),
   bio: z.string().trim().max(160).optional(),
+  location_text: z.string().trim().min(1).max(100).optional(),
 });
 
 export async function PATCH(request: Request) {
@@ -90,6 +91,17 @@ export async function PATCH(request: Request) {
         supabase
           .from("users")
           .update({ display_name: parsed.data.display_name })
+          .eq("id", user.id)
+      ).then(({ error }) => ({ error }))
+    );
+  }
+
+  if (parsed.data.location_text !== undefined) {
+    updates.push(
+      Promise.resolve(
+        supabase
+          .from("users")
+          .update({ location_text: parsed.data.location_text })
           .eq("id", user.id)
       ).then(({ error }) => ({ error }))
     );

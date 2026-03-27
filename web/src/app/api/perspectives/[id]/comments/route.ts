@@ -98,5 +98,33 @@ export async function POST(
     return NextResponse.json({ error: "Failed to post comment" }, { status: 500 });
   }
 
+  // Notify the perspective author about the comment
+  try {
+    const { data: perspective } = await supabase
+      .from("perspectives")
+      .select("author_id")
+      .eq("id", parsedId.data)
+      .single();
+
+    if (perspective && perspective.author_id !== user.id) {
+      const { data: commenter } = await supabase
+        .from("users")
+        .select("username, display_name")
+        .eq("id", user.id)
+        .single();
+
+      const name = commenter?.display_name || commenter?.username || "Someone";
+      await supabase.from("notifications").insert({
+        user_id: perspective.author_id,
+        type: "comment",
+        title: "New comment on your perspective",
+        body: `${name} commented on your perspective`,
+        metadata: { perspective_id: parsedId.data, comment_id: data.id, commenter_id: user.id },
+      });
+    }
+  } catch {
+    // Non-critical — don't fail the comment creation
+  }
+
   return NextResponse.json({ data }, { status: 201 });
 }

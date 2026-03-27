@@ -8,6 +8,7 @@ import { PerspectiveCard } from "@/components/perspective-card";
 import { PerspectiveDetail } from "@/components/perspective-detail";
 import { COMMUNITY_COLORS } from "@/lib/constants";
 import { EmptyState, EMPTY_STATES } from "@/components/empty-state";
+import { useToast } from "@/components/toast";
 import type { Topic, Community, CommunityType, TopicStatus } from "@shared/types";
 
 const STATUS_DOT: Record<TopicStatus, string> = {
@@ -39,6 +40,7 @@ export default function TopicDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
   const { session } = useAuth();
+  const { toast } = useToast();
 
   const [topic, setTopic] = useState<Topic | null>(null);
   const [perspectives, setPerspectives] = useState<TopicPerspective[]>([]);
@@ -47,6 +49,7 @@ export default function TopicDetailPage() {
   const [notFound, setNotFound] = useState(false);
 
   const [selectedPerspectiveId, setSelectedPerspectiveId] = useState<string | null>(null);
+  const [topicSaved, setTopicSaved] = useState(false);
 
   useEffect(() => {
     async function fetchTopic() {
@@ -181,6 +184,38 @@ export default function TopicDetailPage() {
             <span className="text-xs text-prism-text-dim font-mono">
               {topic.community_count} communities
             </span>
+            {session && (
+              <button
+                onClick={async () => {
+                  if (!session.access_token) return;
+                  const wasSaved = topicSaved;
+                  setTopicSaved(!wasSaved);
+                  toast(wasSaved ? "Topic unsaved" : "Topic saved");
+                  try {
+                    await fetch("/api/bookmarks/topics", {
+                      method: wasSaved ? "DELETE" : "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${session.access_token}`,
+                      },
+                      body: JSON.stringify({ topic_id: topic.id }),
+                    });
+                  } catch {
+                    setTopicSaved(wasSaved);
+                  }
+                }}
+                className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full transition-all ${
+                  topicSaved
+                    ? "bg-prism-accent-primary/15 text-prism-accent-primary"
+                    : "text-prism-text-dim hover:text-prism-text-secondary hover:bg-prism-bg-elevated"
+                }`}
+              >
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill={topicSaved ? "currentColor" : "none"} stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+                </svg>
+                {topicSaved ? "Saved" : "Save"}
+              </button>
+            )}
           </div>
 
           {/* Active communities */}
@@ -221,6 +256,7 @@ export default function TopicDetailPage() {
                   category_tag={p.category_tag}
                   reaction_count={p.reaction_count}
                   bookmark_count={p.bookmark_count}
+                  created_at={p.created_at}
                   onSelect={setSelectedPerspectiveId}
                   animationDelay={i * 50}
                 />

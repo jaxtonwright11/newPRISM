@@ -22,6 +22,7 @@ function LoginPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/";
+  const callbackError = searchParams.get("error");
   const { signIn, signInWithGoogle } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -66,7 +67,14 @@ function LoginPageInner() {
           </p>
         </div>
 
-        {/* Error message */}
+        {/* Error messages */}
+        {callbackError && !error && (
+          <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-400">
+            {callbackError === "auth_callback_failed"
+              ? "Sign-in failed. Please try again."
+              : "Something went wrong. Please try again."}
+          </div>
+        )}
         {error && (
           <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-400">
             {error}
@@ -118,6 +126,15 @@ function LoginPageInner() {
             {loading ? "Signing in..." : "Sign in"}
           </button>
         </form>
+
+        <div className="text-right mt-2">
+          <Link
+            href="/forgot-password"
+            className="text-xs text-prism-text-dim hover:text-prism-accent-primary transition-colors"
+          >
+            Forgot password?
+          </Link>
+        </div>
 
         {/* Divider */}
         <div className="relative my-6">

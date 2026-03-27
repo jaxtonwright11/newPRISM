@@ -9,7 +9,9 @@ import { FeedSkeleton } from "@/components/skeleton";
 import { EmptyState, EMPTY_STATES } from "@/components/empty-state";
 import { COMMUNITY_COLORS } from "@/lib/constants";
 import { useAuth } from "@/lib/auth-context";
+import { useToast } from "@/components/toast";
 import { useRealtime } from "@/lib/use-realtime";
+import { prismEvents } from "@/lib/posthog";
 import type { Topic, Community, CommunityType } from "@shared/types";
 
 const PerspectiveDetail = dynamic(
@@ -24,6 +26,7 @@ interface DisplayPerspective {
   category_tag: string | null;
   reaction_count: number;
   bookmark_count: number;
+  created_at?: string;
   community: {
     name: string;
     region: string;
@@ -39,9 +42,14 @@ export default function DiscoverPage() {
   const [perspectives, setPerspectives] = useState<DisplayPerspective[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPerspectiveId, setSelectedPerspectiveId] = useState<string | null>(null);
+
+  // Track discover feed opened
+  useEffect(() => { prismEvents.discoverFeedOpened(); }, []);
   const [searchQuery, setSearchQuery] = useState("");
   const [trendingCommunities, setTrendingCommunities] = useState<Community[]>([]);
   const { session } = useAuth();
+  const { toast } = useToast();
+  const [followedIds, setFollowedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetch("/api/topics")
@@ -62,6 +70,50 @@ export default function DiscoverPage() {
       .then((data) => setTrendingCommunities((data.communities ?? []).slice(0, 8)))
       .catch(() => {});
   }, []);
+
+  // Load user's followed communities
+  useEffect(() => {
+    if (!session?.access_token) return;
+    fetch("/api/communities/follow", {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.follows) setFollowedIds(new Set(data.follows));
+      })
+      .catch(() => {});
+  }, [session?.access_token]);
+
+  const toggleFollow = async (communityId: string) => {
+    if (!session?.access_token) return;
+    const wasFollowing = followedIds.has(communityId);
+    const community = trendingCommunities.find((c) => c.id === communityId);
+    setFollowedIds((prev) => {
+      const next = new Set(prev);
+      if (wasFollowing) next.delete(communityId);
+      else next.add(communityId);
+      return next;
+    });
+    toast(wasFollowing ? `Unfollowed ${community?.name ?? "community"}` : `Following ${community?.name ?? "community"}`);
+    try {
+      const res = await fetch("/api/communities/follow", {
+        method: wasFollowing ? "DELETE" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ community_id: communityId }),
+      });
+      if (!res.ok) throw new Error();
+    } catch {
+      setFollowedIds((prev) => {
+        const next = new Set(prev);
+        if (wasFollowing) next.add(communityId);
+        else next.delete(communityId);
+        return next;
+      });
+    }
+  };
 
   useEffect(() => {
     if (!selectedTopicSlug) return;
@@ -155,20 +207,38 @@ export default function DiscoverPage() {
           <div className="flex gap-2 overflow-x-auto no-scrollbar">
             {trendingCommunities.map((c) => {
               const color = COMMUNITY_COLORS[c.community_type as CommunityType];
+              const isFollowed = followedIds.has(c.id);
               return (
-                <Link
+                <div
                   key={c.id}
-                  href={`/community/${c.id}`}
-                  className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--bg-surface)] border border-[var(--bg-elevated)] hover:bg-[var(--bg-elevated)] transition-colors"
+                  className={`shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl border transition-colors ${
+                    isFollowed
+                      ? "bg-[var(--accent-primary)]/5 border-[var(--accent-primary)]/20"
+                      : "bg-[var(--bg-surface)] border-[var(--bg-elevated)] hover:bg-[var(--bg-elevated)]"
+                  }`}
                 >
-                  <div
-                    className="w-6 h-6 rounded-full flex items-center justify-center text-[8px] font-bold"
-                    style={{ backgroundColor: color + "20", color }}
-                  >
-                    {c.name.split(" ").map((w) => w[0]).slice(0, 2).join("")}
-                  </div>
-                  <span className="text-xs text-prism-text-primary whitespace-nowrap">{c.name}</span>
-                </Link>
+                  <Link href={`/community/${c.id}`} className="flex items-center gap-2">
+                    <div
+                      className="w-6 h-6 rounded-full flex items-center justify-center text-[8px] font-bold"
+                      style={{ backgroundColor: color + "20", color }}
+                    >
+                      {c.name.split(" ").map((w) => w[0]).slice(0, 2).join("")}
+                    </div>
+                    <span className="text-xs text-prism-text-primary whitespace-nowrap">{c.name}</span>
+                  </Link>
+                  {session && (
+                    <button
+                      onClick={() => toggleFollow(c.id)}
+                      className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium transition-all ${
+                        isFollowed
+                          ? "text-[var(--accent-primary)]"
+                          : "text-[var(--text-dim)] hover:text-[var(--accent-primary)]"
+                      }`}
+                    >
+                      {isFollowed ? "✓" : "+"}
+                    </button>
+                  )}
+                </div>
               );
             })}
           </div>
@@ -199,6 +269,7 @@ export default function DiscoverPage() {
                 category_tag={p.category_tag}
                 reaction_count={p.reaction_count}
                 bookmark_count={p.bookmark_count}
+                created_at={p.created_at}
                 onSelect={setSelectedPerspectiveId}
                 animationDelay={i * 50}
               />

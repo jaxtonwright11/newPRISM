@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import type { CommunityType, ReactionType } from "@shared/types";
 import { REACTION_LABELS, COMMUNITY_COLORS } from "@/lib/constants";
 import { useAuth } from "@/lib/auth-context";
+import { prismEvents } from "@/lib/posthog";
 
 interface PerspectiveDetailProps {
   id: string;
@@ -35,6 +36,48 @@ export function PerspectiveDetail({
   onClose,
 }: PerspectiveDetailProps) {
   const { session } = useAuth();
+
+  // Track perspective view
+  useEffect(() => {
+    prismEvents.perspectiveCardViewed(id, community.community_type, category_tag ?? "");
+  }, [id, community.community_type, category_tag]);
+
+  // Close on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
+  // Swipe down to dismiss
+  const [swipeY, setSwipeY] = useState(0);
+  const touchStartY = useRef(0);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    const el = modalRef.current;
+    if (el && el.scrollTop <= 0) {
+      touchStartY.current = e.touches[0].clientY;
+    }
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    const delta = e.touches[0].clientY - touchStartY.current;
+    if (delta > 0 && touchStartY.current > 0) {
+      setSwipeY(delta * 0.5);
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (swipeY > 120) {
+      onClose();
+    }
+    setSwipeY(0);
+    touchStartY.current = 0;
+  }, [swipeY, onClose]);
+
   const [activeReaction, setActiveReaction] = useState<ReactionType | null>(null);
   const [localReactionDelta, setLocalReactionDelta] = useState(0);
   const [bookmarked, setBookmarked] = useState(false);
@@ -115,10 +158,23 @@ export function PerspectiveDetail({
 
       {/* Modal */}
       <div
-        className="relative bg-prism-bg-surface border border-prism-border rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-fade-in"
-        style={{ borderLeftWidth: "4px", borderLeftColor: community.color_hex }}
+        ref={modalRef}
+        className="relative bg-prism-bg-surface border border-prism-border rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-fade-in transition-transform"
+        style={{
+          borderLeftWidth: "4px",
+          borderLeftColor: community.color_hex,
+          transform: swipeY > 0 ? `translateY(${swipeY}px)` : undefined,
+          opacity: swipeY > 0 ? Math.max(0.3, 1 - swipeY / 300) : 1,
+        }}
         onClick={(e) => e.stopPropagation()}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
+        {/* Swipe indicator */}
+        <div className="flex justify-center pt-2 pb-1 md:hidden">
+          <div className="w-8 h-1 rounded-full bg-prism-text-dim/30" />
+        </div>
         {/* Close button */}
         <button
           onClick={onClose}
@@ -256,10 +312,11 @@ export function PerspectiveDetail({
               </button>
               <button
                 onClick={() => {
+                  const url = `${window.location.origin}/perspective/${id}`;
                   if (navigator.share) {
-                    navigator.share({ title: `${community.name} perspective`, text: quote }).catch(() => {});
+                    navigator.share({ title: `${community.name} on PRISM`, text: `"${quote}"`, url }).catch(() => {});
                   } else {
-                    navigator.clipboard.writeText(quote).catch(() => {});
+                    navigator.clipboard.writeText(url).catch(() => {});
                   }
                 }}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-prism-text-dim hover:text-prism-text-secondary hover:bg-prism-bg-elevated transition-all duration-150"

@@ -45,6 +45,17 @@ export default function PostPage() {
   const [likeDelta, setLikeDelta] = useState(0);
   const { session } = useAuth();
 
+  // Load existing like state for authenticated users
+  useEffect(() => {
+    if (!session?.access_token) return;
+    fetch(`/api/posts/${id}/like`, {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    })
+      .then((r) => r.json())
+      .then((json) => { if (json.data) setLiked(true); })
+      .catch(() => {});
+  }, [id, session?.access_token]);
+
   useEffect(() => {
     async function load() {
       try {

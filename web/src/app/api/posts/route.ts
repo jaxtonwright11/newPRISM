@@ -8,7 +8,7 @@ const postCreateBodySchema = z.object({
   topic_id: z.string().uuid().optional().nullable(),
   community_id: z.string().uuid().optional(),
   post_type: z.enum(["permanent", "story"]).optional(),
-  radius_miles: z.number().positive().max(500).optional(),
+  radius_miles: z.union([z.literal(10), z.literal(20), z.literal(30), z.literal(40)]).optional(),
 });
 
 export async function GET(request: Request) {
@@ -167,5 +167,16 @@ export async function POST(request: Request) {
     );
   }
 
-  return NextResponse.json({ data }, { status: 201 });
+  // Fire-and-forget: update user's streak
+  let streakCount = 0;
+  try {
+    const { data: streakData } = await supabase.rpc("update_user_streak", { p_user_id: user.id });
+    if (streakData?.[0]) {
+      streakCount = streakData[0].streak_count;
+    }
+  } catch {
+    // Non-critical
+  }
+
+  return NextResponse.json({ data, streak: streakCount }, { status: 201 });
 }

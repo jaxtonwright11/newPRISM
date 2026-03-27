@@ -147,6 +147,7 @@ export default function BookmarksPage() {
                   category_tag={p.category_tag}
                   reaction_count={p.reaction_count}
                   bookmark_count={p.bookmark_count}
+                  created_at={p.created_at}
                   onSelect={setSelectedPerspectiveId}
                   animationDelay={i * 50}
                 />
