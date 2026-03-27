@@ -90,7 +90,7 @@ export function EmptyState({
           animate={{ scale: 1, opacity: 0.4 }}
           transition={{ duration: 0.6, delay: 0.1 }}
         >
-          <div className="w-14 h-14 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--bg-overlay)] flex items-center justify-center">
+          <div className="w-14 h-14 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--bg-overlay)] flex items-center justify-center" aria-hidden="true">
             {ICONS[icon]}
           </div>
         </motion.div>
@@ -104,7 +104,7 @@ export function EmptyState({
       {ctaLabel && (ctaHref ? (
         <Link
           href={ctaHref}
-          className="group px-6 py-2.5 rounded-xl bg-[var(--accent-primary)] text-white font-body font-medium text-sm transition-all hover:shadow-[0_0_20px_rgba(212,149,107,0.25)] hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2"
+          className="group px-6 py-3 rounded-xl bg-[var(--accent-primary)] text-white font-body font-medium text-sm transition-all hover:shadow-[0_0_20px_rgba(212,149,107,0.25)] hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2 min-h-[44px]"
         >
           {ctaLabel}
           <svg className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -114,7 +114,7 @@ export function EmptyState({
       ) : onCtaClick ? (
         <button
           onClick={onCtaClick}
-          className="group px-6 py-2.5 rounded-xl bg-[var(--accent-primary)] text-white font-body font-medium text-sm transition-all hover:shadow-[0_0_20px_rgba(212,149,107,0.25)] hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2"
+          className="group px-6 py-3 rounded-xl bg-[var(--accent-primary)] text-white font-body font-medium text-sm transition-all hover:shadow-[0_0_20px_rgba(212,149,107,0.25)] hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2 min-h-[44px]"
         >
           {ctaLabel}
           <svg className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -125,7 +125,7 @@ export function EmptyState({
       {secondaryLabel && secondaryHref && (
         <Link
           href={secondaryHref}
-          className="mt-3 text-sm text-[var(--text-secondary)] font-body hover:text-[var(--text-primary)] transition-colors"
+          className="mt-3 text-sm text-[var(--text-secondary)] font-body hover:text-[var(--text-primary)] transition-colors min-h-[44px] flex items-center"
         >
           {secondaryLabel}
         </Link>

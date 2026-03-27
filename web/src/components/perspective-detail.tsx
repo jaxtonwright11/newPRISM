@@ -151,6 +151,9 @@ export function PerspectiveDetail({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="perspective-detail-title"
       onClick={onClose}
     >
       {/* Overlay */}
@@ -204,11 +207,11 @@ export function PerspectiveDetail({
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="text-base font-medium text-prism-text-primary">
+                <span id="perspective-detail-title" className="text-base font-medium text-prism-text-primary">
                   {community.name}
                 </span>
                 {community.verified && (
-                  <svg className="w-4 h-4 text-prism-accent-live" viewBox="0 0 20 20" fill="currentColor">
+                  <svg className="w-4 h-4 text-prism-accent-live" viewBox="0 0 20 20" fill="currentColor" aria-label="Verified community" role="img">
                     <path
                       fillRule="evenodd"
                       d="M16.403 12.652a3 3 0 010-5.304 3 3 0 00-3.75-3.751 3 3 0 00-5.305 0 3 3 0 00-3.751 3.75 3 3 0 000 5.305 3 3 0 003.75 3.751 3 3 0 005.305 0 3 3 0 003.751-3.75zm-2.546-4.46a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
@@ -279,6 +282,8 @@ export function PerspectiveDetail({
                       : "text-prism-text-dim hover:text-prism-text-secondary hover:bg-prism-bg-elevated"
                   }`}
                   title={label}
+                  aria-label={label}
+                  aria-pressed={activeReaction === type}
                 >
                   <span className="text-base">{emoji}</span>
                   <span className="font-mono text-xs">
@@ -296,6 +301,8 @@ export function PerspectiveDetail({
                     : "text-prism-text-dim hover:text-prism-text-secondary hover:bg-prism-bg-elevated"
                 }`}
                 title={bookmarked ? "Remove bookmark" : "Bookmark"}
+                aria-label={bookmarked ? "Remove bookmark" : "Bookmark"}
+                aria-pressed={bookmarked}
               >
                 <svg
                   className="w-4 h-4"
@@ -321,6 +328,7 @@ export function PerspectiveDetail({
                 }}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-prism-text-dim hover:text-prism-text-secondary hover:bg-prism-bg-elevated transition-all duration-150"
                 title="Share"
+                aria-label="Share perspective"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />

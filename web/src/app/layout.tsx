@@ -87,6 +87,10 @@ export default function RootLayout({
       <head>
         <link rel="apple-touch-icon" sizes="180x180" href="/api/icon?size=180" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="dns-prefetch" href="https://api.mapbox.com" />
+        <link rel="dns-prefetch" href="https://bkmutmhahravmpfcpbvw.supabase.co" />
+        <link rel="preconnect" href="https://api.mapbox.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://bkmutmhahravmpfcpbvw.supabase.co" crossOrigin="anonymous" />
       </head>
       <body className="min-h-screen bg-prism-bg-base text-prism-text-primary antialiased">
         <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-prism-accent-primary focus:text-white focus:text-sm focus:font-medium">

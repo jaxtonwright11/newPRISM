@@ -25,6 +25,7 @@ interface MapPlaceholderProps {
   heatPoints?: HeatPoint[];
   onHeatTap?: (point: HeatPoint) => void;
   isAuthenticated?: boolean;
+  hideOverlays?: boolean;
 }
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? "";
@@ -443,6 +444,7 @@ export function MapPlaceholder({
   heatPoints = [],
   onHeatTap,
   isAuthenticated = false,
+  hideOverlays = false,
 }: MapPlaceholderProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -753,13 +755,15 @@ export function MapPlaceholder({
       )}
 
       {/* Community count — show count when > 0, or exploration prompt when empty */}
-      <div className="absolute top-3 left-3 bg-prism-bg-base/80 backdrop-blur-sm px-2.5 py-1 rounded-full z-10">
-        <span className="text-[10px] font-mono text-prism-text-secondary">
-          {communitiesProp.filter((c) => c.latitude != null).length > 0
-            ? `${communitiesProp.filter((c) => c.latitude != null).length} communities active`
-            : "Tap anywhere to explore"}
-        </span>
-      </div>
+      {!hideOverlays && (
+        <div className="absolute top-3 left-3 bg-prism-bg-base/80 backdrop-blur-sm px-2.5 py-1 rounded-full z-10">
+          <span className="text-[10px] font-mono text-prism-text-secondary">
+            {communitiesProp.filter((c) => c.latitude != null).length > 0
+              ? `${communitiesProp.filter((c) => c.latitude != null).length} communities active`
+              : "Tap anywhere to explore"}
+          </span>
+        </div>
+      )}
 
       {/* Loading state */}
       {!mapLoaded && (

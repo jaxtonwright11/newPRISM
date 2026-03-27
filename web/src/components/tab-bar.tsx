@@ -73,7 +73,7 @@ export function TabBar() {
 
 function MapIcon({ filled }: { filled?: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={filled ? 2.5 : 1.8} strokeLinecap="round" strokeLinejoin="round">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={filled ? 2.5 : 1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill={filled ? "currentColor" : "none"} />
       <circle cx="12" cy="9" r="2.5" fill={filled ? "var(--bg-surface)" : "none"} />
     </svg>
@@ -82,7 +82,7 @@ function MapIcon({ filled }: { filled?: boolean }) {
 
 function FeedIcon({ filled }: { filled?: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={filled ? 2.5 : 1.8} strokeLinecap="round" strokeLinejoin="round">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={filled ? 2.5 : 1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <rect x="3" y="3" width="18" height="18" rx="3" fill={filled ? "currentColor" : "none"} />
       <line x1="7" y1="8" x2="17" y2="8" stroke={filled ? "var(--bg-surface)" : "currentColor"} />
       <line x1="7" y1="12" x2="17" y2="12" stroke={filled ? "var(--bg-surface)" : "currentColor"} />
@@ -93,7 +93,7 @@ function FeedIcon({ filled }: { filled?: boolean }) {
 
 function PlusIcon() {
   return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
       <line x1="12" y1="5" x2="12" y2="19" />
       <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
@@ -102,7 +102,7 @@ function PlusIcon() {
 
 function CompassIcon({ filled }: { filled?: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={filled ? 2.5 : 1.8} strokeLinecap="round" strokeLinejoin="round">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={filled ? 2.5 : 1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <circle cx="12" cy="12" r="10" fill={filled ? "currentColor" : "none"} />
       <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill={filled ? "var(--bg-surface)" : "none"} stroke={filled ? "var(--bg-surface)" : "currentColor"} />
     </svg>
@@ -111,7 +111,7 @@ function CompassIcon({ filled }: { filled?: boolean }) {
 
 function UserIcon({ filled }: { filled?: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={filled ? 2.5 : 1.8} strokeLinecap="round" strokeLinejoin="round">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={filled ? 2.5 : 1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <circle cx="12" cy="8" r="4" fill={filled ? "currentColor" : "none"} />
       <path d="M20 21a8 8 0 0 0-16 0" fill={filled ? "currentColor" : "none"} />
     </svg>

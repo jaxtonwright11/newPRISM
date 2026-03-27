@@ -218,11 +218,13 @@ export default function FeedPage() {
       <header className="flex items-center justify-between px-4 py-3 border-b border-[var(--bg-elevated)] max-w-2xl mx-auto w-full md:px-6">
         <PrismWordmark size="sm" />
         <div className="flex items-center gap-2">
-        <div className="flex gap-1 bg-[var(--bg-elevated)] rounded-full p-1">
+        <div className="flex gap-1 bg-[var(--bg-elevated)] rounded-full p-1" role="tablist" aria-label="Feed filters">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
+              role="tab"
+              aria-selected={activeTab === tab.id}
               className={`px-3 py-1 rounded-full text-sm font-medium font-body transition-all ${
                 activeTab === tab.id
                   ? "bg-[var(--accent-primary)] text-white"
@@ -347,7 +349,7 @@ export default function FeedPage() {
         {welcomeBack && (
           <div className="mb-3 px-4 py-3 rounded-xl bg-[var(--accent-primary)]/5 border border-[var(--accent-primary)]/10 flex items-center justify-between">
             <p className="text-xs text-[var(--text-secondary)]">{welcomeBack}</p>
-            <button onClick={() => setWelcomeBack(null)} className="text-[var(--text-dim)] hover:text-[var(--text-secondary)] ml-2 shrink-0">
+            <button onClick={() => setWelcomeBack(null)} aria-label="Dismiss welcome message" className="text-[var(--text-dim)] hover:text-[var(--text-secondary)] ml-2 shrink-0">
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
           </div>
@@ -364,7 +366,7 @@ export default function FeedPage() {
         {feedLoading ? (
           <FeedSkeleton count={4} />
         ) : feedPerspectives.length > 0 ? (
-          <div className="flex flex-col gap-2 animate-fade-in">
+          <div className="flex flex-col gap-2 animate-fade-in" role="feed" aria-label="Perspectives feed">
             {feedPerspectives.map((p, i) => (
               <PerspectiveCard
                 key={p.id}

@@ -118,6 +118,7 @@ export default function Home() {
         <MapPlaceholder
           communities={communities}
           isAuthenticated={false}
+          hideOverlays
         />
       </div>
 
@@ -132,13 +133,13 @@ export default function Home() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => router.push("/login")}
-              className="px-3 py-1.5 text-xs font-body font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+              className="px-4 py-2.5 text-sm font-body font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors min-h-[44px] flex items-center"
             >
               Log in
             </button>
             <button
               onClick={() => router.push("/signup")}
-              className="px-3 py-1.5 rounded-lg bg-[var(--accent-primary)] text-white text-xs font-body font-medium hover:shadow-lg hover:shadow-[var(--accent-primary)]/20 transition-all"
+              className="px-4 py-2.5 rounded-lg bg-[var(--accent-primary)] text-white text-sm font-body font-medium hover:shadow-lg hover:shadow-[var(--accent-primary)]/20 transition-all min-h-[44px] flex items-center"
             >
               Sign up
             </button>

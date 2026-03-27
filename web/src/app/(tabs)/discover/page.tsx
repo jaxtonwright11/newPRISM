@@ -163,13 +163,14 @@ export default function DiscoverPage() {
       <header className="px-4 pt-4 pb-2">
         <h1 className="font-display font-bold text-xl text-[var(--text-primary)] mb-3">Discover</h1>
         <div className="relative">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-dim)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-dim)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
             <circle cx="11" cy="11" r="8" />
             <path d="m21 21-4.35-4.35" />
           </svg>
           <input
             type="text"
             placeholder="Search topics..."
+            aria-label="Search topics"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--bg-elevated)] text-sm font-body text-[var(--text-primary)] placeholder:text-[var(--text-dim)] focus:outline-none focus:border-[var(--accent-primary)]/50 transition-colors"
@@ -178,12 +179,14 @@ export default function DiscoverPage() {
       </header>
 
       {/* Topic pills */}
-      <div className="overflow-x-auto scrollbar-hide border-b border-[var(--bg-elevated)]">
+      <div className="overflow-x-auto scrollbar-hide border-b border-[var(--bg-elevated)]" role="tablist" aria-label="Topics">
         <div className="flex gap-2 px-4 py-2.5">
           {filteredTopics.filter((t) => t.status !== "archived").map((topic) => (
             <button
               key={topic.slug}
               onClick={() => setSelectedTopicSlug(topic.slug)}
+              role="tab"
+              aria-selected={selectedTopicSlug === topic.slug}
               className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium font-body transition-all border ${
                 selectedTopicSlug === topic.slug
                   ? "bg-[var(--accent-primary)]/15 border-[var(--accent-primary)]/40 text-[var(--accent-primary)]"
@@ -229,6 +232,8 @@ export default function DiscoverPage() {
                   {session && (
                     <button
                       onClick={() => toggleFollow(c.id)}
+                      aria-label={isFollowed ? `Unfollow ${c.name}` : `Follow ${c.name}`}
+                      aria-pressed={isFollowed}
                       className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium transition-all ${
                         isFollowed
                           ? "text-[var(--accent-primary)]"
@@ -251,7 +256,7 @@ export default function DiscoverPage() {
         {loading ? (
           <FeedSkeleton count={4} />
         ) : perspectives.length > 0 ? (
-          <div className="flex flex-col gap-3 animate-fade-in">
+          <div className="flex flex-col gap-3 animate-fade-in" role="feed" aria-label="Discover perspectives">
             {showComparison && (
               <PerspectiveComparison
                 topicTitle={selectedTopicTitle}

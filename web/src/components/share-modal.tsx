@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 interface ShareModalProps {
   title: string;
@@ -16,6 +16,16 @@ export function ShareModal({
   onClose,
 }: ShareModalProps) {
   const [copied, setCopied] = useState(false);
+
+  // Close on Escape key
+  const handleEscape = useCallback((e: KeyboardEvent) => {
+    if (e.key === "Escape") onClose();
+  }, [onClose]);
+
+  useEffect(() => {
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [handleEscape]);
 
   const shareText = quote
     ? `"${quote}" — ${communityName ?? "PRISM Community"} on ${title}`
@@ -74,6 +84,9 @@ export function ShareModal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="share-modal-title"
       onClick={onClose}
     >
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
@@ -85,7 +98,7 @@ export function ShareModal({
           {/* Handle bar (mobile) */}
           <div className="w-8 h-1 rounded-full bg-prism-border mx-auto mb-4 md:hidden" />
 
-          <h3 className="text-base font-semibold text-prism-text-primary mb-4">
+          <h3 id="share-modal-title" className="text-base font-semibold text-prism-text-primary mb-4">
             Share
           </h3>
 

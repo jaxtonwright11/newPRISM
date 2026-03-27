@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { prismEvents } from "@/lib/posthog";
 import { VerificationGate } from "@/components/verification-gate";
@@ -37,6 +37,17 @@ export function CreatePostModal({
   const [error, setError] = useState<string | null>(null);
   const [verificationLevel, setVerificationLevel] = useState<number>(1);
   const [showVerifyGate, setShowVerifyGate] = useState(false);
+
+  // Close on Escape key
+  const handleEscape = useCallback((e: KeyboardEvent) => {
+    if (e.key === "Escape") onOpenChange(false);
+  }, [onOpenChange]);
+
+  useEffect(() => {
+    if (!open) return;
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [open, handleEscape]);
 
   // Fetch user's verification level when modal opens
   useEffect(() => {
@@ -101,7 +112,7 @@ export function CreatePostModal({
   if (session && verificationLevel < 2) {
     return (
       <>
-        <div className="fixed inset-0 z-50">
+        <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="Verification required">
           <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" onClick={() => onOpenChange(false)} />
           <div className="fixed left-[50%] top-[50%] z-50 w-full max-w-sm translate-x-[-50%] translate-y-[-50%] p-4">
             <div className="bg-prism-bg-surface border border-prism-border rounded-2xl shadow-2xl p-6 text-center">
@@ -142,7 +153,7 @@ export function CreatePostModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50">
+    <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-labelledby="create-post-title">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/80 backdrop-blur-sm"
@@ -154,12 +165,13 @@ export function CreatePostModal({
         <div className="bg-prism-bg-surface border border-prism-border rounded-2xl shadow-2xl overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-prism-border">
-            <h2 className="text-sm font-semibold text-prism-text-primary">
+            <h2 id="create-post-title" className="text-sm font-semibold text-prism-text-primary">
               Create Post
             </h2>
             <button
               onClick={() => onOpenChange(false)}
               className="p-1 rounded-lg text-prism-text-dim hover:text-prism-text-primary hover:bg-prism-bg-elevated transition-colors"
+              aria-label="Close"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -175,6 +187,7 @@ export function CreatePostModal({
                 value={content}
                 onChange={(e) => setContent(e.target.value.slice(0, maxChars))}
                 placeholder="Share your perspective..."
+                aria-label="Post content"
                 rows={4}
                 autoFocus
                 className="w-full px-4 py-3 rounded-xl bg-prism-bg-elevated border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:ring-1 focus:ring-prism-accent-primary resize-none leading-relaxed"
@@ -197,9 +210,11 @@ export function CreatePostModal({
               <label className="text-[11px] font-medium text-prism-text-dim uppercase tracking-wider mb-2 block">
                 Post Type
               </label>
-              <div className="flex gap-1 bg-prism-bg-elevated rounded-full p-1">
+              <div className="flex gap-1 bg-prism-bg-elevated rounded-full p-1" role="radiogroup" aria-label="Post type">
                 <button
                   onClick={() => setPostType("permanent")}
+                  role="radio"
+                  aria-checked={postType === "permanent"}
                   className={`flex-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-150 ${
                     postType === "permanent"
                       ? "bg-prism-accent-primary text-white shadow-sm"
@@ -210,6 +225,8 @@ export function CreatePostModal({
                 </button>
                 <button
                   onClick={() => setPostType("story")}
+                  role="radio"
+                  aria-checked={postType === "story"}
                   className={`flex-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-150 flex items-center justify-center gap-1.5 ${
                     postType === "story"
                       ? "bg-prism-accent-primary text-white shadow-sm"
@@ -229,11 +246,13 @@ export function CreatePostModal({
               <label className="text-[11px] font-medium text-prism-text-dim uppercase tracking-wider mb-2 block">
                 Visibility Radius
               </label>
-              <div className="flex gap-2">
+              <div className="flex gap-2" role="radiogroup" aria-label="Visibility radius">
                 {RADIUS_OPTIONS.map((r) => (
                   <button
                     key={r}
                     onClick={() => setRadiusMiles(r)}
+                    role="radio"
+                    aria-checked={radiusMiles === r}
                     className={`flex-1 py-2 rounded-xl text-xs font-mono font-medium transition-all duration-150 border ${
                       radiusMiles === r
                         ? "bg-prism-accent-primary/10 border-prism-accent-primary text-prism-accent-primary"
@@ -248,7 +267,7 @@ export function CreatePostModal({
 
             {/* Error */}
             {error && (
-              <div className="text-xs text-prism-accent-live bg-prism-accent-live/10 px-3 py-2 rounded-lg">
+              <div role="alert" className="text-xs text-prism-accent-live bg-prism-accent-live/10 px-3 py-2 rounded-lg">
                 {error}
               </div>
             )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { COMMUNITY_COLORS } from "@/lib/constants";
 import type { CommunityType } from "@shared/types";
@@ -41,6 +41,17 @@ export function CommunityPulse({ isOpen, onClose }: CommunityPulseProps) {
   const { session } = useAuth();
   const [pulse, setPulse] = useState<PulseData | null>(null);
 
+  // Close on Escape key
+  const handleEscape = useCallback((e: KeyboardEvent) => {
+    if (e.key === "Escape") onClose();
+  }, [onClose]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [isOpen, handleEscape]);
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -71,7 +82,7 @@ export function CommunityPulse({ isOpen, onClose }: CommunityPulseProps) {
   const newCommunities = pulse?.new_communities ?? [];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-end p-4 md:p-6">
+    <div className="fixed inset-0 z-50 flex items-start justify-end p-4 md:p-6" role="dialog" aria-modal="true" aria-labelledby="community-pulse-title">
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         onClick={onClose}
@@ -98,7 +109,7 @@ export function CommunityPulse({ isOpen, onClose }: CommunityPulseProps) {
                 </svg>
               </div>
               <div>
-                <h2 className="text-sm font-semibold text-prism-text-primary">
+                <h2 id="community-pulse-title" className="text-sm font-semibold text-prism-text-primary">
                   Community Pulse
                 </h2>
                 <p className="text-[10px] text-prism-text-dim">
@@ -239,7 +250,7 @@ export function CommunityPulse({ isOpen, onClose }: CommunityPulseProps) {
                           </span>
                         </div>
                         {c.verified && (
-                          <svg className="w-3.5 h-3.5 text-prism-accent-live shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                          <svg className="w-3.5 h-3.5 text-prism-accent-live shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-label="Verified" role="img">
                             <path fillRule="evenodd" d="M16.403 12.652a3 3 0 010-5.304 3 3 0 00-3.75-3.751 3 3 0 00-5.305 0 3 3 0 00-3.751 3.75 3 3 0 000 5.305 3 3 0 003.75 3.751 3 3 0 005.305 0 3 3 0 003.751-3.75zm-2.546-4.46a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
                           </svg>
                         )}
