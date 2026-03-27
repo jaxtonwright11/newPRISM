@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   }
 
   const { title, body, url, community_id } = parsed.data;
-  const payload = { title, body, url: url ?? "/feed", icon: "/icon-192.png" };
+  const payload = { title, body, url: url ?? "/feed", icon: "/icons/icon-192.svg" };
 
   let sent = 0;
   if (community_id) {

@@ -50,7 +50,7 @@ export async function GET(request: Request) {
         ? `${count} new perspectives from ${communityName}`
         : newPerspectives.find((p) => p.community_id === communityId)!.quote.slice(0, 100),
       url: "/feed",
-      icon: "/icon-192.png",
+      icon: "/icons/icon-192.svg",
     });
     totalSent += sent;
   }

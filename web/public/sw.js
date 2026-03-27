@@ -52,8 +52,8 @@ self.addEventListener("push", (event) => {
     payload = {
       title: "PRISM",
       body: event.data.text(),
-      icon: "/icons/icon-192.png",
-      badge: "/icons/badge-72.png",
+      icon: "/icons/icon-192.svg",
+      badge: "/icons/icon-192.svg",
     };
   }
 
@@ -62,8 +62,8 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(title, {
       body,
-      icon: icon || "/icons/icon-192.png",
-      badge: badge || "/icons/badge-72.png",
+      icon: icon || "/icons/icon-192.svg",
+      badge: badge || "/icons/icon-192.svg",
       tag: tag || "prism-default",
       renotify: !!tag,
       data: data || {},

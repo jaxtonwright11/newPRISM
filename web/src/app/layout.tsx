@@ -85,7 +85,7 @@ export default function RootLayout({
       className={`dark ${sora.variable} ${dmSans.variable} ${jetbrainsMono.variable}`}
     >
       <head>
-        <link rel="apple-touch-icon" sizes="180x180" href="/api/icon?size=180" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192.svg" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="dns-prefetch" href="https://api.mapbox.com" />
         <link rel="dns-prefetch" href="https://bkmutmhahravmpfcpbvw.supabase.co" />
