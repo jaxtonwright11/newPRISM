@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { applyRateLimit, parseJsonBody } from "@/lib/api";
+import { getAdminUser } from "@/lib/admin";
 import { getSupabaseWithAuth } from "@/lib/supabase";
 import { z } from "zod";
-
-const ADMIN_IDS = (process.env.ADMIN_USER_IDS ?? "").split(",").filter(Boolean);
 
 const createPromptSchema = z.object({
   prompt_text: z.string().min(1).max(500),
@@ -17,21 +16,21 @@ const updatePromptSchema = z.object({
   active: z.boolean().optional(),
 });
 
-async function getAdminUser(request: Request) {
+async function getAdminWithSupabase(request: Request) {
+  const admin = await getAdminUser(request);
+  if (!admin) return null;
   const token = request.headers.get("authorization")?.replace("Bearer ", "");
   if (!token) return null;
   const supabase = getSupabaseWithAuth(token);
   if (!supabase) return null;
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user || !ADMIN_IDS.includes(user.id)) return null;
-  return { user, supabase };
+  return { user: admin, supabase };
 }
 
 export async function GET(request: Request) {
   const rateLimitResponse = applyRateLimit(request, "admin-prompts");
   if (rateLimitResponse) return rateLimitResponse;
 
-  const admin = await getAdminUser(request);
+  const admin = await getAdminWithSupabase(request);
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { data } = await admin.supabase
@@ -50,7 +49,7 @@ export async function POST(request: Request) {
   const parsed = await parseJsonBody(request, createPromptSchema);
   if (!parsed.success) return parsed.response;
 
-  const admin = await getAdminUser(request);
+  const admin = await getAdminWithSupabase(request);
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   // If setting active, deactivate all others first
@@ -86,7 +85,7 @@ export async function PATCH(request: Request) {
   const parsed = await parseJsonBody(request, updatePromptSchema);
   if (!parsed.success) return parsed.response;
 
-  const admin = await getAdminUser(request);
+  const admin = await getAdminWithSupabase(request);
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   if (parsed.data.active) {

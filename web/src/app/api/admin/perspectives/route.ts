@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { applyRateLimit, parseJsonBody } from "@/lib/api";
+import { getAdminUser } from "@/lib/admin";
 import { getSupabaseWithAuth } from "@/lib/supabase";
 import { z } from "zod";
-
-const ADMIN_IDS = (process.env.ADMIN_USER_IDS ?? "").split(",").filter(Boolean);
 
 const createPerspectiveSchema = z.object({
   quote: z.string().min(1).max(2000),
@@ -20,16 +19,14 @@ export async function POST(request: Request) {
   const parsed = await parseJsonBody(request, createPerspectiveSchema);
   if (!parsed.success) return parsed.response;
 
+  const admin = await getAdminUser(request);
+  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
   const token = request.headers.get("authorization")?.replace("Bearer ", "");
   if (!token) return NextResponse.json({ error: "Missing auth" }, { status: 401 });
 
   const supabase = getSupabaseWithAuth(token);
   if (!supabase) return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user || !ADMIN_IDS.includes(user.id)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
 
   const { data, error } = await supabase
     .from("perspectives")
