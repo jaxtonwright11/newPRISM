@@ -75,10 +75,14 @@ export async function POST(request: NextRequest) {
   const { data, error } = await supabase
     .from("communities")
     .insert({
-      ...parsed.data,
+      name: parsed.data.name,
+      region: parsed.data.region,
+      country: parsed.data.country,
+      community_type: parsed.data.community_type,
+      color_hex: parsed.data.color_hex,
       description: parsed.data.description ?? null,
-      lat: parsed.data.lat ?? null,
-      lng: parsed.data.lng ?? null,
+      latitude: parsed.data.lat ?? null,
+      longitude: parsed.data.lng ?? null,
       active: true,
       verified: true,
     })

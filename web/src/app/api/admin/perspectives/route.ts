@@ -5,10 +5,10 @@ import { getSupabaseWithAuth } from "@/lib/supabase";
 import { z } from "zod";
 
 const createPerspectiveSchema = z.object({
-  quote: z.string().min(1).max(2000),
-  context: z.string().max(500).optional(),
+  quote: z.string().min(20, "Quote must be at least 20 characters").max(500, "Quote must be under 500 characters"),
+  context: z.string().max(300).optional(),
   community_id: z.string().uuid(),
-  topic_id: z.string().uuid().optional(),
+  topic_id: z.string().uuid(),
   category_tag: z.string().max(50).optional(),
 });
 
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
       quote: parsed.data.quote,
       context: parsed.data.context ?? null,
       community_id: parsed.data.community_id,
-      topic_id: parsed.data.topic_id ?? null,
+      topic_id: parsed.data.topic_id,
       category_tag: parsed.data.category_tag ?? null,
       verified: true,
       reaction_count: 0,
