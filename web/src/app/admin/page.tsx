@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import type { CommunityType, TopicStatus } from "@shared/types";
 
-type AdminTab = "communities" | "topics" | "reports";
+type AdminTab = "communities" | "topics" | "reports" | "prompts" | "perspectives" | "push";
 
 interface AdminCommunity {
   id: string;
@@ -76,22 +76,73 @@ const STATUS_COLORS: Record<TopicStatus, string> = {
   archived: "bg-prism-bg-elevated text-prism-text-dim",
 };
 
+interface AdminPrompt {
+  id: string;
+  prompt_text: string;
+  description: string | null;
+  active: boolean;
+  topic_id: string | null;
+  topic: { title: string; slug: string } | null;
+  starts_at: string;
+  created_at: string;
+}
+
+const COMMUNITY_TYPE_DEFAULTS: Record<CommunityType, string> = {
+  civic: "#3B82F6",
+  diaspora: "#A855F7",
+  rural: "#F59E0B",
+  policy: "#22C55E",
+  academic: "#06B6D4",
+  cultural: "#F97316",
+};
+
 export default function AdminPage() {
   const { session } = useAuth();
   const [activeTab, setActiveTab] = useState<AdminTab>("communities");
   const [communities, setCommunities] = useState<AdminCommunity[]>([]);
   const [topics, setTopics] = useState<AdminTopic[]>([]);
   const [reports, setReports] = useState<AdminReport[]>([]);
+  const [prompts, setPrompts] = useState<AdminPrompt[]>([]);
   const [reportsLoading, setReportsLoading] = useState(false);
   const [reportsLoaded, setReportsLoaded] = useState(false);
+  const [promptsLoaded, setPromptsLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState("");
 
   // Topic creation form
   const [newTopicTitle, setNewTopicTitle] = useState("");
   const [newTopicSummary, setNewTopicSummary] = useState("");
   const [newTopicStatus, setNewTopicStatus] = useState<TopicStatus>("active");
+
+  // Community creation form
+  const [newCommName, setNewCommName] = useState("");
+  const [newCommRegion, setNewCommRegion] = useState("");
+  const [newCommCountry, setNewCommCountry] = useState("");
+  const [newCommType, setNewCommType] = useState<CommunityType>("civic");
+  const [newCommDesc, setNewCommDesc] = useState("");
+  const [newCommLat, setNewCommLat] = useState("");
+  const [newCommLng, setNewCommLng] = useState("");
+
+  // Prompt creation form
+  const [newPromptText, setNewPromptText] = useState("");
+  const [newPromptDesc, setNewPromptDesc] = useState("");
+  const [newPromptTopicId, setNewPromptTopicId] = useState("");
+  const [newPromptActive, setNewPromptActive] = useState(false);
+
+  // Perspective creation form
+  const [newPerspQuote, setNewPerspQuote] = useState("");
+  const [newPerspContext, setNewPerspContext] = useState("");
+  const [newPerspCommunityId, setNewPerspCommunityId] = useState("");
+  const [newPerspTopicId, setNewPerspTopicId] = useState("");
+
+  // Push notification form
+  const [pushTitle, setPushTitle] = useState("");
+  const [pushBody, setPushBody] = useState("");
+  const [pushUrl, setPushUrl] = useState("/feed");
+  const [pushCommunityId, setPushCommunityId] = useState("");
+  const [pushResult, setPushResult] = useState("");
 
   const headers = useCallback((): Record<string, string> => {
     const h: Record<string, string> = { "Content-Type": "application/json" };
@@ -149,11 +200,28 @@ export default function AdminPage() {
     if (session?.access_token) fetchData();
   }, [session?.access_token, fetchData]);
 
+  const fetchPrompts = useCallback(async () => {
+    if (promptsLoaded) return;
+    try {
+      const res = await fetch("/api/admin/prompts", { headers: headers() });
+      if (res.ok) {
+        const data = await res.json();
+        setPrompts(data.prompts ?? []);
+        setPromptsLoaded(true);
+      }
+    } catch {
+      // silent
+    }
+  }, [headers, promptsLoaded]);
+
   useEffect(() => {
     if (activeTab === "reports" && session?.access_token && !reportsLoaded) {
       fetchReports();
     }
-  }, [activeTab, session?.access_token, reportsLoaded, fetchReports]);
+    if (activeTab === "prompts" && session?.access_token && !promptsLoaded) {
+      fetchPrompts();
+    }
+  }, [activeTab, session?.access_token, reportsLoaded, fetchReports, promptsLoaded, fetchPrompts]);
 
   const handleCommunityAction = async (id: string, action: "approve" | "reject") => {
     setActionLoading(id);
@@ -242,6 +310,137 @@ export default function AdminPage() {
     }
   };
 
+  const showSuccess = (msg: string) => {
+    setSuccessMessage(msg);
+    setTimeout(() => setSuccessMessage(""), 3000);
+  };
+
+  const handleCreateCommunity = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCommName.trim() || !newCommRegion.trim() || !newCommCountry.trim()) return;
+    setActionLoading("new-community");
+    try {
+      const res = await fetch("/api/admin/communities", {
+        method: "POST",
+        headers: headers(),
+        body: JSON.stringify({
+          name: newCommName.trim(),
+          region: newCommRegion.trim(),
+          country: newCommCountry.trim(),
+          community_type: newCommType,
+          color_hex: COMMUNITY_TYPE_DEFAULTS[newCommType],
+          description: newCommDesc.trim() || undefined,
+          lat: newCommLat ? parseFloat(newCommLat) : undefined,
+          lng: newCommLng ? parseFloat(newCommLng) : undefined,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.community) {
+        setCommunities((prev) => [data.community, ...prev]);
+        setNewCommName(""); setNewCommRegion(""); setNewCommCountry("");
+        setNewCommType("civic"); setNewCommDesc(""); setNewCommLat(""); setNewCommLng("");
+        showSuccess(`Created community: ${data.community.name}`);
+      }
+    } catch { /* silent */ } finally { setActionLoading(null); }
+  };
+
+  const handleCreatePrompt = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPromptText.trim()) return;
+    setActionLoading("new-prompt");
+    try {
+      const res = await fetch("/api/admin/prompts", {
+        method: "POST",
+        headers: headers(),
+        body: JSON.stringify({
+          prompt_text: newPromptText.trim(),
+          description: newPromptDesc.trim() || undefined,
+          topic_id: newPromptTopicId || undefined,
+          active: newPromptActive,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.prompt) {
+        if (newPromptActive) {
+          setPrompts((prev) => [data.prompt, ...prev.map((p: AdminPrompt) => ({ ...p, active: false }))]);
+        } else {
+          setPrompts((prev) => [data.prompt, ...prev]);
+        }
+        setNewPromptText(""); setNewPromptDesc(""); setNewPromptTopicId(""); setNewPromptActive(false);
+        showSuccess("Prompt created");
+      }
+    } catch { /* silent */ } finally { setActionLoading(null); }
+  };
+
+  const handleTogglePrompt = async (id: string, active: boolean) => {
+    setActionLoading(id);
+    try {
+      const res = await fetch("/api/admin/prompts", {
+        method: "PATCH",
+        headers: headers(),
+        body: JSON.stringify({ id, active }),
+      });
+      if (res.ok) {
+        setPrompts((prev) =>
+          prev.map((p) => {
+            if (p.id === id) return { ...p, active };
+            if (active) return { ...p, active: false };
+            return p;
+          })
+        );
+      }
+    } catch { /* silent */ } finally { setActionLoading(null); }
+  };
+
+  const handleCreatePerspective = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPerspQuote.trim() || !newPerspCommunityId) return;
+    setActionLoading("new-perspective");
+    try {
+      const res = await fetch("/api/admin/perspectives", {
+        method: "POST",
+        headers: headers(),
+        body: JSON.stringify({
+          quote: newPerspQuote.trim(),
+          context: newPerspContext.trim() || undefined,
+          community_id: newPerspCommunityId,
+          topic_id: newPerspTopicId || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.perspective) {
+        setNewPerspQuote(""); setNewPerspContext(""); setNewPerspCommunityId(""); setNewPerspTopicId("");
+        showSuccess("Perspective created");
+      }
+    } catch { /* silent */ } finally { setActionLoading(null); }
+  };
+
+  const handleSendPush = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pushTitle.trim() || !pushBody.trim()) return;
+    setActionLoading("send-push");
+    setPushResult("");
+    try {
+      const res = await fetch("/api/admin/send-push", {
+        method: "POST",
+        headers: headers(),
+        body: JSON.stringify({
+          title: pushTitle.trim(),
+          body: pushBody.trim(),
+          url: pushUrl.trim() || "/feed",
+          community_id: pushCommunityId || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setPushResult(`Sent to ${data.sent} subscriber(s)`);
+        setPushTitle(""); setPushBody(""); setPushUrl("/feed"); setPushCommunityId("");
+      } else {
+        setPushResult(`Error: ${data.error ?? "Failed"}`);
+      }
+    } catch { setPushResult("Network error"); } finally { setActionLoading(null); }
+  };
+
   if (!session) {
     return (
       <div className="min-h-screen bg-prism-bg-base flex flex-col items-center justify-center px-6 text-center">
@@ -263,6 +462,9 @@ export default function AdminPage() {
   const tabs: { id: AdminTab; label: string; count: number }[] = [
     { id: "communities", label: "Communities", count: pendingCommunities.length },
     { id: "topics", label: "Topics", count: topics.length },
+    { id: "prompts", label: "Prompts", count: prompts.filter((p) => p.active).length },
+    { id: "perspectives", label: "Perspectives", count: 0 },
+    { id: "push", label: "Push", count: 0 },
     { id: "reports", label: "Reports", count: reports.filter((r) => r.status === "pending").length },
   ];
 
@@ -292,13 +494,20 @@ export default function AdminPage() {
           </div>
         ) : (
           <>
+            {/* Success toast */}
+            {successMessage && (
+              <div className="fixed top-4 right-4 z-50 px-4 py-2.5 rounded-xl bg-prism-accent-live/90 text-white text-sm font-medium shadow-lg animate-fade-in">
+                {successMessage}
+              </div>
+            )}
+
             {/* Tabs */}
-            <div className="flex gap-1 bg-prism-bg-elevated rounded-full p-1 mb-6">
+            <div className="flex gap-1 bg-prism-bg-elevated rounded-full p-1 mb-6 overflow-x-auto no-scrollbar">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  className={`shrink-0 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                     activeTab === tab.id
                       ? "bg-prism-accent-primary text-white"
                       : "text-prism-text-secondary hover:text-prism-text-primary"
@@ -306,7 +515,7 @@ export default function AdminPage() {
                 >
                   {tab.label}
                   {tab.count > 0 && (
-                    <span className="font-mono text-xs opacity-70">{tab.count}</span>
+                    <span className="font-mono text-[10px] opacity-70">{tab.count}</span>
                   )}
                 </button>
               ))}
@@ -315,6 +524,43 @@ export default function AdminPage() {
             {/* Communities tab */}
             {activeTab === "communities" && (
               <div className="space-y-6">
+                {/* Create community form */}
+                <form onSubmit={handleCreateCommunity} className="bg-prism-bg-surface border border-prism-border rounded-xl p-4 space-y-3">
+                  <h2 className="text-xs font-semibold uppercase tracking-wider text-prism-accent-primary">
+                    Create Community
+                  </h2>
+                  <div className="grid grid-cols-2 gap-3">
+                    <input type="text" value={newCommName} onChange={(e) => setNewCommName(e.target.value)}
+                      placeholder="Community name" maxLength={200}
+                      className="col-span-2 w-full px-3 py-2 rounded-lg bg-prism-bg-base border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:border-prism-accent-primary/50" />
+                    <input type="text" value={newCommRegion} onChange={(e) => setNewCommRegion(e.target.value)}
+                      placeholder="Region (e.g. South Side Chicago)" maxLength={200}
+                      className="w-full px-3 py-2 rounded-lg bg-prism-bg-base border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:border-prism-accent-primary/50" />
+                    <input type="text" value={newCommCountry} onChange={(e) => setNewCommCountry(e.target.value)}
+                      placeholder="Country" maxLength={100}
+                      className="w-full px-3 py-2 rounded-lg bg-prism-bg-base border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:border-prism-accent-primary/50" />
+                    <select value={newCommType} onChange={(e) => setNewCommType(e.target.value as CommunityType)}
+                      className="px-3 py-2 rounded-lg bg-prism-bg-base border border-prism-border text-sm text-prism-text-primary focus:outline-none">
+                      {(Object.keys(COMMUNITY_TYPE_LABELS) as CommunityType[]).map((t) => (
+                        <option key={t} value={t}>{COMMUNITY_TYPE_LABELS[t]}</option>
+                      ))}
+                    </select>
+                    <div className="flex gap-2">
+                      <input type="text" value={newCommLat} onChange={(e) => setNewCommLat(e.target.value)}
+                        placeholder="Lat" className="w-full px-3 py-2 rounded-lg bg-prism-bg-base border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none" />
+                      <input type="text" value={newCommLng} onChange={(e) => setNewCommLng(e.target.value)}
+                        placeholder="Lng" className="w-full px-3 py-2 rounded-lg bg-prism-bg-base border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none" />
+                    </div>
+                  </div>
+                  <textarea value={newCommDesc} onChange={(e) => setNewCommDesc(e.target.value)}
+                    placeholder="Description (optional)" rows={2} maxLength={500}
+                    className="w-full px-3 py-2 rounded-lg bg-prism-bg-base border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:border-prism-accent-primary/50 resize-none" />
+                  <button type="submit" disabled={!newCommName.trim() || !newCommRegion.trim() || !newCommCountry.trim() || actionLoading === "new-community"}
+                    className="px-4 py-2 rounded-lg bg-prism-accent-primary text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
+                    {actionLoading === "new-community" ? "Creating..." : "Create Community"}
+                  </button>
+                </form>
+
                 {/* Pending */}
                 <div>
                   <h2 className="text-xs font-semibold uppercase tracking-wider text-prism-accent-primary mb-3">
@@ -566,6 +812,162 @@ export default function AdminPage() {
                     No pending reports.
                   </p>
                 )}
+              </div>
+            )}
+
+            {/* Prompts tab */}
+            {activeTab === "prompts" && (
+              <div className="space-y-6">
+                <form onSubmit={handleCreatePrompt} className="bg-prism-bg-surface border border-prism-border rounded-xl p-4 space-y-3">
+                  <h2 className="text-xs font-semibold uppercase tracking-wider text-prism-accent-primary">
+                    Create Perspective Prompt
+                  </h2>
+                  <input type="text" value={newPromptText} onChange={(e) => setNewPromptText(e.target.value)}
+                    placeholder="Prompt text (e.g. How is your community experiencing the housing crisis?)"
+                    maxLength={500}
+                    className="w-full px-3 py-2 rounded-lg bg-prism-bg-base border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:border-prism-accent-primary/50" />
+                  <textarea value={newPromptDesc} onChange={(e) => setNewPromptDesc(e.target.value)}
+                    placeholder="Description (optional context for contributors)" rows={2} maxLength={500}
+                    className="w-full px-3 py-2 rounded-lg bg-prism-bg-base border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:border-prism-accent-primary/50 resize-none" />
+                  <div className="flex items-center gap-3">
+                    <select value={newPromptTopicId} onChange={(e) => setNewPromptTopicId(e.target.value)}
+                      className="px-3 py-2 rounded-lg bg-prism-bg-base border border-prism-border text-sm text-prism-text-primary focus:outline-none">
+                      <option value="">No topic</option>
+                      {topics.map((t) => (
+                        <option key={t.id} value={t.id}>{t.title}</option>
+                      ))}
+                    </select>
+                    <label className="flex items-center gap-2 text-sm text-prism-text-secondary cursor-pointer">
+                      <input type="checkbox" checked={newPromptActive} onChange={(e) => setNewPromptActive(e.target.checked)}
+                        className="w-4 h-4 rounded accent-prism-accent-primary" />
+                      Set active
+                    </label>
+                    <button type="submit" disabled={!newPromptText.trim() || actionLoading === "new-prompt"}
+                      className="ml-auto px-4 py-2 rounded-lg bg-prism-accent-primary text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
+                      {actionLoading === "new-prompt" ? "Creating..." : "Create"}
+                    </button>
+                  </div>
+                </form>
+
+                {prompts.length > 0 ? (
+                  <div className="space-y-2">
+                    {prompts.map((p) => (
+                      <div key={p.id} className="bg-prism-bg-surface border border-prism-border rounded-xl p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-prism-text-primary mb-1">{p.prompt_text}</p>
+                            {p.description && <p className="text-xs text-prism-text-dim mb-1">{p.description}</p>}
+                            <div className="flex items-center gap-2">
+                              {p.active && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-prism-accent-live/15 text-prism-accent-live font-medium">ACTIVE</span>
+                              )}
+                              {p.topic && (
+                                <span className="text-[10px] text-prism-text-dim">Topic: {p.topic.title}</span>
+                              )}
+                              <span className="text-[10px] font-mono text-prism-text-dim">
+                                {new Date(p.created_at).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleTogglePrompt(p.id, !p.active)}
+                            disabled={actionLoading === p.id}
+                            className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 ${
+                              p.active
+                                ? "bg-prism-accent-destructive/15 text-prism-accent-destructive hover:bg-prism-accent-destructive/25"
+                                : "bg-prism-accent-live/15 text-prism-accent-live hover:bg-prism-accent-live/25"
+                            }`}>
+                            {p.active ? "Deactivate" : "Activate"}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-prism-text-dim py-6 text-center">No prompts yet.</p>
+                )}
+              </div>
+            )}
+
+            {/* Perspectives tab */}
+            {activeTab === "perspectives" && (
+              <div className="space-y-6">
+                <form onSubmit={handleCreatePerspective} className="bg-prism-bg-surface border border-prism-border rounded-xl p-4 space-y-3">
+                  <h2 className="text-xs font-semibold uppercase tracking-wider text-prism-accent-primary">
+                    Create Perspective
+                  </h2>
+                  <textarea value={newPerspQuote} onChange={(e) => setNewPerspQuote(e.target.value)}
+                    placeholder="Perspective quote (the actual community voice)" rows={3} maxLength={2000}
+                    className="w-full px-3 py-2 rounded-lg bg-prism-bg-base border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:border-prism-accent-primary/50 resize-none" />
+                  <input type="text" value={newPerspContext} onChange={(e) => setNewPerspContext(e.target.value)}
+                    placeholder="Context (optional, e.g. spoken at a town hall)" maxLength={500}
+                    className="w-full px-3 py-2 rounded-lg bg-prism-bg-base border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:border-prism-accent-primary/50" />
+                  <div className="grid grid-cols-2 gap-3">
+                    <select value={newPerspCommunityId} onChange={(e) => setNewPerspCommunityId(e.target.value)}
+                      className="px-3 py-2 rounded-lg bg-prism-bg-base border border-prism-border text-sm text-prism-text-primary focus:outline-none">
+                      <option value="">Select community</option>
+                      {communities.filter((c) => c.active).map((c) => (
+                        <option key={c.id} value={c.id}>{c.name} ({c.region})</option>
+                      ))}
+                    </select>
+                    <select value={newPerspTopicId} onChange={(e) => setNewPerspTopicId(e.target.value)}
+                      className="px-3 py-2 rounded-lg bg-prism-bg-base border border-prism-border text-sm text-prism-text-primary focus:outline-none">
+                      <option value="">No topic</option>
+                      {topics.map((t) => (
+                        <option key={t.id} value={t.id}>{t.title}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <button type="submit"
+                    disabled={!newPerspQuote.trim() || !newPerspCommunityId || actionLoading === "new-perspective"}
+                    className="px-4 py-2 rounded-lg bg-prism-accent-primary text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
+                    {actionLoading === "new-perspective" ? "Creating..." : "Create Perspective"}
+                  </button>
+                </form>
+                <p className="text-xs text-prism-text-dim text-center">
+                  Perspectives created here are auto-verified and will appear on the map and feeds immediately.
+                </p>
+              </div>
+            )}
+
+            {/* Push tab */}
+            {activeTab === "push" && (
+              <div className="space-y-6">
+                <form onSubmit={handleSendPush} className="bg-prism-bg-surface border border-prism-border rounded-xl p-4 space-y-3">
+                  <h2 className="text-xs font-semibold uppercase tracking-wider text-prism-accent-primary">
+                    Send Push Notification
+                  </h2>
+                  <input type="text" value={pushTitle} onChange={(e) => setPushTitle(e.target.value)}
+                    placeholder="Notification title" maxLength={200}
+                    className="w-full px-3 py-2 rounded-lg bg-prism-bg-base border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:border-prism-accent-primary/50" />
+                  <textarea value={pushBody} onChange={(e) => setPushBody(e.target.value)}
+                    placeholder="Notification body" rows={2} maxLength={500}
+                    className="w-full px-3 py-2 rounded-lg bg-prism-bg-base border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:border-prism-accent-primary/50 resize-none" />
+                  <div className="grid grid-cols-2 gap-3">
+                    <input type="text" value={pushUrl} onChange={(e) => setPushUrl(e.target.value)}
+                      placeholder="URL (default: /feed)"
+                      className="px-3 py-2 rounded-lg bg-prism-bg-base border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none" />
+                    <select value={pushCommunityId} onChange={(e) => setPushCommunityId(e.target.value)}
+                      className="px-3 py-2 rounded-lg bg-prism-bg-base border border-prism-border text-sm text-prism-text-primary focus:outline-none">
+                      <option value="">All users (broadcast)</option>
+                      {communities.filter((c) => c.active).map((c) => (
+                        <option key={c.id} value={c.id}>{c.name} followers</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button type="submit" disabled={!pushTitle.trim() || !pushBody.trim() || actionLoading === "send-push"}
+                      className="px-4 py-2 rounded-lg bg-prism-accent-primary text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
+                      {actionLoading === "send-push" ? "Sending..." : "Send Push"}
+                    </button>
+                    {pushResult && (
+                      <span className="text-xs text-prism-text-secondary">{pushResult}</span>
+                    )}
+                  </div>
+                </form>
+                <p className="text-xs text-prism-text-dim text-center">
+                  Automated hourly notifications are already configured for new perspectives via cron.
+                </p>
               </div>
             )}
           </>

@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/expire-stories",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/notify-perspectives",
+      "schedule": "0 * * * *"
     }
   ]
 }

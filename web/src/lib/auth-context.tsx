@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, useRef } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { createClient, SupabaseClient, User, Session, AuthError } from '@supabase/supabase-js';
 import { subscribeToPush } from '@/lib/push';
 

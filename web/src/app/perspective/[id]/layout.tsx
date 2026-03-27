@@ -8,7 +8,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
 
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://web-liard-psi-12.vercel.app";
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://prism-app.vercel.app";
     const res = await fetch(`${baseUrl}/api/perspectives/${id}`, {
       next: { revalidate: 60 },
     });
