@@ -226,7 +226,7 @@ export default function FeedPage() {
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-3 border-b border-[var(--bg-elevated)] max-w-2xl mx-auto w-full md:px-6">
         <PrismWordmark size="sm" />
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0 overflow-hidden">
         <div className="flex gap-0.5 bg-[var(--bg-elevated)] rounded-full p-0.5" role="tablist" aria-label="Feed filters">
           {tabs.map((tab) => (
             <button
@@ -234,7 +234,7 @@ export default function FeedPage() {
               onClick={() => setActiveTab(tab.id)}
               role="tab"
               aria-selected={activeTab === tab.id}
-              className={`px-2.5 py-1 rounded-full text-xs font-medium font-body transition-all ${
+              className={`px-2 py-2 min-w-[44px] min-h-[44px] rounded-full text-xs font-medium font-body transition-all ${
                 activeTab === tab.id
                   ? "bg-[var(--accent-primary)] text-white"
                   : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
@@ -246,19 +246,19 @@ export default function FeedPage() {
         </div>
         <button
           onClick={() => setPulseOpen(true)}
-          className="p-1.5 text-[var(--text-dim)] hover:text-prism-accent-primary transition-colors"
+          className="w-10 min-h-[44px] flex items-center justify-center text-[var(--text-dim)] hover:text-prism-accent-primary transition-colors"
           aria-label="Community Pulse"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
           </svg>
         </button>
-        <Link href="/search" className="p-1.5 text-[var(--text-dim)] hover:text-[var(--text-primary)] transition-colors" aria-label="Search">
+        <Link href="/search" className="w-10 min-h-[44px] flex items-center justify-center text-[var(--text-dim)] hover:text-[var(--text-primary)] transition-colors" aria-label="Search">
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
           </svg>
         </Link>
-        <Link href="/notifications" className="relative p-1.5 text-[var(--text-dim)] hover:text-[var(--text-primary)] transition-colors" aria-label="Notifications">
+        <Link href="/notifications" className="relative w-10 min-h-[44px] flex items-center justify-center text-[var(--text-dim)] hover:text-[var(--text-primary)] transition-colors" aria-label="Notifications">
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
           </svg>
@@ -274,7 +274,7 @@ export default function FeedPage() {
       {/* Collapsible map preview */}
       <button
         onClick={() => setMapExpanded(!mapExpanded)}
-        className="flex items-center justify-center py-1.5 bg-[var(--bg-surface)] border-b border-[var(--bg-elevated)] text-[10px] text-[var(--text-dim)] font-body hover:text-[var(--text-secondary)] transition-colors"
+        className="flex items-center justify-center min-h-[44px] bg-[var(--bg-surface)] border-b border-[var(--bg-elevated)] text-[10px] text-[var(--text-dim)] font-body hover:text-[var(--text-secondary)] transition-colors"
       >
         <svg
           className={`w-3 h-3 mr-1 transition-transform ${mapExpanded ? "rotate-180" : ""}`}
