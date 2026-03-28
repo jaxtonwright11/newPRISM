@@ -1,23 +1,19 @@
 import { NextResponse } from "next/server";
+import { applyRateLimit } from "@/lib/api";
 import { getAdminUser } from "@/lib/admin";
 import { generateWeeklyDigest } from "@/lib/claude";
-import { createClient } from "@supabase/supabase-js";
-
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
-
-function getServiceSupabase() {
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) return null;
-  return createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-}
+import { getSupabaseServer } from "@/lib/supabase";
 
 export async function POST(request: Request) {
+  const rateLimitResponse = applyRateLimit(request, "admin-ai");
+  if (rateLimitResponse) return rateLimitResponse;
+
   const admin = await getAdminUser(request);
   if (!admin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const supabase = getServiceSupabase();
+  const supabase = getSupabaseServer();
   if (!supabase) {
     return NextResponse.json({ error: "Database not configured" }, { status: 500 });
   }

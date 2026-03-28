@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { useAuth } from "@/lib/auth-context";
 import { COMMUNITY_COLORS } from "@/lib/constants";
 import type { CommunityType } from "@shared/types";
@@ -147,8 +148,7 @@ export default function PublicProfilePage() {
           <div className="flex items-start gap-4">
             <div className="w-16 h-16 rounded-full bg-prism-accent-primary/30 flex items-center justify-center shrink-0 overflow-hidden">
               {profile.avatar_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={profile.avatar_url} alt={profile.display_name ?? profile.username} className="w-full h-full object-cover" />
+                <Image src={profile.avatar_url} alt={profile.display_name ?? profile.username} width={64} height={64} className="w-full h-full object-cover" />
               ) : (
                 <span className="text-white font-display font-bold text-xl">
                   {(profile.display_name ?? profile.username).charAt(0).toUpperCase()}

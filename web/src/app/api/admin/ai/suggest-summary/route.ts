@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { applyRateLimit } from "@/lib/api";
 import { getAdminUser } from "@/lib/admin";
 import { generateTopicSummary } from "@/lib/claude";
 import { z } from "zod";
@@ -9,6 +10,9 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
+  const rateLimitResponse = applyRateLimit(request, "admin-ai");
+  if (rateLimitResponse) return rateLimitResponse;
+
   const admin = await getAdminUser(request);
   if (!admin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

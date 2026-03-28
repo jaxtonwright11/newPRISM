@@ -45,6 +45,7 @@ export function ShareButton({ perspectiveId, quote }: ShareButtonProps) {
       }}
       className="flex items-center gap-1 text-prism-text-dim hover:text-prism-text-secondary transition-colors"
       title="Share"
+      aria-label="Share perspective"
     >
       {/* Share/arrow-up-from-square icon */}
       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

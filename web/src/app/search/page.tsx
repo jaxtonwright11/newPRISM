@@ -111,6 +111,7 @@ export default function SearchPage() {
               <input
                 type="text"
                 placeholder="Search perspectives, topics, communities..."
+                aria-label="Search perspectives, topics, communities"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 autoFocus
@@ -153,8 +154,14 @@ export default function SearchPage() {
             </div>
 
             {searching && (
-              <div className="text-center py-8">
-                <div className="w-6 h-6 border-2 border-prism-accent-primary border-t-transparent rounded-full animate-spin mx-auto" />
+              <div className="space-y-3 py-2">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="bg-prism-bg-surface rounded-xl border border-prism-border p-4">
+                    <div className="h-3 w-24 bg-prism-bg-elevated rounded animate-shimmer mb-2" />
+                    <div className="h-4 w-full bg-prism-bg-elevated rounded animate-shimmer mb-1" />
+                    <div className="h-4 w-3/4 bg-prism-bg-elevated rounded animate-shimmer" />
+                  </div>
+                ))}
               </div>
             )}
 

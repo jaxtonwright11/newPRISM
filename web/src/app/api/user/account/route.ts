@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
+import { applyRateLimit } from "@/lib/api";
 import { getSupabaseWithAuth, getSupabaseServer } from "@/lib/supabase";
 
 export async function DELETE(request: Request) {
+  const rateLimitResponse = applyRateLimit(request, "account-delete");
+  if (rateLimitResponse) return rateLimitResponse;
+
   const token = request.headers.get("authorization")?.replace("Bearer ", "");
   if (!token) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
