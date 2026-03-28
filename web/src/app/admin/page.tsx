@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import type { CommunityType, TopicStatus } from "@shared/types";
 
-type AdminTab = "communities" | "topics" | "reports" | "prompts" | "perspectives" | "push" | "tools";
+type AdminTab = "communities" | "topics" | "reports" | "prompts" | "perspectives" | "push" | "tools" | "calendar" | "templates" | "health";
 
 interface AdminCommunity {
   id: string;
@@ -545,6 +545,9 @@ export default function AdminPage() {
     { id: "perspectives", label: "Perspectives", count: 0 },
     { id: "push", label: "Push", count: 0 },
     { id: "tools", label: "Tools", count: 0 },
+    { id: "calendar", label: "Calendar", count: 0 },
+    { id: "templates", label: "Templates", count: 0 },
+    { id: "health", label: "Health", count: 0 },
     { id: "reports", label: "Reports", count: reports.filter((r) => r.status === "pending").length },
   ];
 
@@ -1157,8 +1160,373 @@ export default function AdminPage() {
                 </div>
               </div>
             )}
+
+            {/* Content Calendar Tab */}
+            {activeTab === "calendar" && (
+              <ContentCalendarTab topics={topics} prompts={prompts} />
+            )}
+
+            {/* Topic Templates Tab */}
+            {activeTab === "templates" && (
+              <TopicTemplatesTab headers={headers} onTopicCreated={() => {
+                fetch("/api/admin/topics", { headers: headers() })
+                  .then((r) => r.json())
+                  .then((d) => setTopics(d.topics ?? [])).catch(() => {});
+              }} />
+            )}
+
+            {/* Platform Health Tab */}
+            {activeTab === "health" && (
+              <PlatformHealthTab headers={headers} />
+            )}
           </>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ── Content Calendar Tab ─────────────────────────────────────────────────
+function ContentCalendarTab({ topics, prompts }: {
+  topics: AdminTopic[];
+  prompts: AdminPrompt[];
+}) {
+  const today = new Date();
+  const weeks: Date[][] = [];
+  const startOfWeek = new Date(today);
+  startOfWeek.setDate(today.getDate() - today.getDay());
+
+  for (let w = 0; w < 4; w++) {
+    const week: Date[] = [];
+    for (let d = 0; d < 7; d++) {
+      const date = new Date(startOfWeek);
+      date.setDate(startOfWeek.getDate() + w * 7 + d);
+      week.push(date);
+    }
+    weeks.push(week);
+  }
+
+  const topicsByDate = new Map<string, AdminTopic[]>();
+  for (const t of topics) {
+    const dateKey = t.created_at.split("T")[0];
+    if (!topicsByDate.has(dateKey)) topicsByDate.set(dateKey, []);
+    topicsByDate.get(dateKey)!.push(t);
+  }
+
+  const promptsByDate = new Map<string, AdminPrompt[]>();
+  for (const p of prompts) {
+    const dateKey = p.starts_at.split("T")[0];
+    if (!promptsByDate.has(dateKey)) promptsByDate.set(dateKey, []);
+    promptsByDate.get(dateKey)!.push(p);
+  }
+
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const todayStr = today.toISOString().split("T")[0];
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-sm font-semibold text-prism-text-primary">Content Calendar — 4 Week View</h2>
+
+      {/* Day headers */}
+      <div className="grid grid-cols-7 gap-1">
+        {dayNames.map((d) => (
+          <div key={d} className="text-[9px] text-prism-text-dim text-center font-mono uppercase">{d}</div>
+        ))}
+      </div>
+
+      {/* Calendar grid */}
+      {weeks.map((week, wi) => (
+        <div key={wi} className="grid grid-cols-7 gap-1">
+          {week.map((date) => {
+            const dateStr = date.toISOString().split("T")[0];
+            const dayTopics = topicsByDate.get(dateStr) ?? [];
+            const dayPrompts = promptsByDate.get(dateStr) ?? [];
+            const isToday = dateStr === todayStr;
+
+            return (
+              <div
+                key={dateStr}
+                className={`min-h-[60px] p-1.5 rounded-lg border text-[9px] ${
+                  isToday
+                    ? "border-prism-accent-primary/40 bg-prism-accent-primary/5"
+                    : "border-prism-border/40 bg-prism-bg-surface"
+                }`}
+              >
+                <span className={`font-mono block mb-1 ${isToday ? "text-prism-accent-primary font-bold" : "text-prism-text-dim"}`}>
+                  {date.getDate()}
+                </span>
+                {dayTopics.map((t) => (
+                  <div key={t.id} className="bg-prism-accent-live/10 text-prism-accent-live rounded px-1 py-0.5 mb-0.5 truncate">
+                    {t.title}
+                  </div>
+                ))}
+                {dayPrompts.map((p) => (
+                  <div key={p.id} className="bg-prism-accent-primary/10 text-prism-accent-primary rounded px-1 py-0.5 mb-0.5 truncate">
+                    {p.prompt_text.slice(0, 30)}
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      ))}
+
+      <p className="text-[10px] text-prism-text-dim">
+        <span className="inline-block w-2 h-2 bg-prism-accent-live/30 rounded mr-1" /> Topics
+        <span className="inline-block w-2 h-2 bg-prism-accent-primary/30 rounded mr-1 ml-3" /> Prompts
+      </p>
+    </div>
+  );
+}
+
+// ── Topic Templates Tab ──────────────────────────────────────────────────
+const TOPIC_TEMPLATES = [
+  { title: "Cost of Living Crisis", category: "economic", description: "How are communities coping with rising costs?", prompts: ["How has your community's daily routine changed due to rising costs?", "What creative solutions has your neighborhood developed?"] },
+  { title: "Water Access & Quality", category: "environmental", description: "Clean water varies dramatically by region.", prompts: ["What does water access look like in your community?", "Has water quality affected daily life where you live?"] },
+  { title: "Local Election Impact", category: "civic", description: "How do local elections change life on the ground?", prompts: ["What changed in your neighborhood after the last local election?", "What issue do local candidates never address?"] },
+  { title: "Youth Mental Health", category: "cultural", description: "Young people's experiences differ by community.", prompts: ["What mental health resources exist in your community?", "How do young people in your area talk about stress?"] },
+  { title: "Housing Affordability", category: "economic", description: "The housing crisis looks different everywhere.", prompts: ["What does affordable housing mean in your community?", "How has housing changed in your neighborhood in the last 5 years?"] },
+  { title: "Public Transit vs Car Culture", category: "civic", description: "Transportation shapes communities differently.", prompts: ["How do people in your area get around?", "What would better transit change about your community?"] },
+  { title: "Food Deserts & Access", category: "environmental", description: "Access to fresh food varies wildly.", prompts: ["Where does your community get fresh food?", "How far is the nearest full grocery store?"] },
+  { title: "Immigration in My Community", category: "cultural", description: "Immigration looks different from every angle.", prompts: ["How has immigration shaped your neighborhood?", "What do outsiders not understand about immigration here?"] },
+  { title: "Education Quality Gap", category: "civic", description: "School experiences vary dramatically by zip code.", prompts: ["What's the biggest gap in your local schools?", "How does education quality compare to neighboring areas?"] },
+  { title: "Climate in My Backyard", category: "environmental", description: "Climate change impacts hit differently by region.", prompts: ["What climate impact is most visible where you live?", "How has weather changed in your area over the last decade?"] },
+];
+
+function TopicTemplatesTab({ headers, onTopicCreated }: {
+  headers: () => Record<string, string>;
+  onTopicCreated: () => void;
+}) {
+  const [deploying, setDeploying] = useState<number | null>(null);
+  const [deployed, setDeployed] = useState<Set<number>>(new Set());
+
+  async function deployTemplate(index: number) {
+    const template = TOPIC_TEMPLATES[index];
+    setDeploying(index);
+    try {
+      const res = await fetch("/api/admin/topics", {
+        method: "POST",
+        headers: headers(),
+        body: JSON.stringify({
+          title: template.title,
+          summary: template.description,
+          status: "active",
+        }),
+      });
+      if (res.ok) {
+        setDeployed((prev) => new Set(prev).add(index));
+        onTopicCreated();
+      }
+    } catch {
+      // ignore
+    } finally {
+      setDeploying(null);
+    }
+  }
+
+  const categories = Array.from(new Set(TOPIC_TEMPLATES.map((t) => t.category)));
+  const categoryColors: Record<string, string> = {
+    economic: "text-yellow-400 bg-yellow-500/10",
+    environmental: "text-green-400 bg-green-500/10",
+    civic: "text-blue-400 bg-blue-500/10",
+    cultural: "text-orange-400 bg-orange-500/10",
+  };
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-sm font-semibold text-prism-text-primary">Topic Templates</h2>
+      <p className="text-xs text-prism-text-dim">Pre-written topic templates ready to deploy in one click.</p>
+
+      {categories.map((cat) => (
+        <div key={cat}>
+          <h3 className="text-[10px] font-semibold uppercase tracking-wider text-prism-text-dim mb-2">{cat}</h3>
+          <div className="space-y-2">
+            {TOPIC_TEMPLATES.map((template, i) => {
+              if (template.category !== cat) return null;
+              const isDeployed = deployed.has(i);
+              return (
+                <div key={i} className="bg-prism-bg-surface border border-prism-border rounded-lg p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-sm font-medium text-prism-text-primary">{template.title}</span>
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${categoryColors[cat] ?? "text-prism-text-dim bg-prism-bg-elevated"}`}>
+                          {cat}
+                        </span>
+                      </div>
+                      <p className="text-xs text-prism-text-secondary mb-2">{template.description}</p>
+                      <div className="space-y-1">
+                        {template.prompts.map((p, pi) => (
+                          <p key={pi} className="text-[10px] text-prism-text-dim italic">&ldquo;{p}&rdquo;</p>
+                        ))}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => deployTemplate(i)}
+                      disabled={deploying === i || isDeployed}
+                      className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                        isDeployed
+                          ? "bg-prism-accent-live/15 text-prism-accent-live"
+                          : "bg-prism-accent-primary text-white hover:opacity-90 disabled:opacity-50"
+                      }`}
+                    >
+                      {isDeployed ? "Deployed" : deploying === i ? "..." : "Deploy"}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Platform Health Tab ──────────────────────────────────────────────────
+function PlatformHealthTab({ headers }: { headers: () => Record<string, string> }) {
+  const [health, setHealth] = useState<{
+    perspectivesToday: number;
+    perspectives7dAvg: number;
+    activeCommunities: { name: string; count: number }[];
+    emptyTopics: { title: string; id: string }[];
+    unfollowedUsers: number;
+    totalUsers: number;
+    totalPerspectives: number;
+    totalCommunities: number;
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [bulkNotifyType, setBulkNotifyType] = useState<CommunityType>("civic");
+  const [bulkNotifyMsg, setBulkNotifyMsg] = useState("");
+  const [bulkNotifyResult, setBulkNotifyResult] = useState("");
+
+  useEffect(() => {
+    async function fetchHealth() {
+      try {
+        const res = await fetch("/api/admin/health", { headers: headers() });
+        if (res.ok) {
+          const data = await res.json();
+          setHealth(data);
+        }
+      } catch {
+        // ignore
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchHealth();
+  }, [headers]);
+
+  async function sendBulkNotify() {
+    if (!bulkNotifyMsg.trim()) return;
+    setBulkNotifyResult("Sending...");
+    try {
+      const res = await fetch("/api/admin/bulk-notify", {
+        method: "POST",
+        headers: headers(),
+        body: JSON.stringify({ community_type: bulkNotifyType, title: "PRISM", body: bulkNotifyMsg }),
+      });
+      const data = await res.json();
+      setBulkNotifyResult(`Sent to ${data.sent ?? 0} users`);
+    } catch {
+      setBulkNotifyResult("Failed to send");
+    }
+  }
+
+  if (loading) {
+    return <div className="space-y-3">{[1, 2, 3].map((i) => <div key={i} className="h-20 bg-prism-bg-elevated rounded-xl animate-shimmer" />)}</div>;
+  }
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-sm font-semibold text-prism-text-primary">Platform Health</h2>
+
+      {health && (
+        <>
+          {/* Key metrics */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+              { label: "Users", value: health.totalUsers },
+              { label: "Communities", value: health.totalCommunities },
+              { label: "Perspectives", value: health.totalPerspectives },
+              { label: "Today", value: health.perspectivesToday, sub: `avg ${health.perspectives7dAvg}/day` },
+            ].map((m) => (
+              <div key={m.label} className="bg-prism-bg-surface border border-prism-border rounded-lg p-3 text-center">
+                <span className="font-mono text-lg font-bold text-prism-text-primary">{m.value}</span>
+                <p className="text-[10px] text-prism-text-dim">{m.label}</p>
+                {m.sub && <p className="text-[9px] text-prism-text-dim">{m.sub}</p>}
+              </div>
+            ))}
+          </div>
+
+          {/* Most active communities */}
+          {health.activeCommunities.length > 0 && (
+            <div className="bg-prism-bg-surface border border-prism-border rounded-xl p-4">
+              <h3 className="text-xs font-semibold text-prism-accent-primary uppercase tracking-wider mb-2">Most Active Communities</h3>
+              <div className="space-y-1.5">
+                {health.activeCommunities.map((c) => (
+                  <div key={c.name} className="flex items-center justify-between">
+                    <span className="text-xs text-prism-text-primary">{c.name}</span>
+                    <span className="text-[10px] font-mono text-prism-text-dim">{c.count} perspectives</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Attention needed */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {health.emptyTopics.length > 0 && (
+              <div className="bg-prism-accent-destructive/5 border border-prism-accent-destructive/20 rounded-xl p-4">
+                <h3 className="text-xs font-semibold text-prism-accent-destructive uppercase tracking-wider mb-2">Topics with 0 Perspectives</h3>
+                {health.emptyTopics.map((t) => (
+                  <p key={t.id} className="text-xs text-prism-text-secondary">{t.title}</p>
+                ))}
+              </div>
+            )}
+            {health.unfollowedUsers > 0 && (
+              <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-xl p-4">
+                <h3 className="text-xs font-semibold text-yellow-400 uppercase tracking-wider mb-2">Onboarding Failures</h3>
+                <p className="text-xs text-prism-text-secondary">{health.unfollowedUsers} users follow 0 communities</p>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* Bulk Notify */}
+      <div className="bg-prism-bg-surface border border-prism-border rounded-xl p-4 space-y-3">
+        <h3 className="text-xs font-semibold text-prism-accent-primary uppercase tracking-wider">Bulk Notify by Community Type</h3>
+        <div className="flex gap-2 flex-wrap">
+          {(["civic", "diaspora", "rural", "policy", "academic", "cultural"] as CommunityType[]).map((t) => (
+            <button
+              key={t}
+              onClick={() => setBulkNotifyType(t)}
+              className={`text-[10px] px-2 py-1 rounded-full border transition-all ${
+                bulkNotifyType === t
+                  ? "border-prism-accent-primary bg-prism-accent-primary/10 text-prism-accent-primary"
+                  : "border-prism-border text-prism-text-dim"
+              }`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+        <input
+          type="text"
+          value={bulkNotifyMsg}
+          onChange={(e) => setBulkNotifyMsg(e.target.value)}
+          placeholder="Notification message..."
+          className="w-full px-3 py-2 rounded-lg bg-prism-bg-base border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none"
+        />
+        <button
+          onClick={sendBulkNotify}
+          disabled={!bulkNotifyMsg.trim()}
+          className="px-4 py-2 rounded-lg bg-prism-accent-primary text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+        >
+          Send to all {bulkNotifyType} community followers
+        </button>
+        {bulkNotifyResult && <p className="text-xs text-prism-text-secondary">{bulkNotifyResult}</p>}
       </div>
     </div>
   );

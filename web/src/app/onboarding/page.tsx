@@ -5,16 +5,38 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { PrismWordmark } from "@/components/prism-wordmark";
 import { prismEvents } from "@/lib/posthog";
+import { COMMUNITY_COLORS } from "@/lib/constants";
+import type { CommunityType } from "@shared/types";
 
-type Step = 1 | 2 | 3;
+type Step = 1 | 2 | 3 | 4;
+
+interface SuggestedCommunity {
+  id: string;
+  name: string;
+  region: string;
+  community_type: string;
+  color_hex: string;
+  perspective_count: number;
+  member_count: number;
+  sample_quote: string | null;
+  distance_km: number | null;
+}
 
 export default function OnboardingPage() {
   const [step, setStep] = useState<Step>(1);
   const [location, setLocation] = useState("");
   const [detecting, setDetecting] = useState(false);
+  const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [perspective, setPerspective] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [activePrompt, setActivePrompt] = useState<{ prompt_text: string; topic_name?: string } | null>(null);
+
+  // Community matching state
+  const [suggestedCommunities, setSuggestedCommunities] = useState<SuggestedCommunity[]>([]);
+  const [selectedCommunityIds, setSelectedCommunityIds] = useState<Set<string>>(new Set());
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [followingInProgress, setFollowingInProgress] = useState(false);
+
   const { session } = useAuth();
   const router = useRouter();
   const startTime = useRef(Date.now());
@@ -27,11 +49,13 @@ export default function OnboardingPage() {
       .catch(() => {});
   }, []);
 
+  // Detect location
   useEffect(() => {
     if ("geolocation" in navigator) {
       setDetecting(true);
       navigator.geolocation.getCurrentPosition(
         async (pos) => {
+          setUserCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
           try {
             const res = await fetch(
               `https://api.mapbox.com/geocoding/v5/mapbox.places/${pos.coords.longitude},${pos.coords.latitude}.json?types=neighborhood,place&access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`
@@ -49,6 +73,61 @@ export default function OnboardingPage() {
       );
     }
   }, []);
+
+  // Fetch community suggestions when moving to step 2
+  async function fetchSuggestions() {
+    setLoadingSuggestions(true);
+    try {
+      const params = userCoords ? `?lat=${userCoords.lat}&lng=${userCoords.lng}` : "";
+      const res = await fetch(`/api/communities/suggest${params}`);
+      const data = await res.json();
+      setSuggestedCommunities(data.suggestions ?? []);
+    } catch {
+      setSuggestedCommunities([]);
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  }
+
+  function toggleCommunity(id: string) {
+    setSelectedCommunityIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else if (next.size < 3) {
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
+  async function followSelectedAndContinue() {
+    if (!session?.access_token || selectedCommunityIds.size === 0) {
+      setStep(3);
+      return;
+    }
+
+    setFollowingInProgress(true);
+    try {
+      await Promise.all(
+        Array.from(selectedCommunityIds).map((community_id) =>
+          fetch("/api/communities/follow", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({ community_id }),
+          })
+        )
+      );
+    } catch {
+      // Non-critical
+    } finally {
+      setFollowingInProgress(false);
+      setStep(3);
+    }
+  }
 
   async function handlePostPerspective() {
     if (!perspective.trim() || !session?.access_token) return;
@@ -70,9 +149,11 @@ export default function OnboardingPage() {
     } finally {
       setSubmitting(false);
       prismEvents.onboardingAhaMoment(location, Date.now() - startTime.current);
-      setStep(3);
+      setStep(4);
     }
   }
+
+  const totalSteps = 4;
 
   return (
     <div className="min-h-screen bg-[var(--bg-base)] flex flex-col">
@@ -83,7 +164,7 @@ export default function OnboardingPage() {
 
       {/* Progress dots */}
       <div className="flex items-center justify-center gap-2 mb-8">
-        {[1, 2, 3].map((s) => (
+        {Array.from({ length: totalSteps }, (_, i) => i + 1).map((s) => (
           <div
             key={s}
             className={`w-2 h-2 rounded-full transition-colors ${
@@ -99,6 +180,7 @@ export default function OnboardingPage() {
 
       {/* Step content */}
       <div className="flex-1 px-6 flex flex-col">
+        {/* Step 1: Location */}
         {step === 1 && (
           <div className="flex flex-col items-center text-center flex-1">
             <h1 className="font-display font-bold text-2xl text-[var(--text-primary)] mb-2">
@@ -134,6 +216,7 @@ export default function OnboardingPage() {
                     // Non-critical
                   }
                 }
+                fetchSuggestions();
                 setStep(2);
               }}
               disabled={!location.trim()}
@@ -143,7 +226,7 @@ export default function OnboardingPage() {
             </button>
 
             <button
-              onClick={() => setStep(2)}
+              onClick={() => { fetchSuggestions(); setStep(2); }}
               className="mt-3 text-sm text-[var(--text-secondary)] font-body hover:text-[var(--text-primary)] transition-colors"
             >
               Skip for now
@@ -151,7 +234,123 @@ export default function OnboardingPage() {
           </div>
         )}
 
+        {/* Step 2: Community Matching */}
         {step === 2 && (
+          <div className="flex flex-col items-center text-center flex-1">
+            <h1 className="font-display font-bold text-2xl text-[var(--text-primary)] mb-2">
+              Communities near you and beyond
+            </h1>
+            <p className="text-base text-[var(--text-secondary)] font-body mb-6 max-w-sm">
+              Follow 1-3 communities to fill your feed with real perspectives.
+            </p>
+
+            {loadingSuggestions ? (
+              <div className="w-full max-w-sm space-y-3">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="h-24 bg-[var(--bg-elevated)] rounded-xl animate-shimmer" />
+                ))}
+              </div>
+            ) : (
+              <div className="w-full max-w-sm space-y-2.5 mb-6">
+                {suggestedCommunities.map((c, i) => {
+                  const isSelected = selectedCommunityIds.has(c.id);
+                  const color = COMMUNITY_COLORS[c.community_type as CommunityType] ?? c.color_hex;
+                  const isNearby = i < 2 && c.distance_km !== null;
+
+                  return (
+                    <button
+                      key={c.id}
+                      onClick={() => toggleCommunity(c.id)}
+                      className={`w-full text-left p-3.5 rounded-xl border transition-all ${
+                        isSelected
+                          ? "border-[var(--accent-primary)]/50 bg-[var(--accent-primary)]/8"
+                          : "border-[var(--bg-elevated)] bg-[var(--bg-surface)] hover:border-[var(--text-dim)]/30"
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        {/* Color dot */}
+                        <div
+                          className="w-3 h-3 rounded-full mt-1 flex-shrink-0"
+                          style={{ backgroundColor: color, boxShadow: `0 0 8px ${color}40` }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <span className="text-sm font-medium text-[var(--text-primary)] truncate">
+                              {c.name}
+                            </span>
+                            <span
+                              className="text-[9px] px-1.5 py-0.5 rounded-full font-medium uppercase tracking-wider flex-shrink-0"
+                              style={{ backgroundColor: color + "18", color }}
+                            >
+                              {c.community_type}
+                            </span>
+                            {isNearby && (
+                              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[var(--accent-live)]/10 text-[var(--accent-live)] font-medium flex-shrink-0">
+                                Nearby
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 text-[10px] text-[var(--text-dim)] mb-1.5">
+                            <span>{c.region}</span>
+                            <span>·</span>
+                            <span className="font-mono">{c.member_count} member{c.member_count !== 1 ? "s" : ""}</span>
+                            <span>·</span>
+                            <span className="font-mono">{c.perspective_count} perspective{c.perspective_count !== 1 ? "s" : ""}</span>
+                          </div>
+                          {c.sample_quote && (
+                            <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed line-clamp-2 italic">
+                              &ldquo;{c.sample_quote}&rdquo;
+                            </p>
+                          )}
+                        </div>
+                        {/* Check indicator */}
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${
+                          isSelected
+                            ? "border-[var(--accent-primary)] bg-[var(--accent-primary)]"
+                            : "border-[var(--text-dim)]/30"
+                        }`}>
+                          {isSelected && (
+                            <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {selectedCommunityIds.size > 0 && (
+              <p className="text-xs text-[var(--accent-primary)] font-body mb-4">
+                {selectedCommunityIds.size} communit{selectedCommunityIds.size === 1 ? "y" : "ies"} selected
+              </p>
+            )}
+
+            <button
+              onClick={followSelectedAndContinue}
+              disabled={followingInProgress}
+              className="w-full max-w-sm py-3 rounded-xl bg-[var(--accent-primary)] text-white font-body font-medium text-base disabled:opacity-40 transition-opacity"
+            >
+              {followingInProgress
+                ? "Following..."
+                : selectedCommunityIds.size > 0
+                  ? "Follow and continue"
+                  : "Continue without following"}
+            </button>
+
+            <button
+              onClick={() => setStep(3)}
+              className="mt-3 text-sm text-[var(--text-secondary)] font-body hover:text-[var(--text-primary)] transition-colors"
+            >
+              Skip for now
+            </button>
+          </div>
+        )}
+
+        {/* Step 3: First Perspective */}
+        {step === 3 && (
           <div className="flex flex-col items-center text-center flex-1">
             <h1 className="font-display font-bold text-2xl text-[var(--text-primary)] mb-2">
               {activePrompt ? activePrompt.prompt_text : "What\u2019s one thing about your city that outsiders don\u2019t understand?"}
@@ -204,7 +403,8 @@ export default function OnboardingPage() {
           </div>
         )}
 
-        {step === 3 && (
+        {/* Step 4: Welcome */}
+        {step === 4 && (
           <div className="flex flex-col items-center text-center flex-1 justify-center">
             <h1 className="font-display font-bold text-2xl text-[var(--text-primary)] mb-2">
               Welcome to PRISM.

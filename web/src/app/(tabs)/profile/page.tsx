@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import Link from "next/link";
 import { EmptyState, EMPTY_STATES } from "@/components/empty-state";
-import { getStreak, getStreakMessage } from "@/lib/streak";
+import { getStreak, getStreakMessage, getEarnedBadges } from "@/lib/streak";
 
 type ProfileTab = "perspectives" | "connections" | "saved" | "settings";
 
@@ -189,6 +189,24 @@ export default function ProfilePage() {
             <span className="text-xs text-[var(--text-dim)] ml-2">{streakMessage}</span>
           )}
         </div>
+
+        {/* Streak badges */}
+        {getEarnedBadges(streak).length > 0 && (
+          <div className="flex gap-2">
+            {getEarnedBadges(streak).map((badge) => (
+              <div
+                key={badge.badge}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--bg-surface)] border border-[var(--bg-elevated)]"
+                title={badge.description}
+              >
+                <svg className="w-3 h-3 text-[var(--accent-primary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
+                </svg>
+                <span className="text-[10px] font-medium text-[var(--text-secondary)]">{badge.title}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </header>
 
       {/* Tabs */}

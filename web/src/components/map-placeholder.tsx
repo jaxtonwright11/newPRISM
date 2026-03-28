@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { COMMUNITY_COLORS } from "@/lib/constants";
-import type { Community, CommunityType, Post } from "@shared/types";
+import { COMMUNITY_COLORS, REACTION_LABELS } from "@/lib/constants";
+import type { Community, CommunityType, Post, ReactionType } from "@shared/types";
+import type { CommunitySentiment } from "@/app/api/map/sentiment/route";
 
 export interface HeatPoint {
   latitude: number;
@@ -14,6 +15,13 @@ export interface HeatPoint {
   community_types: string[];
   topic_count: number;
 }
+
+/** Sentiment-based pin colors by dominant reaction */
+const SENTIMENT_COLORS: Record<ReactionType, string> = {
+  this_resonates: "#4ADE80",       // green — agreement
+  seeing_differently: "#F59E0B",   // amber — different view
+  want_to_understand: "#3B82F6",   // blue — curiosity
+};
 
 interface MapPlaceholderProps {
   communities?: Community[];
@@ -26,6 +34,12 @@ interface MapPlaceholderProps {
   onHeatTap?: (point: HeatPoint) => void;
   isAuthenticated?: boolean;
   hideOverlays?: boolean;
+  /** Sentiment data for topic-filtered mode */
+  sentimentData?: CommunitySentiment[];
+  /** Whether geographic lens (heat overlay) is active */
+  geoLensActive?: boolean;
+  /** Active topic name for tooltip display */
+  activeTopicName?: string;
 }
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? "";
@@ -498,6 +512,9 @@ export function MapPlaceholder({
   onHeatTap,
   isAuthenticated = false,
   hideOverlays = false,
+  sentimentData = [],
+  geoLensActive = false,
+  activeTopicName,
 }: MapPlaceholderProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -621,8 +638,9 @@ export function MapPlaceholder({
           // Single community — render as normal pin
           const c = group[0];
           const isHighlighted = !highlightedCommunityIds || highlightedCommunityIds.includes(c.id);
-          const color = COMMUNITY_COLORS[c.community_type as CommunityType];
-          const el = createPulseElement(color, isHighlighted ? 10 : 6, (c as unknown as Record<string, unknown>).activity_level as string | undefined);
+          const sent = sentimentData.find((s) => s.community_id === c.id);
+          const color = sent ? SENTIMENT_COLORS[sent.dominant_reaction] : COMMUNITY_COLORS[c.community_type as CommunityType];
+          const el = createPulseElement(color, isHighlighted ? 10 : 6, sent ? "high" : (c as unknown as Record<string, unknown>).activity_level as string | undefined);
           if (!isHighlighted) el.style.opacity = "0.2";
           addCommunityMarker(c, el);
         } else {
@@ -653,11 +671,20 @@ export function MapPlaceholder({
       communities.forEach((c) => {
         const isHighlighted = !highlightedCommunityIds || highlightedCommunityIds.includes(c.id);
         const pinSize = isHighlighted ? 10 : 6;
-        const color = COMMUNITY_COLORS[c.community_type as CommunityType];
-        const el = createPulseElement(color, pinSize, (c as unknown as Record<string, unknown>).activity_level as string | undefined);
+        // Use sentiment color when available, otherwise community type color
+        const sent = sentimentData.find((s) => s.community_id === c.id);
+        const color = sent ? SENTIMENT_COLORS[sent.dominant_reaction] : COMMUNITY_COLORS[c.community_type as CommunityType];
+        const activityLevel = sent ? "high" : (c as unknown as Record<string, unknown>).activity_level as string | undefined;
+        const el = createPulseElement(color, pinSize, activityLevel);
         if (!isHighlighted) el.style.opacity = "0.2";
         addCommunityMarker(c, el);
       });
+    }
+
+    // Build sentiment lookup for this render pass
+    const sentimentLookup = new Map<string, CommunitySentiment>();
+    for (const s of sentimentData) {
+      sentimentLookup.set(s.community_id, s);
     }
 
     function addCommunityMarker(c: Community, el: HTMLDivElement) {
@@ -665,11 +692,27 @@ export function MapPlaceholder({
         .setLngLat([c.longitude as number, c.latitude as number])
         .addTo(mapRef.current!);
 
+      // Build tooltip content — enhanced when sentiment data available
+      const sent = sentimentLookup.get(c.id);
+      let tooltipHtml: string;
+      if (sent && activeTopicName) {
+        const reactionLabel = REACTION_LABELS[sent.dominant_reaction];
+        tooltipHtml = `<div style="background:#0F1114;border:1px solid #262A31;border-radius:8px;padding:8px 10px;font-family:'DM Sans',sans-serif;min-width:160px;">
+          <div style="font-size:11px;color:#EDEDEF;font-weight:600;margin-bottom:4px;">${c.name}</div>
+          <div style="font-size:10px;color:#9CA3AF;margin-bottom:6px;">${c.region}</div>
+          <div style="font-size:10px;color:#5C6370;margin-bottom:2px;">${sent.perspective_count} perspective${sent.perspective_count !== 1 ? "s" : ""} on this topic</div>
+          <div style="display:flex;align-items:center;gap:4px;margin-top:4px;">
+            <span style="font-size:11px;">${reactionLabel.emoji}</span>
+            <span style="font-size:10px;color:${SENTIMENT_COLORS[sent.dominant_reaction]};font-weight:500;">${reactionLabel.label}</span>
+          </div>
+        </div>`;
+      } else {
+        tooltipHtml = `<div style="background:#0F1114;border:1px solid #262A31;border-radius:6px;padding:4px 8px;font-size:10px;color:#EDEDEF;font-family:'DM Sans',sans-serif;">${c.name}</div>`;
+      }
+
       const popup = new mapboxgl.Popup({
         closeButton: false, closeOnClick: false, offset: 12, className: "prism-popup",
-      }).setHTML(
-        `<div style="background:#0F1114;border:1px solid #262A31;border-radius:6px;padding:4px 8px;font-size:10px;color:#EDEDEF;font-family:'DM Sans',sans-serif;">${c.name}</div>`
-      );
+      }).setHTML(tooltipHtml);
 
       el.style.cursor = "pointer";
       el.addEventListener("mouseenter", () => { marker.setPopup(popup); popup.addTo(mapRef.current!); });
@@ -681,6 +724,39 @@ export function MapPlaceholder({
       });
 
       markersRef.current.push(marker);
+    }
+
+    // Geographic Lens heat overlay — show perspective density when active
+    if (geoLensActive && sentimentData.length > 0) {
+      // Group sentiments by rounded geographic region for density display
+      const densityClusters: Record<string, { lat: number; lng: number; count: number }> = {};
+      for (const s of sentimentData) {
+        const key = `${Math.round(s.latitude / 2) * 2}_${Math.round(s.longitude / 3) * 3}`;
+        if (!densityClusters[key]) {
+          densityClusters[key] = { lat: s.latitude, lng: s.longitude, count: 0 };
+        }
+        densityClusters[key].count += s.perspective_count;
+      }
+
+      for (const cluster of Object.values(densityClusters)) {
+        const intensity = Math.min(cluster.count / 10, 1);
+        const size = 60 + intensity * 120;
+        const opacity = 0.08 + intensity * 0.18;
+
+        const el = document.createElement("div");
+        el.style.width = `${size}px`;
+        el.style.height = `${size}px`;
+        el.style.borderRadius = "50%";
+        el.style.background = `radial-gradient(circle, rgba(212,149,107,${opacity}) 0%, rgba(212,149,107,${opacity * 0.3}) 50%, transparent 70%)`;
+        el.style.position = "relative";
+        el.style.pointerEvents = "none";
+        el.style.animation = "prism-pulse 5s ease-in-out infinite";
+
+        const marker = new mapboxgl.Marker({ element: el, anchor: "center" })
+          .setLngLat([cluster.lng, cluster.lat])
+          .addTo(mapRef.current!);
+        markersRef.current.push(marker);
+      }
     }
 
     // Heat points
@@ -815,6 +891,9 @@ export function MapPlaceholder({
     heatPoints,
     onHeatTap,
     clearMarkers,
+    sentimentData,
+    geoLensActive,
+    activeTopicName,
   ]);
 
   // Fallback if no Mapbox token
@@ -856,6 +935,23 @@ export function MapPlaceholder({
               ? `${communitiesProp.filter((c) => c.latitude != null).length} communities active`
               : "Tap anywhere to explore"}
           </span>
+        </div>
+      )}
+
+      {/* Sentiment legend — shown when topic sentiment data is active */}
+      {sentimentData.length > 0 && !hideOverlays && (
+        <div className="absolute bottom-16 left-3 bg-prism-bg-base/90 backdrop-blur-sm px-3 py-2.5 rounded-lg z-10 border border-prism-border/60">
+          <p className="text-[9px] font-semibold text-prism-text-dim uppercase tracking-wider mb-2">
+            Community Sentiment
+          </p>
+          <div className="space-y-1.5">
+            {(Object.entries(SENTIMENT_COLORS) as [ReactionType, string][]).map(([key, color]) => (
+              <div key={key} className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color, boxShadow: `0 0 6px ${color}60` }} />
+                <span className="text-[10px] text-prism-text-secondary">{REACTION_LABELS[key].label}</span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

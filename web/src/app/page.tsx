@@ -6,11 +6,15 @@ import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth-context";
 import { PrismWordmark } from "@/components/prism-wordmark";
-import { PerspectiveComparison } from "@/components/perspective-comparison";
 import type { Community, Topic, CommunityType } from "@shared/types";
 
 const MapPlaceholder = dynamic(
   () => import("@/components/map-placeholder").then((mod) => mod.MapPlaceholder),
+  { ssr: false }
+);
+
+const PerspectiveComparison = dynamic(
+  () => import("@/components/perspective-comparison").then((mod) => mod.PerspectiveComparison),
   { ssr: false }
 );
 
@@ -112,7 +116,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg-base)] flex flex-col relative overflow-hidden">
+    <div id="main-content" className="min-h-screen bg-[var(--bg-base)] flex flex-col relative overflow-hidden">
       {/* Map — always visible as background */}
       <div className="absolute inset-0 z-0">
         <MapPlaceholder

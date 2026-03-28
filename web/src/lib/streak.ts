@@ -1,9 +1,23 @@
 const STREAK_KEY = "prism_streak";
+const MILESTONE_KEY = "prism_milestones_shown";
 
 interface StreakData {
   count: number;
   lastPostDate: string; // YYYY-MM-DD
 }
+
+export interface StreakMilestone {
+  days: number;
+  badge: string;
+  title: string;
+  description: string;
+}
+
+export const STREAK_MILESTONES: StreakMilestone[] = [
+  { days: 7, badge: "consistent-voice", title: "Consistent Voice", description: "7 days of sharing your perspective. Your community is heard." },
+  { days: 30, badge: "founding-voice", title: "Founding Voice", description: "30 days strong. You're a cornerstone of PRISM." },
+  { days: 100, badge: "century-voice", title: "Century Voice", description: "100 days. Your perspective has shaped countless conversations." },
+];
 
 function today(): string {
   return new Date().toISOString().split("T")[0];
@@ -55,4 +69,45 @@ export function getStreakMessage(count: number): string | null {
   if (count >= 7) return `${count}-day streak — you're a regular voice here.`;
   if (count >= 3) return `${count}-day streak — keep it going.`;
   return null;
+}
+
+/**
+ * Check if a milestone was just hit and hasn't been shown yet.
+ * Returns the milestone to show, or null.
+ */
+export function checkMilestone(count: number): StreakMilestone | null {
+  if (typeof window === "undefined") return null;
+
+  const shown = getShownMilestones();
+
+  for (const milestone of STREAK_MILESTONES) {
+    if (count >= milestone.days && !shown.has(milestone.days)) {
+      return milestone;
+    }
+  }
+  return null;
+}
+
+export function markMilestoneShown(days: number): void {
+  if (typeof window === "undefined") return;
+  const shown = getShownMilestones();
+  shown.add(days);
+  localStorage.setItem(MILESTONE_KEY, JSON.stringify(Array.from(shown)));
+}
+
+function getShownMilestones(): Set<number> {
+  try {
+    const raw = localStorage.getItem(MILESTONE_KEY);
+    if (!raw) return new Set();
+    return new Set(JSON.parse(raw) as number[]);
+  } catch {
+    return new Set();
+  }
+}
+
+/**
+ * Get all earned badges for profile display.
+ */
+export function getEarnedBadges(count: number): StreakMilestone[] {
+  return STREAK_MILESTONES.filter((m) => count >= m.days);
 }

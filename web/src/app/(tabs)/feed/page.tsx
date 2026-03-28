@@ -13,6 +13,8 @@ import { useRealtime } from "@/lib/use-realtime";
 import { useUnreadCount } from "@/lib/use-unread-count";
 import { usePullToRefresh } from "@/lib/use-pull-to-refresh";
 import { CommunityPulse } from "@/components/community-pulse";
+import { GeoFomoBanner } from "@/components/geo-fomo-banner";
+import { StreakMilestoneModal } from "@/components/streak-milestone-modal";
 import type { Community, CommunityType, Topic } from "@shared/types";
 import Link from "next/link";
 
@@ -382,6 +384,8 @@ export default function FeedPage() {
             </button>
           </div>
         )}
+        {/* Geographic FOMO banner */}
+        <GeoFomoBanner />
         {/* New perspectives banner */}
         {newPerspectiveCount > 0 && (
           <button
@@ -482,6 +486,7 @@ export default function FeedPage() {
 
       {/* Community Pulse panel */}
       <CommunityPulse isOpen={pulseOpen} onClose={() => setPulseOpen(false)} />
+      <StreakMilestoneModal />
     </div>
   );
 }

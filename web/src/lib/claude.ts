@@ -96,3 +96,35 @@ Write 2-3 short paragraphs. Tone: warm, community-focused, not corporate. Highli
   if (block.type === "text") return block.text.trim();
   return "";
 }
+
+/**
+ * Generate an insight summary paragraph from platform data patterns.
+ */
+export async function generateInsightSummary(insights: {
+  topAgreementPairs: string[];
+  topDivergentTopics: string[];
+  risingTopics: string[];
+  geographicPatterns: string[];
+}): Promise<string> {
+  const message = await client.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 400,
+    messages: [
+      {
+        role: "user",
+        content: `You are an analyst for PRISM, a geographic community perspective platform. Write a brief, insightful paragraph (3-4 sentences) summarizing the most interesting pattern from this data:
+
+- Community pairs that agree most: ${insights.topAgreementPairs.join("; ") || "insufficient data"}
+- Topics with most diverse perspectives: ${insights.topDivergentTopics.join(", ") || "insufficient data"}
+- Rising topics this week: ${insights.risingTopics.join(", ") || "none"}
+- Geographic patterns: ${insights.geographicPatterns.join("; ") || "none detected"}
+
+Focus on the single most surprising or interesting finding. Tone: analytical but accessible. Do not use bullet points or lists — write a flowing paragraph.`,
+      },
+    ],
+  });
+
+  const block2 = message.content[0];
+  if (block2.type === "text") return block2.text.trim();
+  return "";
+}

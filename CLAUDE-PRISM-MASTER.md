@@ -3,7 +3,54 @@
 # Read this entire file before writing a single line of code.
 # When you finish every task in this document, start from the top and improve.
 # There is always more to do. Never stop unless explicitly told to.
-# Last updated: March 2026
+# Last updated: March 28, 2026
+
+---
+
+## CURRENT STATE (as of March 28, 2026)
+
+### What's Built
+- **Full platform**: Next.js 15 web app with Supabase backend, Mapbox maps, PostHog analytics
+- **Core features**: Auth, communities, topics, perspectives, reactions, posts, stories, DMs, connections, notifications
+- **Geographic Lens**: Sentiment-colored map pins per topic, heat overlay, rich tooltips with reaction data
+- **Community matching onboarding**: 4-step flow — location, community suggestions (2 nearby + 3 diverse), first perspective, welcome
+- **Insights page**: /insights with 4 insight cards (agreement map, diversity scores, geographic faults, rising topics), Claude AI summaries, OG image sharing
+- **Retention mechanics**: Daily perspective push (3 PM UTC cron), geographic FOMO banner, streak milestones (7/30/100-day badges)
+- **Content pipeline admin tools**: 4-week content calendar, 10 topic templates, platform health dashboard, bulk notify by community type
+- **Email digest**: Resend integration, weekly Monday 9 AM UTC cron, admin preview
+- **N8N webhooks**: 3 endpoints (new-topic, digest, community-alert) with shared secret auth
+- **Verification levels**: Auto Level 2 promotion, admin Level 3 endpoint, profile badges
+- **Map clustering**: Pins cluster at zoom < 6 with count badges, fly-to on click
+- **Feed diversity**: Community-type diversity penalty prevents same-type triplication
+- **Perspective comparison**: 4-way grid with shareable URLs and OG images
+- **E2E tests**: 36 Playwright tests (15 auth, 6 webhook, 5 push, 10 general)
+
+### What's Deployed
+- **Production**: Vercel (auto-deploy from main branch)
+- **Database**: Supabase project PRISM1 (bkmutmhahravmpfcpbvw)
+- **Crons**: Weekly digest (Mon 9 AM UTC), daily prompt push (3 PM UTC)
+
+### Credentials Needed
+All in `/web/.env.local` (gitignored):
+- `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase client
+- `SUPABASE_SERVICE_ROLE_KEY` — admin operations
+- `NEXT_PUBLIC_MAPBOX_TOKEN` — Mapbox GL JS
+- `ANTHROPIC_API_KEY` — Claude AI for insight summaries
+- `RESEND_API_KEY` — email digest
+- `NEXT_PUBLIC_POSTHOG_KEY` + `NEXT_PUBLIC_POSTHOG_HOST` — analytics
+- `VAPID_PUBLIC_KEY` + `VAPID_PRIVATE_KEY` — web push notifications
+- `N8N_WEBHOOK_SECRET` — N8N webhook auth
+- `CRON_SECRET` — Vercel cron auth
+
+### Lighthouse Scores (Homepage)
+Performance 61 | Accessibility 84 | Best Practices 96 | SEO 100
+
+### Next Priorities
+1. **Soft-delete for account deletion** — 30-day grace period before permanent deletion
+2. **Rate limit AI suggestion endpoints** — `/api/admin/ai/*` routes need cost protection
+3. **Reduce unused JS** — 548 KiB unused (mainly mapbox-gl), consider code splitting
+4. **E2E authenticated tests** — tests that sign in and verify feed content, post creation
+5. **Bundle size monitoring** — add `@next/bundle-analyzer`
 
 ---
 
