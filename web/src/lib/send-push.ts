@@ -6,12 +6,18 @@ const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY ?? "";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 
-if (VAPID_PUBLIC && VAPID_PRIVATE) {
-  webpush.setVapidDetails(
-    "mailto:hello@prism-app.com",
-    VAPID_PUBLIC,
-    VAPID_PRIVATE
-  );
+let vapidConfigured = false;
+try {
+  if (VAPID_PUBLIC && VAPID_PRIVATE) {
+    webpush.setVapidDetails(
+      "mailto:hello@prism-app.com",
+      VAPID_PUBLIC,
+      VAPID_PRIVATE
+    );
+    vapidConfigured = true;
+  }
+} catch {
+  // VAPID keys missing or invalid — push notifications disabled
 }
 
 function getServiceSupabase() {
@@ -31,7 +37,7 @@ interface PushPayload {
  */
 export async function sendPushToUser(userId: string, payload: PushPayload): Promise<number> {
   const supabase = getServiceSupabase();
-  if (!supabase || !VAPID_PUBLIC || !VAPID_PRIVATE) return 0;
+  if (!supabase || !vapidConfigured) return 0;
 
   const { data: subscriptions } = await supabase
     .from("push_subscriptions")
@@ -70,7 +76,7 @@ export async function sendPushToUser(userId: string, payload: PushPayload): Prom
  */
 export async function sendPushBroadcast(payload: PushPayload): Promise<number> {
   const supabase = getServiceSupabase();
-  if (!supabase || !VAPID_PUBLIC || !VAPID_PRIVATE) return 0;
+  if (!supabase || !vapidConfigured) return 0;
 
   const { data: subscriptions } = await supabase
     .from("push_subscriptions")
@@ -109,7 +115,7 @@ export async function sendPushToCommunityFollowers(
   payload: PushPayload
 ): Promise<number> {
   const supabase = getServiceSupabase();
-  if (!supabase || !VAPID_PUBLIC || !VAPID_PRIVATE) return 0;
+  if (!supabase || !vapidConfigured) return 0;
 
   // Get followers who have push_community_activity enabled
   const { data: followers } = await supabase

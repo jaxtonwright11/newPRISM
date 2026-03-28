@@ -2,10 +2,27 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { MapPlaceholder } from "@/components/map-placeholder";
+import dynamic from "next/dynamic";
 import { useAuth } from "@/lib/auth-context";
 import { prismEvents } from "@/lib/posthog";
 import type { Community, Topic } from "@shared/types";
+
+const MapPlaceholder = dynamic(
+  () => import("@/components/map-placeholder").then((mod) => mod.MapPlaceholder),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-full bg-prism-bg-base flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-48 h-2 bg-prism-bg-elevated rounded-full overflow-hidden">
+            <div className="h-full bg-prism-accent-primary/30 rounded-full animate-shimmer" style={{ width: "60%" }} />
+          </div>
+          <span className="text-[10px] text-prism-text-dim">Loading map</span>
+        </div>
+      </div>
+    ),
+  }
+);
 
 export default function MapPage() {
   const [communities, setCommunities] = useState<Community[]>([]);

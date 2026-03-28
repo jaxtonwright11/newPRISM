@@ -49,6 +49,7 @@ export default function SettingsPage() {
   const [pushSupported, setPushSupported] = useState(false);
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [inviteLoading, setInviteLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // Check push notification status
   useEffect(() => {
@@ -443,17 +444,37 @@ export default function SettingsPage() {
           </div>
           <div className="p-4">
             <button
-              onClick={() => {
-                if (window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
-                  // TODO: wire to account deletion API
-                  alert("Please contact support to delete your account.");
+              disabled={deleting}
+              onClick={async () => {
+                if (!window.confirm("Are you sure you want to delete your account? All your posts, perspectives, reactions, and messages will be permanently removed.")) return;
+                if (!window.confirm("This is your last chance. Type OK in the next prompt to confirm.")) return;
+                const confirmation = window.prompt("Type DELETE to permanently delete your account:");
+                if (confirmation !== "DELETE") return;
+
+                setDeleting(true);
+                try {
+                  const res = await fetch("/api/user/account", {
+                    method: "DELETE",
+                    headers: { Authorization: `Bearer ${session?.access_token}` },
+                  });
+                  if (res.ok) {
+                    await signOut();
+                    router.push("/landing");
+                  } else {
+                    const data = await res.json();
+                    alert(data.error ?? "Failed to delete account. Please try again.");
+                  }
+                } catch {
+                  alert("Network error. Please try again.");
+                } finally {
+                  setDeleting(false);
                 }
               }}
-              className="text-sm text-prism-accent-destructive hover:underline"
+              className="text-sm text-prism-accent-destructive hover:underline disabled:opacity-50"
             >
-              Delete Account
+              {deleting ? "Deleting..." : "Delete Account"}
             </button>
-            <p className="text-xs text-prism-text-dim mt-1">This action cannot be undone.</p>
+            <p className="text-xs text-prism-text-dim mt-1">This permanently removes all your data and cannot be undone.</p>
           </div>
         </section>
       </div>

@@ -111,6 +111,7 @@ export default function AdminPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [aiLoading, setAiLoading] = useState<string | null>(null);
 
   // Topic creation form
   const [newTopicTitle, setNewTopicTitle] = useState("");
@@ -324,6 +325,59 @@ export default function AdminPage() {
     setErrorMessage(msg);
     setSuccessMessage("");
     setTimeout(() => setErrorMessage(""), 5000);
+  };
+
+  const handleAiSuggestSummary = async () => {
+    if (!newTopicTitle.trim()) return;
+    setAiLoading("suggest-summary");
+    try {
+      const res = await fetch("/api/admin/ai/suggest-summary", {
+        method: "POST",
+        headers: headers(),
+        body: JSON.stringify({ title: newTopicTitle.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok && data.summary) {
+        setNewTopicSummary(data.summary);
+        showSuccess("AI summary generated");
+      } else {
+        showError(data.error ?? "Failed to generate summary");
+      }
+    } catch {
+      showError("Network error — check your connection");
+    } finally {
+      setAiLoading(null);
+    }
+  };
+
+  const handleAiSuggestPrompts = async () => {
+    const topicTitle = newPromptTopicId
+      ? topics.find((t) => t.id === newPromptTopicId)?.title ?? ""
+      : newPromptText.trim();
+    if (!topicTitle) {
+      showError("Select a topic or enter prompt text first");
+      return;
+    }
+    setAiLoading("suggest-prompts");
+    try {
+      const res = await fetch("/api/admin/ai/suggest-prompts", {
+        method: "POST",
+        headers: headers(),
+        body: JSON.stringify({ topicTitle, count: 3 }),
+      });
+      const data = await res.json();
+      if (res.ok && data.prompts?.length) {
+        setNewPromptText(data.prompts[0]);
+        setNewPromptDesc(data.prompts.slice(1).join("\n"));
+        showSuccess(`AI suggested ${data.prompts.length} prompts`);
+      } else {
+        showError(data.error ?? "Failed to generate prompts");
+      }
+    } catch {
+      showError("Network error — check your connection");
+    } finally {
+      setAiLoading(null);
+    }
   };
 
   const handleCreateCommunity = async (e: React.FormEvent) => {
@@ -696,14 +750,24 @@ export default function AdminPage() {
                     maxLength={120}
                     className="w-full px-3 py-2 rounded-lg bg-prism-bg-base border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:border-prism-accent-primary/50"
                   />
-                  <textarea
-                    value={newTopicSummary}
-                    onChange={(e) => setNewTopicSummary(e.target.value)}
-                    placeholder="Brief summary (optional)"
-                    rows={2}
-                    maxLength={300}
-                    className="w-full px-3 py-2 rounded-lg bg-prism-bg-base border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:border-prism-accent-primary/50 resize-none"
-                  />
+                  <div className="relative">
+                    <textarea
+                      value={newTopicSummary}
+                      onChange={(e) => setNewTopicSummary(e.target.value)}
+                      placeholder="Brief summary (optional)"
+                      rows={2}
+                      maxLength={300}
+                      className="w-full px-3 py-2 pr-28 rounded-lg bg-prism-bg-base border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:border-prism-accent-primary/50 resize-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAiSuggestSummary}
+                      disabled={!newTopicTitle.trim() || aiLoading === "suggest-summary"}
+                      className="absolute top-2 right-2 px-2 py-1 rounded-md bg-prism-bg-elevated border border-prism-border text-[10px] font-medium text-prism-accent-primary hover:bg-prism-bg-overlay transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {aiLoading === "suggest-summary" ? "Thinking..." : "Suggest with AI"}
+                    </button>
+                  </div>
                   <div className="flex items-center gap-3">
                     <select
                       value={newTopicStatus}
@@ -853,7 +917,7 @@ export default function AdminPage() {
                   <textarea value={newPromptDesc} onChange={(e) => setNewPromptDesc(e.target.value)}
                     placeholder="Description (optional context for contributors)" rows={2} maxLength={500}
                     className="w-full px-3 py-2 rounded-lg bg-prism-bg-base border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none focus:border-prism-accent-primary/50 resize-none" />
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-wrap">
                     <select value={newPromptTopicId} onChange={(e) => setNewPromptTopicId(e.target.value)}
                       className="px-3 py-2 rounded-lg bg-prism-bg-base border border-prism-border text-sm text-prism-text-primary focus:outline-none">
                       <option value="">No topic</option>
@@ -861,6 +925,11 @@ export default function AdminPage() {
                         <option key={t.id} value={t.id}>{t.title}</option>
                       ))}
                     </select>
+                    <button type="button" onClick={handleAiSuggestPrompts}
+                      disabled={aiLoading === "suggest-prompts"}
+                      className="px-2 py-1 rounded-md bg-prism-bg-elevated border border-prism-border text-[10px] font-medium text-prism-accent-primary hover:bg-prism-bg-overlay transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                      {aiLoading === "suggest-prompts" ? "Thinking..." : "Suggest with AI"}
+                    </button>
                     <label className="flex items-center gap-2 text-sm text-prism-text-secondary cursor-pointer">
                       <input type="checkbox" checked={newPromptActive} onChange={(e) => setNewPromptActive(e.target.checked)}
                         className="w-4 h-4 rounded accent-prism-accent-primary" />
