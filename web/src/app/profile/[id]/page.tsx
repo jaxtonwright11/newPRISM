@@ -8,10 +8,10 @@ import { useAuth } from "@/lib/auth-context";
 import { COMMUNITY_COLORS } from "@/lib/constants";
 import type { CommunityType } from "@shared/types";
 
-const VERIFICATION_LABELS: Record<number, { label: string; description: string; color: string }> = {
-  1: { label: "Level 1", description: "Email verified", color: "text-prism-text-secondary" },
-  2: { label: "Level 2", description: "Community verified", color: "text-prism-accent-primary" },
-  3: { label: "Level 3", description: "Fully verified", color: "text-prism-accent-live" },
+const VERIFICATION_LABELS: Record<number, { label: string; badge: string; description: string; tooltip: string; color: string }> = {
+  1: { label: "Level 1", badge: "○", description: "Email verified", tooltip: "Email verified — explore and react to perspectives", color: "text-prism-text-secondary" },
+  2: { label: "Level 2", badge: "◐", description: "Community verified", tooltip: "Community verified — can create posts and appear on the map", color: "text-prism-accent-primary" },
+  3: { label: "Level 3", badge: "●", description: "Verified contributor", tooltip: "Verified contributor — trusted community voice with full permissions", color: "text-prism-accent-live" },
 };
 
 interface PublicProfile {
@@ -163,7 +163,11 @@ export default function PublicProfilePage() {
                 <p className="text-sm text-prism-text-secondary">@{profile.username}</p>
               )}
               <div className="flex items-center gap-2 mt-1">
-                <span className={`text-xs font-medium ${verification.color}`}>
+                <span
+                  className={`text-xs font-medium ${verification.color} cursor-help`}
+                  title={verification.tooltip}
+                >
+                  <span className="font-mono mr-1">{verification.badge}</span>
                   {verification.label}
                 </span>
               </div>

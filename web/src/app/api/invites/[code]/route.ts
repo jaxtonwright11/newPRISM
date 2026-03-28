@@ -1,10 +1,13 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
+import { applyRateLimit } from "@/lib/api";
 
 export async function GET(
-  _request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ code: string }> }
 ) {
+  const rl = applyRateLimit(request, "invites-code");
+  if (rl) return rl;
   const { code } = await params;
   const supabase = getSupabase();
   if (!supabase) {

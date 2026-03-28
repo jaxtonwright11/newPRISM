@@ -325,15 +325,33 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
   ],
 };
 
+/**
+ * Activity levels map to pulse speeds:
+ *   high → 1.8s (fast pulse)
+ *   medium → 3s (normal pulse)
+ *   low → 5s (slow, ambient pulse)
+ */
+function pulseSpeedForActivity(level: string | undefined): string {
+  switch (level) {
+    case "high": return "1.8s";
+    case "medium": return "3s";
+    default: return "5s";
+  }
+}
+
 function createPulseElement(
   color: string,
   size: number,
-  isHighActivity: boolean
+  activityLevel?: string,
 ): HTMLDivElement {
   const el = document.createElement("div");
   el.style.width = `${size}px`;
   el.style.height = `${size}px`;
   el.style.position = "relative";
+  el.style.transition = "opacity 0.4s ease, transform 0.4s ease";
+
+  const speed = pulseSpeedForActivity(activityLevel);
+  const isActive = activityLevel === "high" || activityLevel === "medium";
 
   // Core dot
   const core = document.createElement("div");
@@ -348,7 +366,7 @@ function createPulseElement(
   core.style.zIndex = "3";
   el.appendChild(core);
 
-  if (isHighActivity) {
+  if (isActive) {
     // Pulse ring 1
     const ring1 = document.createElement("div");
     ring1.style.width = `${size * 2.5}px`;
@@ -358,7 +376,7 @@ function createPulseElement(
     ring1.style.position = "absolute";
     ring1.style.top = `${-(size * 0.75)}px`;
     ring1.style.left = `${-(size * 0.75)}px`;
-    ring1.style.animation = "prism-pulse 3s ease-in-out infinite";
+    ring1.style.animation = `prism-pulse ${speed} ease-in-out infinite`;
     ring1.style.zIndex = "1";
     el.appendChild(ring1);
 
@@ -371,10 +389,45 @@ function createPulseElement(
     ring2.style.position = "absolute";
     ring2.style.top = `${-(size * 1.25)}px`;
     ring2.style.left = `${-(size * 1.25)}px`;
-    ring2.style.animation = "prism-pulse 3s ease-in-out infinite 0.5s";
+    ring2.style.animation = `prism-pulse ${speed} ease-in-out infinite 0.5s`;
     ring2.style.zIndex = "1";
     el.appendChild(ring2);
   }
+
+  return el;
+}
+
+/**
+ * Create a cluster element showing count of communities grouped at low zoom.
+ */
+function createClusterElement(
+  count: number,
+  dominantColor: string,
+): HTMLDivElement {
+  const size = Math.min(44, 24 + count * 4);
+  const el = document.createElement("div");
+  el.style.width = `${size}px`;
+  el.style.height = `${size}px`;
+  el.style.borderRadius = "50%";
+  el.style.backgroundColor = `${dominantColor}30`;
+  el.style.border = `2px solid ${dominantColor}60`;
+  el.style.display = "flex";
+  el.style.alignItems = "center";
+  el.style.justifyContent = "center";
+  el.style.cursor = "pointer";
+  el.style.transition = "transform 0.3s ease";
+  el.style.boxShadow = `0 0 ${size}px ${dominantColor}25`;
+
+  const label = document.createElement("span");
+  label.textContent = String(count);
+  label.style.fontSize = "11px";
+  label.style.fontWeight = "700";
+  label.style.color = "#EDEDEF";
+  label.style.fontFamily = "'JetBrains Mono', monospace";
+  el.appendChild(label);
+
+  el.addEventListener("mouseenter", () => { el.style.transform = "scale(1.15)"; });
+  el.addEventListener("mouseleave", () => { el.style.transform = "scale(1)"; });
 
   return el;
 }
@@ -451,6 +504,7 @@ export function MapPlaceholder({
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   const emptyPopupRef = useRef<mapboxgl.Popup | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [zoomGeneration, setZoomGeneration] = useState(0);
 
   // Inject pulse animation CSS
   useEffect(() => {
@@ -490,6 +544,16 @@ export function MapPlaceholder({
 
     map.on("load", () => {
       setMapLoaded(true);
+    });
+
+    // Re-render markers when crossing cluster zoom threshold
+    let lastClusterState = map.getZoom() < 6;
+    map.on("zoomend", () => {
+      const nowClustered = map.getZoom() < 6;
+      if (nowClustered !== lastClusterState) {
+        lastClusterState = nowClustered;
+        setZoomGeneration((g) => g + 1);
+      }
     });
 
     // Click on empty area → show "no perspectives here yet" prompt
@@ -539,56 +603,85 @@ export function MapPlaceholder({
       (c) => c.latitude != null && c.longitude != null
     );
 
-    // Community pins
-    communities.forEach((c, i) => {
-      const isHighlighted =
-        !highlightedCommunityIds ||
-        highlightedCommunityIds.includes(c.id);
-      const isHighActivity = isHighlighted && i % 2 === 0;
-      const pinSize = isHighlighted ? 10 : 6;
-      const color = COMMUNITY_COLORS[c.community_type as CommunityType];
+    // ── Cluster communities at low zoom, expand at high zoom ───────────
+    const currentZoom = mapRef.current!.getZoom();
+    const CLUSTER_ZOOM_THRESHOLD = 6;
 
-      const el = createPulseElement(color, pinSize, isHighActivity);
-      if (!isHighlighted) {
-        el.style.opacity = "0.2";
+    if (currentZoom < CLUSTER_ZOOM_THRESHOLD && communities.length > 3) {
+      // Group nearby communities into clusters using rounded lat/lng
+      const clusters: Record<string, Community[]> = {};
+      for (const c of communities) {
+        const key = `${Math.round((c.latitude as number) / 3) * 3}_${Math.round((c.longitude as number) / 5) * 5}`;
+        if (!clusters[key]) clusters[key] = [];
+        clusters[key].push(c);
       }
 
-      const marker = new mapboxgl.Marker({
-        element: el,
-        anchor: "center",
-      })
+      for (const group of Object.values(clusters)) {
+        if (group.length === 1) {
+          // Single community — render as normal pin
+          const c = group[0];
+          const isHighlighted = !highlightedCommunityIds || highlightedCommunityIds.includes(c.id);
+          const color = COMMUNITY_COLORS[c.community_type as CommunityType];
+          const el = createPulseElement(color, isHighlighted ? 10 : 6, (c as unknown as Record<string, unknown>).activity_level as string | undefined);
+          if (!isHighlighted) el.style.opacity = "0.2";
+          addCommunityMarker(c, el);
+        } else {
+          // Cluster — show count badge
+          const avgLat = group.reduce((s, c) => s + (c.latitude as number), 0) / group.length;
+          const avgLng = group.reduce((s, c) => s + (c.longitude as number), 0) / group.length;
+          const dominantType = group.reduce<Record<string, number>>((acc, c) => {
+            acc[c.community_type] = (acc[c.community_type] || 0) + 1;
+            return acc;
+          }, {});
+          const topType = Object.entries(dominantType).sort((a, b) => b[1] - a[1])[0][0] as CommunityType;
+          const color = COMMUNITY_COLORS[topType];
+
+          const el = createClusterElement(group.length, color);
+          el.addEventListener("click", (e) => {
+            e.stopPropagation();
+            mapRef.current?.flyTo({ center: [avgLng, avgLat], zoom: CLUSTER_ZOOM_THRESHOLD + 1, duration: 800 });
+          });
+
+          const marker = new mapboxgl.Marker({ element: el, anchor: "center" })
+            .setLngLat([avgLng, avgLat])
+            .addTo(mapRef.current!);
+          markersRef.current.push(marker);
+        }
+      }
+    } else {
+      // Expanded view — individual pins with activity-based pulse
+      communities.forEach((c) => {
+        const isHighlighted = !highlightedCommunityIds || highlightedCommunityIds.includes(c.id);
+        const pinSize = isHighlighted ? 10 : 6;
+        const color = COMMUNITY_COLORS[c.community_type as CommunityType];
+        const el = createPulseElement(color, pinSize, (c as unknown as Record<string, unknown>).activity_level as string | undefined);
+        if (!isHighlighted) el.style.opacity = "0.2";
+        addCommunityMarker(c, el);
+      });
+    }
+
+    function addCommunityMarker(c: Community, el: HTMLDivElement) {
+      const marker = new mapboxgl.Marker({ element: el, anchor: "center" })
         .setLngLat([c.longitude as number, c.latitude as number])
         .addTo(mapRef.current!);
 
-      // Popup on hover
       const popup = new mapboxgl.Popup({
-        closeButton: false,
-        closeOnClick: false,
-        offset: 12,
-        className: "prism-popup",
+        closeButton: false, closeOnClick: false, offset: 12, className: "prism-popup",
       }).setHTML(
         `<div style="background:#0F1114;border:1px solid #262A31;border-radius:6px;padding:4px 8px;font-size:10px;color:#EDEDEF;font-family:'DM Sans',sans-serif;">${c.name}</div>`
       );
 
       el.style.cursor = "pointer";
-      el.addEventListener("mouseenter", () => {
-        marker.setPopup(popup);
-        popup.addTo(mapRef.current!);
-      });
-      el.addEventListener("mouseleave", () => {
-        popup.remove();
-      });
+      el.addEventListener("mouseenter", () => { marker.setPopup(popup); popup.addTo(mapRef.current!); });
+      el.addEventListener("mouseleave", () => { popup.remove(); });
       el.addEventListener("click", (e) => {
         e.stopPropagation();
-        if (emptyPopupRef.current) {
-          emptyPopupRef.current.remove();
-          emptyPopupRef.current = null;
-        }
+        if (emptyPopupRef.current) { emptyPopupRef.current.remove(); emptyPopupRef.current = null; }
         window.location.href = `/community/${c.id}`;
       });
 
       markersRef.current.push(marker);
-    });
+    }
 
     // Heat points
     heatPoints.forEach((hp) => {
@@ -712,6 +805,7 @@ export function MapPlaceholder({
     }
   }, [
     mapLoaded,
+    zoomGeneration,
     communitiesProp,
     highlightedCommunityIds,
     ghostMode,

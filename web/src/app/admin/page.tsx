@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import type { CommunityType, TopicStatus } from "@shared/types";
 
-type AdminTab = "communities" | "topics" | "reports" | "prompts" | "perspectives" | "push";
+type AdminTab = "communities" | "topics" | "reports" | "prompts" | "perspectives" | "push" | "tools";
 
 interface AdminCommunity {
   id: string;
@@ -145,6 +145,14 @@ export default function AdminPage() {
   const [pushUrl, setPushUrl] = useState("/feed");
   const [pushCommunityId, setPushCommunityId] = useState("");
   const [pushResult, setPushResult] = useState("");
+
+  // Digest preview
+  const [digestPreview, setDigestPreview] = useState("");
+  const [digestLoading, setDigestLoading] = useState(false);
+
+  // User promote
+  const [promoteUserId, setPromoteUserId] = useState("");
+  const [promoteResult, setPromoteResult] = useState("");
 
   const headers = useCallback((): Record<string, string> => {
     const h: Record<string, string> = { "Content-Type": "application/json" };
@@ -536,6 +544,7 @@ export default function AdminPage() {
     { id: "prompts", label: "Prompts", count: prompts.filter((p) => p.active).length },
     { id: "perspectives", label: "Perspectives", count: 0 },
     { id: "push", label: "Push", count: 0 },
+    { id: "tools", label: "Tools", count: 0 },
     { id: "reports", label: "Reports", count: reports.filter((r) => r.status === "pending").length },
   ];
 
@@ -1062,6 +1071,90 @@ export default function AdminPage() {
                 <p className="text-xs text-prism-text-dim text-center">
                   Automated hourly notifications are already configured for new perspectives via cron.
                 </p>
+              </div>
+            )}
+
+            {/* Tools tab — digest preview + user promote */}
+            {activeTab === "tools" && (
+              <div className="space-y-6">
+                {/* Digest Preview */}
+                <div className="bg-prism-bg-surface border border-prism-border rounded-xl p-4 space-y-3">
+                  <h2 className="text-xs font-semibold uppercase tracking-wider text-prism-accent-primary">
+                    Preview Weekly Digest
+                  </h2>
+                  <p className="text-xs text-prism-text-dim">
+                    Generate the current weekly digest without sending it. Uses the Claude API.
+                  </p>
+                  <button
+                    onClick={async () => {
+                      setDigestLoading(true);
+                      setDigestPreview("");
+                      try {
+                        const res = await fetch("/api/admin/digest", {
+                          method: "POST",
+                          headers: headers(),
+                        });
+                        const data = await res.json();
+                        setDigestPreview(data.digest ?? data.error ?? "No digest generated");
+                      } catch {
+                        setDigestPreview("Failed to generate digest");
+                      } finally {
+                        setDigestLoading(false);
+                      }
+                    }}
+                    disabled={digestLoading}
+                    className="px-4 py-2 rounded-lg bg-prism-accent-primary text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+                  >
+                    {digestLoading ? "Generating..." : "Generate Preview"}
+                  </button>
+                  {digestPreview && (
+                    <div className="mt-3 p-4 rounded-lg bg-prism-bg-base border border-prism-border text-sm text-prism-text-secondary whitespace-pre-line leading-relaxed">
+                      {digestPreview}
+                    </div>
+                  )}
+                </div>
+
+                {/* User Promote */}
+                <div className="bg-prism-bg-surface border border-prism-border rounded-xl p-4 space-y-3">
+                  <h2 className="text-xs font-semibold uppercase tracking-wider text-prism-accent-primary">
+                    Promote User to Level 3
+                  </h2>
+                  <p className="text-xs text-prism-text-dim">
+                    Manually promote a Level 2 user to Level 3 (verified contributor). Requires the user ID.
+                  </p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={promoteUserId}
+                      onChange={(e) => setPromoteUserId(e.target.value)}
+                      placeholder="User UUID"
+                      className="flex-1 px-3 py-2 rounded-lg bg-prism-bg-base border border-prism-border text-sm text-prism-text-primary placeholder:text-prism-text-dim focus:outline-none"
+                    />
+                    <button
+                      onClick={async () => {
+                        if (!promoteUserId.trim()) return;
+                        setPromoteResult("");
+                        try {
+                          const res = await fetch("/api/admin/users/promote", {
+                            method: "POST",
+                            headers: headers(),
+                            body: JSON.stringify({ user_id: promoteUserId.trim(), level: 3 }),
+                          });
+                          const data = await res.json();
+                          setPromoteResult(data.message ?? data.error ?? "Done");
+                        } catch {
+                          setPromoteResult("Failed");
+                        }
+                      }}
+                      className="px-4 py-2 rounded-lg bg-prism-accent-live text-white text-sm font-medium hover:opacity-90 transition-opacity"
+                    >
+                      Promote
+                    </button>
+                  </div>
+                  {promoteResult && (
+                    <p className="text-xs text-prism-text-secondary">{promoteResult}</p>
+                  )}
+                </div>
               </div>
             )}
           </>

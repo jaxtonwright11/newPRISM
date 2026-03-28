@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getAdminUser } from "@/lib/admin";
 import { getSupabaseServer } from "@/lib/supabase";
+import { applyRateLimit } from "@/lib/api";
 
 const patchSchema = z.object({
   id: z.string().uuid(),
@@ -9,6 +10,9 @@ const patchSchema = z.object({
 });
 
 export async function GET(request: NextRequest) {
+  const rl = applyRateLimit(request, "admin-reports-get");
+  if (rl) return rl;
+
   const admin = await getAdminUser(request);
   if (!admin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
@@ -45,6 +49,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
+  const rl = applyRateLimit(request, "admin-reports-patch");
+  if (rl) return rl;
+
   const admin = await getAdminUser(request);
   if (!admin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });

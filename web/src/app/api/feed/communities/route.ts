@@ -18,6 +18,9 @@ export async function GET(request: Request) {
   if (!parsedQuery.success) return parsedQuery.response;
 
   const topic = parsedQuery.data.topic;
+  const url = new URL(request.url);
+  const offset = Math.max(0, parseInt(url.searchParams.get("offset") ?? "0") || 0);
+  const limit = Math.min(50, Math.max(1, parseInt(url.searchParams.get("limit") ?? "30") || 30));
 
   try {
     const token = request.headers.get("authorization")?.replace("Bearer ", "");
@@ -61,7 +64,7 @@ export async function GET(request: Request) {
         .select("*, community:communities(id, name, region, community_type, color_hex, verified)")
         .eq("verified", true)
         .order("created_at", { ascending: false })
-        .limit(30);
+        .range(offset, offset + limit - 1);
 
       if (followedCommunityIds.length > 0) {
         query = query.in("community_id", followedCommunityIds);
@@ -82,9 +85,15 @@ export async function GET(request: Request) {
       const { data, error } = await query;
 
       if (!error && data) {
+        const lastItem = data[data.length - 1] as Record<string, unknown> | undefined;
         return NextResponse.json({
           data,
-          meta: { total: data.length, feed_type: "communities" },
+          meta: {
+            total: data.length,
+            feed_type: "communities",
+            next_cursor: data.length === limit ? (lastItem?.created_at as string | undefined) : null,
+            has_more: data.length === limit,
+          },
         });
       }
     }

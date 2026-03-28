@@ -23,6 +23,7 @@
     "posthog-js": "^1.363.1",
     "react": "^18",
     "react-dom": "^18",
+    "resend": "^6.9.4",
     "tailwind-merge": "^3.5.0",
     "web-push": "^3.6.7",
     "zod": "^4.3.6"

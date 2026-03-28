@@ -1,7 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
+import { applyRateLimit } from "@/lib/api";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const rl = applyRateLimit(request, "prompts-active");
+  if (rl) return rl;
+
   const supabase = getSupabase();
   if (!supabase) {
     return NextResponse.json({ prompt: null });

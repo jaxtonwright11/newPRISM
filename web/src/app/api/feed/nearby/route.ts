@@ -18,6 +18,9 @@ export async function GET(request: Request) {
   if (!parsedQuery.success) return parsedQuery.response;
 
   const topic = parsedQuery.data.topic;
+  const url = new URL(request.url);
+  const offset = Math.max(0, parseInt(url.searchParams.get("offset") ?? "0") || 0);
+  const limit = Math.min(50, Math.max(1, parseInt(url.searchParams.get("limit") ?? "30") || 30));
 
   try {
     // Try authenticated client first for user-specific radius filtering
@@ -100,9 +103,17 @@ export async function GET(request: Request) {
         });
       }
 
+      // Apply pagination after distance filtering
+      const pagedPosts = posts.slice(offset, offset + limit);
+      const pagedPerspectives = perspectives.slice(offset, offset + limit);
+
       return NextResponse.json({
-        data: { posts, perspectives },
-        meta: { total: posts.length + perspectives.length, feed_type: "nearby" },
+        data: { posts: pagedPosts, perspectives: pagedPerspectives },
+        meta: {
+          total: posts.length + perspectives.length,
+          feed_type: "nearby",
+          has_more: offset + limit < posts.length || offset + limit < perspectives.length,
+        },
       });
     }
   } catch {

@@ -128,37 +128,64 @@ export async function GET(request: Request) {
     const scoredFollowed: Scored[] = followed.map((p) => ({ ...p, _score: scorePerspective(p, true) }));
     const scoredDiscover: Scored[] = discover.map((p) => ({ ...p, _score: scorePerspective(p, false) }));
 
-    // Interleave with diversity: 2 followed, 1 discover, each sorted by score
+    // Interleave with diversity: 2 followed, 1 discover, each sorted by score.
+    // Apply a community-type diversity penalty: if the last 2 items in the
+    // output share the same community_type, penalize candidates of that type
+    // so the feed surfaces varied community types (civic, diaspora, rural, etc.).
     scoredFollowed.sort((a, b) => b._score - a._score);
     scoredDiscover.sort((a, b) => b._score - a._score);
 
-    const blended: Record<string, unknown>[] = [];
-    const seenCommunities = new Set<string>();
+    const blended: Scored[] = [];
     let fi = 0, di = 0;
+
+    /** Returns community_type of a scored perspective */
+    const getCommunityType = (p: Scored): string =>
+      ((p.community as Record<string, unknown>)?.community_type as string) ?? "";
+
+    /** Check if adding this type would create 3 of the same type in a row */
+    const wouldTriplicate = (candidateType: string): boolean => {
+      if (blended.length < 2) return false;
+      const last = getCommunityType(blended[blended.length - 1]);
+      const secondLast = getCommunityType(blended[blended.length - 2]);
+      return last === candidateType && secondLast === candidateType;
+    };
+
+    /** Pick the best non-triplicating candidate from a sorted array starting at idx */
+    const pickDiverse = (arr: Scored[], startIdx: number): { item: Scored; nextIdx: number } | null => {
+      // First try to find one that doesn't triplicate within 3 lookahead
+      for (let look = 0; look < 3 && startIdx + look < arr.length; look++) {
+        const candidate = arr[startIdx + look];
+        if (!wouldTriplicate(getCommunityType(candidate))) {
+          // Swap it to current position for simple index advance
+          if (look > 0) {
+            arr[startIdx + look] = arr[startIdx];
+            arr[startIdx] = candidate;
+          }
+          return { item: candidate, nextIdx: startIdx + 1 };
+        }
+      }
+      // Fall back to just taking the next one
+      if (startIdx < arr.length) {
+        return { item: arr[startIdx], nextIdx: startIdx + 1 };
+      }
+      return null;
+    };
 
     while (fi < scoredFollowed.length || di < scoredDiscover.length) {
       // Add up to 2 from followed
-      for (let i = 0; i < 2 && fi < scoredFollowed.length; fi++) {
-        const p = scoredFollowed[fi];
-        const communityId = (p.community as Record<string, unknown>)?.id as string;
-        // Soft diversity: deprioritize but don't skip same community in a row
-        if (!seenCommunities.has(communityId) || blended.length < 6) {
-          blended.push(p);
-          seenCommunities.add(communityId);
-          i++;
-        } else {
-          blended.push(p);
-          i++;
-        }
+      for (let i = 0; i < 2 && fi < scoredFollowed.length; i++) {
+        const pick = pickDiverse(scoredFollowed, fi);
+        if (!pick) break;
+        blended.push(pick.item);
+        fi = pick.nextIdx;
       }
-      // Add 1 from discover — prefer unseen communities
-      for (let attempts = 0; di < scoredDiscover.length && attempts < 3; di++, attempts++) {
-        const p = scoredDiscover[di];
-        const communityId = (p.community as Record<string, unknown>)?.id as string;
-        blended.push(p);
-        seenCommunities.add(communityId);
-        di++;
-        break;
+      // Add 1 from discover
+      if (di < scoredDiscover.length) {
+        const pick = pickDiverse(scoredDiscover, di);
+        if (pick) {
+          blended.push(pick.item);
+          di = pick.nextIdx;
+        }
       }
     }
 
@@ -166,9 +193,19 @@ export async function GET(request: Request) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const result = blended.map(({ _score, ...rest }) => rest);
 
+    // Cursor-based pagination: return the created_at of the last item as next_cursor
+    const page = result.slice(offset, offset + limit);
+    const lastItem = page[page.length - 1] as Record<string, unknown> | undefined;
+    const nextCursor = lastItem?.created_at as string | undefined;
+
     return NextResponse.json({
-      data: result,
-      meta: { total: result.length, feed_type: "for-you" },
+      data: page,
+      meta: {
+        total: result.length,
+        feed_type: "for-you",
+        next_cursor: page.length === limit ? nextCursor : null,
+        has_more: offset + limit < result.length,
+      },
     });
   } catch {
     // Supabase unavailable
