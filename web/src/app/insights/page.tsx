@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { COMMUNITY_COLORS, REACTION_LABELS } from "@/lib/constants";
 import type { CommunityType, ReactionType } from "@shared/types";
-import type { InsightData } from "@/app/api/insights/route";
+import type { InsightData } from "@shared/insights";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "";
 

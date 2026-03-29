@@ -2,26 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { applyRateLimit } from "@/lib/api";
 import { getSupabase } from "@/lib/supabase";
 import { z } from "zod";
+import type { CommunitySentiment } from "@shared/map-sentiment";
 
 const querySchema = z.object({
   topic_id: z.string().uuid(),
 });
-
-export interface CommunitySentiment {
-  community_id: string;
-  community_name: string;
-  community_type: string;
-  latitude: number;
-  longitude: number;
-  region: string;
-  perspective_count: number;
-  dominant_reaction: "this_resonates" | "seeing_differently" | "want_to_understand";
-  reaction_counts: {
-    this_resonates: number;
-    seeing_differently: number;
-    want_to_understand: number;
-  };
-}
 
 export async function GET(request: NextRequest) {
   const rateLimited = applyRateLimit(request, "map-sentiment");

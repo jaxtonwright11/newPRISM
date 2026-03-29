@@ -5,7 +5,7 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { COMMUNITY_COLORS, REACTION_LABELS } from "@/lib/constants";
 import type { Community, CommunityType, Post, ReactionType } from "@shared/types";
-import type { CommunitySentiment } from "@/app/api/map/sentiment/route";
+import type { CommunitySentiment } from "@shared/map-sentiment";
 
 export interface HeatPoint {
   latitude: number;

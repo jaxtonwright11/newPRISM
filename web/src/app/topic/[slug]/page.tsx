@@ -10,7 +10,7 @@ import { COMMUNITY_COLORS, REACTION_LABELS } from "@/lib/constants";
 import { EmptyState, EMPTY_STATES } from "@/components/empty-state";
 import { useToast } from "@/components/toast";
 import type { Topic, Community, CommunityType, TopicStatus, ReactionType } from "@shared/types";
-import type { CommunitySentiment } from "@/app/api/map/sentiment/route";
+import type { CommunitySentiment } from "@shared/map-sentiment";
 
 const STATUS_DOT: Record<TopicStatus, string> = {
   hot: "bg-prism-accent-primary",

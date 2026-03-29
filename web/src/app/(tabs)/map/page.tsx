@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 import { useAuth } from "@/lib/auth-context";
 import { prismEvents } from "@/lib/posthog";
 import type { Community, Topic } from "@shared/types";
-import type { CommunitySentiment } from "@/app/api/map/sentiment/route";
+import type { CommunitySentiment } from "@shared/map-sentiment";
 
 const MapPlaceholder = dynamic(
   () => import("@/components/map-placeholder").then((mod) => mod.MapPlaceholder),
