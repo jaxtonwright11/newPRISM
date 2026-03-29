@@ -4,8 +4,8 @@ import { applyRateLimit } from "@/lib/api";
 import { getSupabaseWithAuth } from "@/lib/supabase";
 
 const bodySchema = z.object({
-  content_type: z.enum(["perspective", "post", "community"]),
-  content_id: z.string().uuid(),
+  target_type: z.enum(["perspective", "post", "comment", "user"]),
+  target_id: z.string().uuid(),
   reason: z.enum(["harassment", "misinformation", "spam", "hate_speech", "other"]),
   details: z.string().max(500).trim().optional(),
 });
@@ -43,19 +43,16 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { content_type, content_id, reason, details } = parsed.data;
+  const { target_type, target_id, reason, details } = parsed.data;
 
-  const { error: insertError } = await supabase.from("reports").upsert(
-    {
-      reporter_id: user.id,
-      content_type,
-      content_id,
-      reason,
-      details,
-      status: "pending",
-    },
-    { onConflict: "reporter_id,content_id" }
-  );
+  const { error: insertError } = await supabase.from("reports").insert({
+    reporter_id: user.id,
+    target_type,
+    target_id,
+    reason,
+    details,
+    status: "pending",
+  });
 
   if (insertError) {
     return NextResponse.json(

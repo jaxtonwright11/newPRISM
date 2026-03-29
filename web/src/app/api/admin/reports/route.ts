@@ -6,7 +6,7 @@ import { applyRateLimit } from "@/lib/api";
 
 const patchSchema = z.object({
   id: z.string().uuid(),
-  status: z.enum(["reviewed", "dismissed", "actioned"]),
+  status: z.enum(["reviewed", "resolved", "dismissed"]),
 });
 
 export async function GET(request: NextRequest) {

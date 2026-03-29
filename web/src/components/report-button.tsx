@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 
 interface ReportButtonProps {
-  contentType: "perspective" | "post" | "community";
+  contentType: "perspective" | "post" | "comment" | "user";
   contentId: string;
 }
 
@@ -37,8 +37,8 @@ export function ReportButton({ contentType, contentId }: ReportButtonProps) {
           Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
-          content_type: contentType,
-          content_id: contentId,
+          target_type: contentType,
+          target_id: contentId,
           reason,
           details: details.trim() || undefined,
         }),

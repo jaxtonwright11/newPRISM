@@ -31,14 +31,14 @@ interface AdminTopic {
   created_at: string;
 }
 
-type ReportContentType = "perspective" | "post" | "community";
+type ReportContentType = "perspective" | "post" | "comment" | "user";
 type ReportReason = "harassment" | "misinformation" | "spam" | "hate_speech" | "other";
 
 interface AdminReport {
   id: string;
   reporter_id: string;
-  content_type: ReportContentType;
-  content_id: string;
+  target_type: ReportContentType;
+  target_id: string;
   reason: ReportReason;
   details: string | null;
   status: string;
@@ -48,7 +48,8 @@ interface AdminReport {
 const CONTENT_TYPE_COLORS: Record<ReportContentType, string> = {
   perspective: "bg-prism-accent-primary/15 text-prism-accent-primary",
   post: "bg-blue-500/15 text-blue-400",
-  community: "bg-purple-500/15 text-purple-400",
+  comment: "bg-green-500/15 text-green-400",
+  user: "bg-purple-500/15 text-purple-400",
 };
 
 const REASON_COLORS: Record<ReportReason, string> = {
@@ -308,7 +309,7 @@ export default function AdminPage() {
     }
   };
 
-  const handleReportAction = async (id: string, status: "dismissed" | "actioned") => {
+  const handleReportAction = async (id: string, status: "dismissed" | "resolved") => {
     // Optimistic removal
     setReports((prev) => prev.filter((r) => r.id !== id));
     try {
@@ -873,8 +874,8 @@ export default function AdminPage() {
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${CONTENT_TYPE_COLORS[r.content_type]}`}>
-                                  {r.content_type.toUpperCase()}
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${CONTENT_TYPE_COLORS[r.target_type]}`}>
+                                  {r.target_type.toUpperCase()}
                                 </span>
                                 <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${REASON_COLORS[r.reason]}`}>
                                   {r.reason.replace("_", " ").toUpperCase()}
@@ -886,7 +887,7 @@ export default function AdminPage() {
                                 </p>
                               )}
                               <p className="text-[10px] font-mono text-prism-text-dim">
-                                {r.content_id.slice(0, 8)}&hellip; &middot; {new Date(r.created_at).toLocaleDateString()}
+                                {r.target_id.slice(0, 8)}&hellip; &middot; {new Date(r.created_at).toLocaleDateString()}
                               </p>
                             </div>
                             <div className="flex gap-2 shrink-0">
@@ -897,7 +898,7 @@ export default function AdminPage() {
                                 Dismiss
                               </button>
                               <button
-                                onClick={() => handleReportAction(r.id, "actioned")}
+                                onClick={() => handleReportAction(r.id, "resolved")}
                                 className="px-3 py-1.5 rounded-lg bg-prism-accent-destructive/15 text-prism-accent-destructive text-xs font-medium hover:bg-prism-accent-destructive/25 transition-colors"
                               >
                                 Action
