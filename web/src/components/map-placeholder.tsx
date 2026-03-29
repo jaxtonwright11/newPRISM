@@ -562,7 +562,12 @@ export function MapPlaceholder({
     map.on("load", () => {
       setMapLoaded(true);
       // Ensure map fills its container after layout settles
+      // Mapbox can miscalculate container size during dynamic layout;
+      // multiple resize calls at staggered timings cover edge cases.
+      map.resize();
       requestAnimationFrame(() => map.resize());
+      setTimeout(() => map.resize(), 100);
+      setTimeout(() => map.resize(), 500);
     });
 
     // Re-render markers when crossing cluster zoom threshold
@@ -912,7 +917,7 @@ export function MapPlaceholder({
   return (
     <div className="relative w-full h-full rounded-xl overflow-hidden border border-prism-border shadow-inner">
       {/* Map container */}
-      <div ref={mapContainer} className="absolute inset-0" />
+      <div ref={mapContainer} className="w-full h-full" />
 
       {/* Map status */}
 
