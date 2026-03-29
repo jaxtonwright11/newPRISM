@@ -69,8 +69,8 @@ test.describe("Mobile responsiveness (390px)", () => {
     });
   });
 
-  test("explore page — no overflow", async ({ page }) => {
-    await page.goto("/explore");
+  test("discover page — no overflow", async ({ page }) => {
+    await page.goto("/discover");
     await page.waitForLoadState("networkidle");
 
     const scrollWidth = await page.evaluate(
@@ -79,13 +79,13 @@ test.describe("Mobile responsiveness (390px)", () => {
     expect(scrollWidth).toBeLessThanOrEqual(MOBILE_VIEWPORT.width + 1);
 
     await page.screenshot({
-      path: "tests/screenshots/mobile/explore.png",
+      path: "tests/screenshots/mobile/discover.png",
       fullPage: true,
     });
   });
 
-  test("communities page — cards stack vertically", async ({ page }) => {
-    await page.goto("/communities");
+  test("feed page — cards stack vertically", async ({ page }) => {
+    await page.goto("/feed");
     await page.waitForLoadState("networkidle");
 
     const scrollWidth = await page.evaluate(
@@ -94,7 +94,7 @@ test.describe("Mobile responsiveness (390px)", () => {
     expect(scrollWidth).toBeLessThanOrEqual(MOBILE_VIEWPORT.width + 1);
 
     await page.screenshot({
-      path: "tests/screenshots/mobile/communities.png",
+      path: "tests/screenshots/mobile/feed.png",
       fullPage: true,
     });
   });
@@ -129,8 +129,8 @@ test.describe("Mobile responsiveness (390px)", () => {
     });
   });
 
-  test("about page — readable text width", async ({ page }) => {
-    await page.goto("/about");
+  test("landing page — readable text width", async ({ page }) => {
+    await page.goto("/landing");
     await page.waitForLoadState("networkidle");
 
     const scrollWidth = await page.evaluate(
@@ -139,7 +139,7 @@ test.describe("Mobile responsiveness (390px)", () => {
     expect(scrollWidth).toBeLessThanOrEqual(MOBILE_VIEWPORT.width + 1);
 
     await page.screenshot({
-      path: "tests/screenshots/mobile/about.png",
+      path: "tests/screenshots/mobile/landing.png",
       fullPage: true,
     });
   });
@@ -195,7 +195,7 @@ test.describe("Mobile responsiveness (390px)", () => {
   });
 
   test("bottom nav bar visible on tab pages", async ({ page }) => {
-    await page.goto("/explore");
+    await page.goto("/discover");
     await page.waitForLoadState("networkidle");
 
     // Bottom nav should be visible on mobile

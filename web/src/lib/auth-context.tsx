@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { createClient, SupabaseClient, User, Session, AuthError } from '@supabase/supabase-js';
 import { subscribeToPush } from '@/lib/push';
+import { identifyUser, resetUser } from '@/lib/posthog';
 
 type AuthResult = { error: AuthError | null };
 
@@ -54,7 +55,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Auto-subscribe to push on sign in (non-blocking)
       if (event === 'SIGNED_IN' && session?.access_token) {
+        identifyUser(session.user.id, { email: session.user.email });
         subscribeToPush(session.access_token).catch(() => {});
+      }
+      if (event === 'SIGNED_OUT') {
+        resetUser();
       }
     });
 

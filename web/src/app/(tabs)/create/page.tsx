@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { StreakToast } from "@/components/streak-toast";
+import { prismEvents } from "@/lib/posthog";
 import Link from "next/link";
 import type { Topic } from "@shared/types";
 
@@ -92,6 +93,7 @@ export default function CreatePage() {
         body: JSON.stringify(payload),
       });
       if (res.ok) {
+        prismEvents.postCreated(postType, 0, false);
         const json = await res.json();
         // Sync server streak to localStorage
         if (json.streak) {
