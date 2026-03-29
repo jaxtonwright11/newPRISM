@@ -561,6 +561,8 @@ export function MapPlaceholder({
 
     map.on("load", () => {
       setMapLoaded(true);
+      // Ensure map fills its container after layout settles
+      requestAnimationFrame(() => map.resize());
     });
 
     // Re-render markers when crossing cluster zoom threshold
