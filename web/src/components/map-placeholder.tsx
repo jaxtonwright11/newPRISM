@@ -620,6 +620,51 @@ export function MapPlaceholder({
       (c) => c.latitude != null && c.longitude != null
     );
 
+    // Build sentiment lookup for this render pass
+    const sentimentLookup = new Map<string, CommunitySentiment>();
+    for (const s of sentimentData) {
+      sentimentLookup.set(s.community_id, s);
+    }
+
+    function addCommunityMarker(c: Community, el: HTMLDivElement) {
+      const marker = new mapboxgl.Marker({ element: el, anchor: "center" })
+        .setLngLat([c.longitude as number, c.latitude as number])
+        .addTo(mapRef.current!);
+
+      // Build tooltip content — enhanced when sentiment data available
+      const sent = sentimentLookup.get(c.id);
+      let tooltipHtml: string;
+      if (sent && activeTopicName) {
+        const reactionLabel = REACTION_LABELS[sent.dominant_reaction];
+        tooltipHtml = `<div style="background:#0F1114;border:1px solid #262A31;border-radius:8px;padding:8px 10px;font-family:'DM Sans',sans-serif;min-width:160px;">
+          <div style="font-size:11px;color:#EDEDEF;font-weight:600;margin-bottom:4px;">${c.name}</div>
+          <div style="font-size:10px;color:#9CA3AF;margin-bottom:6px;">${c.region}</div>
+          <div style="font-size:10px;color:#5C6370;margin-bottom:2px;">${sent.perspective_count} perspective${sent.perspective_count !== 1 ? "s" : ""} on this topic</div>
+          <div style="display:flex;align-items:center;gap:4px;margin-top:4px;">
+            <span style="font-size:11px;">${reactionLabel.emoji}</span>
+            <span style="font-size:10px;color:${SENTIMENT_COLORS[sent.dominant_reaction]};font-weight:500;">${reactionLabel.label}</span>
+          </div>
+        </div>`;
+      } else {
+        tooltipHtml = `<div style="background:#0F1114;border:1px solid #262A31;border-radius:6px;padding:4px 8px;font-size:10px;color:#EDEDEF;font-family:'DM Sans',sans-serif;">${c.name}</div>`;
+      }
+
+      const popup = new mapboxgl.Popup({
+        closeButton: false, closeOnClick: false, offset: 12, className: "prism-popup",
+      }).setHTML(tooltipHtml);
+
+      el.style.cursor = "pointer";
+      el.addEventListener("mouseenter", () => { marker.setPopup(popup); popup.addTo(mapRef.current!); });
+      el.addEventListener("mouseleave", () => { popup.remove(); });
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (emptyPopupRef.current) { emptyPopupRef.current.remove(); emptyPopupRef.current = null; }
+        window.location.href = `/community/${c.id}`;
+      });
+
+      markersRef.current.push(marker);
+    }
+
     // ── Cluster communities at low zoom, expand at high zoom ───────────
     const currentZoom = mapRef.current!.getZoom();
     const CLUSTER_ZOOM_THRESHOLD = 6;
@@ -679,51 +724,6 @@ export function MapPlaceholder({
         if (!isHighlighted) el.style.opacity = "0.2";
         addCommunityMarker(c, el);
       });
-    }
-
-    // Build sentiment lookup for this render pass
-    const sentimentLookup = new Map<string, CommunitySentiment>();
-    for (const s of sentimentData) {
-      sentimentLookup.set(s.community_id, s);
-    }
-
-    function addCommunityMarker(c: Community, el: HTMLDivElement) {
-      const marker = new mapboxgl.Marker({ element: el, anchor: "center" })
-        .setLngLat([c.longitude as number, c.latitude as number])
-        .addTo(mapRef.current!);
-
-      // Build tooltip content — enhanced when sentiment data available
-      const sent = sentimentLookup.get(c.id);
-      let tooltipHtml: string;
-      if (sent && activeTopicName) {
-        const reactionLabel = REACTION_LABELS[sent.dominant_reaction];
-        tooltipHtml = `<div style="background:#0F1114;border:1px solid #262A31;border-radius:8px;padding:8px 10px;font-family:'DM Sans',sans-serif;min-width:160px;">
-          <div style="font-size:11px;color:#EDEDEF;font-weight:600;margin-bottom:4px;">${c.name}</div>
-          <div style="font-size:10px;color:#9CA3AF;margin-bottom:6px;">${c.region}</div>
-          <div style="font-size:10px;color:#5C6370;margin-bottom:2px;">${sent.perspective_count} perspective${sent.perspective_count !== 1 ? "s" : ""} on this topic</div>
-          <div style="display:flex;align-items:center;gap:4px;margin-top:4px;">
-            <span style="font-size:11px;">${reactionLabel.emoji}</span>
-            <span style="font-size:10px;color:${SENTIMENT_COLORS[sent.dominant_reaction]};font-weight:500;">${reactionLabel.label}</span>
-          </div>
-        </div>`;
-      } else {
-        tooltipHtml = `<div style="background:#0F1114;border:1px solid #262A31;border-radius:6px;padding:4px 8px;font-size:10px;color:#EDEDEF;font-family:'DM Sans',sans-serif;">${c.name}</div>`;
-      }
-
-      const popup = new mapboxgl.Popup({
-        closeButton: false, closeOnClick: false, offset: 12, className: "prism-popup",
-      }).setHTML(tooltipHtml);
-
-      el.style.cursor = "pointer";
-      el.addEventListener("mouseenter", () => { marker.setPopup(popup); popup.addTo(mapRef.current!); });
-      el.addEventListener("mouseleave", () => { popup.remove(); });
-      el.addEventListener("click", (e) => {
-        e.stopPropagation();
-        if (emptyPopupRef.current) { emptyPopupRef.current.remove(); emptyPopupRef.current = null; }
-        window.location.href = `/community/${c.id}`;
-      });
-
-      markersRef.current.push(marker);
     }
 
     // Geographic Lens heat overlay — show perspective density when active
