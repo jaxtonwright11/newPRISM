@@ -129,10 +129,10 @@ export default function Home() {
       {/* Gradient overlay at bottom for readability */}
       <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-[var(--bg-base)] via-[var(--bg-base)]/85 to-transparent z-10 pointer-events-none" />
 
-      {/* Content overlay */}
-      <div className="relative z-20 flex flex-col min-h-screen">
+      {/* Content overlay — pointer-events-none so map is interactive beneath */}
+      <div className="relative z-20 flex flex-col min-h-screen pointer-events-none">
         {/* Header */}
-        <header className="flex items-center justify-between px-4 pt-4">
+        <header className="flex items-center justify-between px-4 pt-4 pointer-events-auto">
           <PrismWordmark size="md" />
           <div className="flex items-center gap-2">
             <button
@@ -154,7 +154,7 @@ export default function Home() {
         <div className="flex-1" />
 
         {/* AHA sequence content */}
-        <div className="px-4 pb-12 max-w-lg mx-auto w-full">
+        <div className="px-4 pb-12 max-w-lg mx-auto w-full pointer-events-auto">
           <AnimatePresence mode="wait">
             {step === "map" && (
               <motion.div
@@ -251,7 +251,7 @@ export default function Home() {
                       {activeTopic ? `Be the first voice on "${activeTopic.title}"` : "This conversation is just getting started."}
                     </h2>
                     <p className="text-sm text-[var(--text-secondary)] font-body mb-4">
-                      No perspectives yet — your community&apos;s take could be the one that starts the conversation.
+                      No perspectives yet. Your community&apos;s take could be the one that starts the conversation.
                     </p>
                     <button
                       onClick={() => setStep("signup")}

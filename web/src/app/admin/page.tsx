@@ -283,7 +283,7 @@ export default function AdminPage() {
         showError(data.error ?? "Failed to create topic");
       }
     } catch {
-      showError("Network error — check your connection");
+      showError("Network error - check your connection");
     } finally {
       setActionLoading(null);
     }
@@ -353,7 +353,7 @@ export default function AdminPage() {
         showError(data.error ?? "Failed to generate summary");
       }
     } catch {
-      showError("Network error — check your connection");
+      showError("Network error - check your connection");
     } finally {
       setAiLoading(null);
     }
@@ -383,7 +383,7 @@ export default function AdminPage() {
         showError(data.error ?? "Failed to generate prompts");
       }
     } catch {
-      showError("Network error — check your connection");
+      showError("Network error - check your connection");
     } finally {
       setAiLoading(null);
     }
@@ -417,7 +417,7 @@ export default function AdminPage() {
       } else {
         showError(data.error ?? "Failed to create community");
       }
-    } catch { showError("Network error — check your connection"); } finally { setActionLoading(null); }
+    } catch { showError("Network error - check your connection"); } finally { setActionLoading(null); }
   };
 
   const handleCreatePrompt = async (e: React.FormEvent) => {
@@ -447,7 +447,7 @@ export default function AdminPage() {
       } else {
         showError(data.error ?? "Failed to create prompt");
       }
-    } catch { showError("Network error — check your connection"); } finally { setActionLoading(null); }
+    } catch { showError("Network error - check your connection"); } finally { setActionLoading(null); }
   };
 
   const handleTogglePrompt = async (id: string, active: boolean) => {
@@ -492,7 +492,7 @@ export default function AdminPage() {
       } else {
         showError(data.error ?? "Failed to create perspective");
       }
-    } catch { showError("Network error — check your connection"); } finally { setActionLoading(null); }
+    } catch { showError("Network error - check your connection"); } finally { setActionLoading(null); }
   };
 
   const handleSendPush = async (e: React.FormEvent) => {
@@ -1226,7 +1226,7 @@ function ContentCalendarTab({ topics, prompts }: {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-sm font-semibold text-prism-text-primary">Content Calendar — 4 Week View</h2>
+      <h2 className="text-sm font-semibold text-prism-text-primary">Content Calendar - 4 Week View</h2>
 
       {/* Day headers */}
       <div className="grid grid-cols-7 gap-1">

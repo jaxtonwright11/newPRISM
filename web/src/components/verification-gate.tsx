@@ -189,7 +189,7 @@ export function VerificationGate({
                     <option value="">Select a community...</option>
                     {communities.map((c) => (
                       <option key={c.id} value={c.id}>
-                        {c.name} — {c.region}
+                        {c.name} - {c.region}
                       </option>
                     ))}
                   </select>
@@ -270,7 +270,7 @@ export function VerificationGate({
                     <div className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-prism-text-secondary" />
                       <span className="text-[11px] text-prism-text-secondary">
-                        Level 1 — Read and react to perspectives
+                        Level 1 - Read and react to perspectives
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -282,7 +282,7 @@ export function VerificationGate({
                             : "text-prism-text-secondary"
                         }`}
                       >
-                        Level 2 — Post, appear on map, connect
+                        Level 2 - Post, appear on map, connect
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -294,7 +294,7 @@ export function VerificationGate({
                             : "text-prism-text-secondary"
                         }`}
                       >
-                        Level 3 — Submit official perspective cards
+                        Level 3 - Submit official perspective cards
                       </span>
                     </div>
                   </div>

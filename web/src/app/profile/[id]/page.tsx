@@ -9,9 +9,9 @@ import { COMMUNITY_COLORS } from "@/lib/constants";
 import type { CommunityType } from "@shared/types";
 
 const VERIFICATION_LABELS: Record<number, { label: string; badge: string; description: string; tooltip: string; color: string }> = {
-  1: { label: "Level 1", badge: "○", description: "Email verified", tooltip: "Email verified — explore and react to perspectives", color: "text-prism-text-secondary" },
-  2: { label: "Level 2", badge: "◐", description: "Community verified", tooltip: "Community verified — can create posts and appear on the map", color: "text-prism-accent-primary" },
-  3: { label: "Level 3", badge: "●", description: "Verified contributor", tooltip: "Verified contributor — trusted community voice with full permissions", color: "text-prism-accent-live" },
+  1: { label: "Level 1", badge: "○", description: "Email verified", tooltip: "Email verified - explore and react to perspectives", color: "text-prism-text-secondary" },
+  2: { label: "Level 2", badge: "◐", description: "Community verified", tooltip: "Community verified - can create posts and appear on the map", color: "text-prism-accent-primary" },
+  3: { label: "Level 3", badge: "●", description: "Verified contributor", tooltip: "Verified contributor - trusted community voice with full permissions", color: "text-prism-accent-live" },
 };
 
 interface PublicProfile {

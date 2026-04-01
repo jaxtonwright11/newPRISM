@@ -137,7 +137,7 @@ export function EmptyState({
 export const EMPTY_STATES = {
   feed: {
     heading: "Your feed starts here.",
-    body: "Share what your community is experiencing — a perspective is a firsthand account of how an event or issue affects your world.",
+    body: "Share what your community is experiencing - a perspective is a firsthand account of how an event or issue affects your world.",
     icon: "perspectives" as const,
     ctaLabel: "Share a perspective",
     ctaHref: "/create",
@@ -171,14 +171,14 @@ export const EMPTY_STATES = {
   },
   map: {
     heading: "The map is waiting.",
-    body: "Every dot on this map represents a real community sharing their perspective. Right now it's quiet — your community could be the first.",
+    body: "Every dot on this map represents a real community sharing their perspective. Right now it's quiet - your community could be the first.",
     icon: "map" as const,
     ctaLabel: "Register a community",
     ctaHref: "/apply",
   },
   discover: {
     heading: "Be the first to share.",
-    body: "This is where you'll see how different communities experience the same events — side by side. Add a perspective to get it started.",
+    body: "This is where you'll see how different communities experience the same events - side by side. Add a perspective to get it started.",
     icon: "compass" as const,
     ctaLabel: "Share a perspective",
     ctaHref: "/create",

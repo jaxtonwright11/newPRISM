@@ -392,7 +392,7 @@ export default function FeedPage() {
             onClick={showNewPerspectives}
             className="w-full mb-3 py-2.5 rounded-xl bg-prism-accent-primary/10 border border-prism-accent-primary/20 text-sm text-prism-accent-primary font-medium hover:bg-prism-accent-primary/15 transition-colors"
           >
-            {newPerspectiveCount} new perspective{newPerspectiveCount > 1 ? "s" : ""} — tap to see
+            {newPerspectiveCount} new perspective{newPerspectiveCount > 1 ? "s" : ""} - tap to see
           </button>
         )}
         {feedLoading ? (

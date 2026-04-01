@@ -152,7 +152,7 @@ function HowItWorksSection() {
     {
       number: "02",
       title: "Select a topic",
-      description: "From immigration policy to remote work economics — choose a topic and see which communities are experiencing it right now.",
+      description: "From immigration policy to remote work economics - choose a topic and see which communities are experiencing it right now.",
       color: COMMUNITY_COLORS.diaspora,
     },
     {
@@ -213,7 +213,7 @@ function HowItWorksSection() {
 function AhaPreviewSection() {
   const previewPerspectives = [
     {
-      quote: "When the factory closed, everyone said learn to code. But my grandmother can't code — she just lost her pharmacy.",
+      quote: "When the factory closed, everyone said learn to code. But my grandmother can't code. She just lost her pharmacy.",
       community: "Rural Appalachia",
       region: "West Virginia",
       type: "rural" as CommunityType,

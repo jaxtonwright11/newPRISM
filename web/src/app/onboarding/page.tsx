@@ -250,6 +250,27 @@ export default function OnboardingPage() {
                   <div key={i} className="h-24 bg-[var(--bg-elevated)] rounded-xl animate-shimmer" />
                 ))}
               </div>
+            ) : suggestedCommunities.length === 0 ? (
+              <div className="w-full max-w-sm bg-[var(--bg-surface)] rounded-xl border border-[var(--bg-elevated)] p-6 text-center mb-6">
+                <div className="w-10 h-10 rounded-full bg-[var(--accent-primary)]/15 flex items-center justify-center mx-auto mb-3">
+                  <svg className="w-5 h-5 text-[var(--accent-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <circle cx="12" cy="12" r="3" />
+                    <circle cx="12" cy="12" r="8" strokeDasharray="4 3" />
+                  </svg>
+                </div>
+                <p className="text-sm font-medium text-[var(--text-primary)] mb-1">
+                  Communities are being formed.
+                </p>
+                <p className="text-xs text-[var(--text-secondary)] mb-3">
+                  You&apos;ll be notified when ones near you join. In the meantime, you can register your own community.
+                </p>
+                <button
+                  onClick={() => router.push("/apply")}
+                  className="text-xs text-[var(--accent-primary)] font-medium hover:underline"
+                >
+                  Register a community
+                </button>
+              </div>
             ) : (
               <div className="w-full max-w-sm space-y-2.5 mb-6">
                 {suggestedCommunities.map((c, i) => {
@@ -353,11 +374,11 @@ export default function OnboardingPage() {
         {step === 3 && (
           <div className="flex flex-col items-center text-center flex-1">
             <h1 className="font-display font-bold text-2xl text-[var(--text-primary)] mb-2">
-              {activePrompt ? activePrompt.prompt_text : "What\u2019s one thing about your city that outsiders don\u2019t understand?"}
+              {activePrompt ? activePrompt.prompt_text : "What's one thing about your city that outsiders don't understand?"}
             </h1>
             <p className="text-base text-[var(--text-secondary)] font-body mb-4 max-w-sm">
               {activePrompt?.topic_name
-                ? `This week\u2019s topic: ${activePrompt.topic_name}. Share your community\u2019s perspective.`
+                ? `This week's topic: ${activePrompt.topic_name}. Share your community's perspective.`
                 : "This becomes your first perspective on PRISM."}
             </p>
             <p className="text-xs text-[var(--text-dim)] font-body mb-6 max-w-sm">
