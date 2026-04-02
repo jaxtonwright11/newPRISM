@@ -69,14 +69,14 @@ function LoginPageInner() {
 
         {/* Error messages */}
         {callbackError && !error && (
-          <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-400">
+          <div role="alert" className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-400">
             {callbackError === "auth_callback_failed"
               ? "Sign-in failed. Please try again."
               : "Something went wrong. Please try again."}
           </div>
         )}
         {error && (
-          <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-400">
+          <div role="alert" className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-400">
             {error}
           </div>
         )}

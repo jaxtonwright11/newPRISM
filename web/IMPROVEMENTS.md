@@ -38,6 +38,7 @@ Prioritized list of improvements identified during sessions.
 
 - [ ] **Soft-delete for account deletion** — Consider a 30-day grace period before permanent deletion.
 - [ ] **Rate limit AI suggestion endpoints** — `/api/admin/ai/*` routes need cost protection.
+- [ ] **Mapbox token upgrade** — Current public token (pk.*) only has `styles:tiles` scope. To use Mapbox Standard style or hosted dark-v11, need a token with `styles:read` scope. Current workaround: hand-crafted `StyleSpecification` in `map-placeholder.tsx` that points directly at vector tile endpoints. This is documented in the component's comments.
 
 ## Remaining — Medium Priority
 

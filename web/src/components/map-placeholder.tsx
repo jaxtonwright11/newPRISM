@@ -3,9 +3,101 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { COMMUNITY_COLORS, REACTION_LABELS } from "@/lib/constants";
 import type { Community, CommunityType, Post, ReactionType } from "@shared/types";
 import type { CommunitySentiment } from "@shared/map-sentiment";
+
+interface PopupData {
+  lngLat: [number, number];
+}
+
+function MapPopup({
+  lngLat,
+  map,
+  onClose,
+}: {
+  lngLat: [number, number];
+  map: mapboxgl.Map;
+  onClose: () => void;
+}) {
+  const prefersReducedMotion = useReducedMotion();
+  const [pixel, setPixel] = useState<{ x: number; y: number }>(() => {
+    const p = map.project(lngLat);
+    return { x: p.x, y: p.y };
+  });
+  const popupRef = useRef<HTMLDivElement>(null);
+
+  // Update position on every map move so popup follows viewport
+  useEffect(() => {
+    const update = () => {
+      const p = map.project(lngLat);
+      setPixel({ x: p.x, y: p.y });
+    };
+    map.on("move", update);
+    return () => { map.off("move", update); };
+  }, [map, lngLat]);
+
+  // Flip popup if it would go off-screen
+  const containerRect = map.getContainer().getBoundingClientRect();
+  const flipUp = pixel.y > containerRect.height * 0.65;
+  const flipLeft = pixel.x > containerRect.width * 0.7;
+
+  const springTransition = prefersReducedMotion
+    ? { duration: 0 }
+    : { type: "spring" as const, stiffness: 420, damping: 32 };
+
+  return (
+    <div
+      className="absolute inset-0 z-30 pointer-events-none"
+      onClick={(e) => {
+        // Only close if clicking the backdrop, not the popup itself
+        if (popupRef.current && !popupRef.current.contains(e.target as Node)) {
+          onClose();
+        }
+      }}
+      style={{ pointerEvents: "auto" }}
+    >
+      <motion.div
+        ref={popupRef}
+        initial={{ opacity: 0, y: flipUp ? -12 : 12, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: flipUp ? -8 : 8, scale: 0.97 }}
+        transition={springTransition}
+        className="absolute pointer-events-auto"
+        style={{
+          left: pixel.x,
+          top: pixel.y,
+          transform: `translate(${flipLeft ? "-100%" : "-50%"}, ${flipUp ? "calc(-100% - 12px)" : "12px"})`,
+        }}
+      >
+        <div className="bg-[#181B20] border border-[rgba(212,149,107,0.3)] rounded-xl shadow-2xl backdrop-blur-sm p-3.5 min-w-[200px] max-w-[240px]">
+          <button
+            onClick={(e) => { e.stopPropagation(); onClose(); }}
+            className="absolute top-2 right-2 text-[#5C6370] hover:text-[#EDEDEF] transition-colors p-0.5"
+            aria-label="Close popup"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <p className="text-[13px] text-[#EDEDEF] font-[family-name:var(--font-body)] mb-1.5 pr-4">
+            No perspectives here yet.
+          </p>
+          <p className="text-[11px] text-[#9CA3AF] font-[family-name:var(--font-body)] mb-2.5">
+            Be the first to share what your community is experiencing.
+          </p>
+          <a
+            href="/create"
+            className="inline-block text-[11px] text-[#D4956B] font-medium font-[family-name:var(--font-body)] hover:text-[#E8B898] transition-colors"
+          >
+            Share a perspective &rarr;
+          </a>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
 
 export interface HeatPoint {
   latitude: number;
@@ -40,30 +132,60 @@ interface MapPlaceholderProps {
   geoLensActive?: boolean;
   /** Active topic name for tooltip display */
   activeTopicName?: string;
+  /** Enable slow auto-pan drift (homepage only) */
+  enableAutoPan?: boolean;
 }
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? "";
 
-// PRISM dark map style — custom dark with visible geography
+// PRISM custom map style — uses a hand-crafted StyleSpecification instead of a hosted
+// Mapbox style URL (e.g. "mapbox://styles/mapbox/dark-v11") because our public token
+// (pk.*) only has "styles:tiles" scope, NOT "styles:read". Hosted styles require a
+// TileJSON metadata fetch that 403s without "styles:read". By inlining the style and
+// pointing sources directly at the vector tile endpoint, we avoid that fetch entirely.
+// To use Mapbox Standard or any hosted style, the token would need "styles:read" scope
+// — which would expose a secret-scoped token in client JS. The custom style also lets
+// us match PRISM's exact palette (warm dark land, deep water, no labels).
 const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
   version: 8,
-  name: "PRISM Dark",
+  name: "PRISM Night",
   sources: {
     "mapbox-streets": {
       type: "vector",
-      url: "mapbox://mapbox.mapbox-streets-v8",
+      tiles: [
+        `https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.vector.pbf?access_token=${MAPBOX_TOKEN}`,
+      ],
+      minzoom: 0,
+      maxzoom: 14,
     },
   },
   glyphs: "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
   sprite: "mapbox://sprites/mapbox/dark-v11",
   layers: [
-    // Background = land color
+    // ── Land — warm dark brown, earthy night tone ─────────────────────
     {
       id: "background",
       type: "background",
-      paint: { "background-color": "#1E2128" },
+      paint: { "background-color": "#1A1208" },
     },
-    // Landuse — parks, forests, etc. Subtle but adds geographic character
+    // ── Landcover — forests, scrub, grass → deep emerald ──────────────
+    {
+      id: "landcover",
+      type: "fill",
+      source: "mapbox-streets",
+      "source-layer": "landcover",
+      paint: {
+        "fill-color": ["match", ["get", "class"],
+          "wood", "rgba(20, 83, 45, 0.40)",
+          "scrub", "rgba(20, 83, 45, 0.25)",
+          "grass", "rgba(22, 78, 42, 0.20)",
+          "crop", "rgba(30, 70, 35, 0.15)",
+          "rgba(20, 83, 45, 0.15)"
+        ],
+        "fill-opacity": ["interpolate", ["linear"], ["zoom"], 2, 0.5, 8, 0.85],
+      },
+    },
+    // ── Parks / landuse — emerald tint ─────────────────────────────────
     {
       id: "landuse-park",
       type: "fill",
@@ -71,43 +193,49 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
       "source-layer": "landuse",
       filter: ["in", ["get", "class"], ["literal", ["park", "cemetery", "glacier", "pitch", "sand"]]],
       paint: {
-        "fill-color": "#1A1F25",
-        "fill-opacity": 0.6,
+        "fill-color": ["match", ["get", "class"],
+          "park", "rgba(20, 83, 45, 0.30)",
+          "pitch", "rgba(20, 83, 45, 0.20)",
+          "sand", "rgba(50, 40, 20, 0.25)",
+          "glacier", "rgba(30, 50, 70, 0.20)",
+          "rgba(26, 22, 18, 0.5)"
+        ],
+        "fill-opacity": 0.8,
       },
     },
-    // Water — clearly darker than land
+    // ── Water — deep navy ─────────────────────────────────────────────
     {
       id: "water",
       type: "fill",
       source: "mapbox-streets",
       "source-layer": "water",
-      paint: { "fill-color": "#0A0D11" },
+      paint: { "fill-color": "#0A1628" },
     },
-    // Waterway lines (rivers, streams)
+    // ── Waterway lines — navy ─────────────────────────────────────────
     {
       id: "waterway",
       type: "line",
       source: "mapbox-streets",
       "source-layer": "waterway",
       paint: {
-        "line-color": "#0A0D11",
+        "line-color": "#0D1D35",
         "line-width": ["interpolate", ["linear"], ["zoom"], 6, 0.5, 12, 2],
-        "line-opacity": 0.6,
+        "line-opacity": 0.7,
       },
     },
-    // Coastline
+    // ── Coastline — subtle amber glow ─────────────────────────────────
     {
       id: "coastline",
       type: "line",
       source: "mapbox-streets",
       "source-layer": "water",
       paint: {
-        "line-color": "#333842",
-        "line-width": 0.8,
-        "line-opacity": 0.5,
+        "line-color": "rgba(212, 149, 107, 0.18)",
+        "line-width": 1,
+        "line-opacity": 0.6,
       },
     },
-    // Buildings — visible at higher zoom levels
+    // ── Buildings — warm brown at high zoom ────────────────────────────
     {
       id: "building",
       type: "fill",
@@ -115,11 +243,11 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
       "source-layer": "building",
       minzoom: 12,
       paint: {
-        "fill-color": "#1A1D22",
+        "fill-color": "#1E1710",
         "fill-opacity": ["interpolate", ["linear"], ["zoom"], 12, 0, 14, 0.5],
       },
     },
-    // Roads — tunnel casing
+    // ── Roads — warm brown hierarchy ──────────────────────────────────
     {
       id: "tunnel-street",
       type: "line",
@@ -127,13 +255,12 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
       "source-layer": "road",
       filter: ["all", ["==", ["get", "structure"], "tunnel"], ["in", ["get", "class"], ["literal", ["street", "street_limited", "primary_link", "secondary_link", "tertiary_link"]]]],
       paint: {
-        "line-color": "#1A1D22",
+        "line-color": "#1E1710",
         "line-width": ["interpolate", ["linear"], ["zoom"], 10, 0.5, 18, 6],
         "line-dasharray": [3, 3],
         "line-opacity": 0.3,
       },
     },
-    // Roads — minor (service, track)
     {
       id: "road-minor",
       type: "line",
@@ -141,12 +268,11 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
       "source-layer": "road",
       filter: ["all", ["!=", ["get", "structure"], "tunnel"], ["in", ["get", "class"], ["literal", ["service", "track"]]]],
       paint: {
-        "line-color": "#252930",
+        "line-color": "#2A2218",
         "line-width": ["interpolate", ["linear"], ["zoom"], 14, 0.5, 18, 3],
         "line-opacity": ["interpolate", ["linear"], ["zoom"], 13, 0, 15, 0.4],
       },
     },
-    // Roads — street level
     {
       id: "road-street",
       type: "line",
@@ -154,12 +280,11 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
       "source-layer": "road",
       filter: ["all", ["!=", ["get", "structure"], "tunnel"], ["in", ["get", "class"], ["literal", ["street", "street_limited"]]]],
       paint: {
-        "line-color": "#282D34",
+        "line-color": "#30271C",
         "line-width": ["interpolate", ["linear"], ["zoom"], 10, 0.5, 14, 2, 18, 8],
         "line-opacity": ["interpolate", ["linear"], ["zoom"], 10, 0, 12, 0.5],
       },
     },
-    // Roads — tertiary
     {
       id: "road-tertiary",
       type: "line",
@@ -167,12 +292,11 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
       "source-layer": "road",
       filter: ["all", ["!=", ["get", "structure"], "tunnel"], ["==", ["get", "class"], "tertiary"]],
       paint: {
-        "line-color": "#2A2F37",
+        "line-color": "#332A1E",
         "line-width": ["interpolate", ["linear"], ["zoom"], 8, 0.5, 14, 3, 18, 10],
         "line-opacity": ["interpolate", ["linear"], ["zoom"], 8, 0, 10, 0.4],
       },
     },
-    // Roads — secondary
     {
       id: "road-secondary",
       type: "line",
@@ -180,12 +304,11 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
       "source-layer": "road",
       filter: ["all", ["!=", ["get", "structure"], "tunnel"], ["==", ["get", "class"], "secondary"]],
       paint: {
-        "line-color": "#2D323A",
+        "line-color": "#382E22",
         "line-width": ["interpolate", ["linear"], ["zoom"], 6, 0.5, 12, 2, 18, 12],
         "line-opacity": ["interpolate", ["linear"], ["zoom"], 6, 0, 8, 0.5],
       },
     },
-    // Roads — primary
     {
       id: "road-primary",
       type: "line",
@@ -193,12 +316,11 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
       "source-layer": "road",
       filter: ["all", ["!=", ["get", "structure"], "tunnel"], ["==", ["get", "class"], "primary"]],
       paint: {
-        "line-color": "#313740",
+        "line-color": "#3D3226",
         "line-width": ["interpolate", ["linear"], ["zoom"], 5, 0.5, 10, 2, 18, 14],
         "line-opacity": ["interpolate", ["linear"], ["zoom"], 5, 0, 7, 0.5],
       },
     },
-    // Roads — motorway/trunk
     {
       id: "road-motorway",
       type: "line",
@@ -206,12 +328,11 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
       "source-layer": "road",
       filter: ["all", ["!=", ["get", "structure"], "tunnel"], ["in", ["get", "class"], ["literal", ["motorway", "trunk"]]]],
       paint: {
-        "line-color": "#363C46",
+        "line-color": "#44382A",
         "line-width": ["interpolate", ["linear"], ["zoom"], 3, 0.5, 8, 1.5, 14, 5, 18, 16],
         "line-opacity": ["interpolate", ["linear"], ["zoom"], 3, 0, 5, 0.6],
       },
     },
-    // Bridges — slight glow effect on major roads
     {
       id: "bridge-major",
       type: "line",
@@ -219,39 +340,39 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
       "source-layer": "road",
       filter: ["all", ["==", ["get", "structure"], "bridge"], ["in", ["get", "class"], ["literal", ["motorway", "trunk", "primary", "secondary"]]]],
       paint: {
-        "line-color": "#3A4050",
+        "line-color": "#4A3D2E",
         "line-width": ["interpolate", ["linear"], ["zoom"], 8, 1, 14, 4, 18, 14],
         "line-opacity": 0.6,
       },
     },
-    // Admin boundaries — country borders
+    // ── Country borders — warm gold, prominent ────────────────────────
     {
       id: "admin-0-boundary",
       type: "line",
       source: "mapbox-streets",
       "source-layer": "admin",
-      filter: ["==", ["get", "admin_level"], 0],
+      filter: ["all", ["==", ["get", "admin_level"], 0], ["!=", ["get", "maritime"], 1]],
       paint: {
-        "line-color": "#3D4350",
-        "line-width": 1.2,
-        "line-opacity": 0.7,
+        "line-color": "rgba(232, 184, 152, 0.55)",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 2, 1.2, 6, 1.8],
+        "line-opacity": 0.8,
       },
     },
-    // Admin boundaries — state/province
+    // ── State borders — PRISM amber, dashed, distinct from country ────
     {
       id: "admin-1-boundary",
       type: "line",
       source: "mapbox-streets",
       "source-layer": "admin",
-      filter: ["==", ["get", "admin_level"], 1],
+      filter: ["all", ["==", ["get", "admin_level"], 1], ["!=", ["get", "maritime"], 1]],
       paint: {
-        "line-color": "#2D3340",
-        "line-width": 0.6,
-        "line-opacity": 0.4,
+        "line-color": "rgba(212, 149, 107, 0.35)",
+        "line-width": 0.8,
+        "line-opacity": 0.6,
         "line-dasharray": [3, 2],
       },
     },
-    // Place labels — country names (large)
+    // ── Country labels — warm gold, highly visible, large ─────────────
     {
       id: "place-country",
       type: "symbol",
@@ -260,20 +381,20 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
       filter: ["==", ["get", "class"], "country"],
       layout: {
         "text-field": ["get", "name_en"],
-        "text-font": ["DIN Pro Medium", "Arial Unicode MS Regular"],
-        "text-size": ["interpolate", ["linear"], ["zoom"], 1, 10, 6, 14],
+        "text-font": ["DIN Pro Bold", "Arial Unicode MS Bold"],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 1, 11, 4, 16, 6, 18],
         "text-transform": "uppercase",
-        "text-letter-spacing": 0.15,
+        "text-letter-spacing": 0.2,
         "text-max-width": 8,
       },
       paint: {
-        "text-color": "#4A5060",
-        "text-halo-color": "#0F1114",
-        "text-halo-width": 1.5,
-        "text-opacity": ["interpolate", ["linear"], ["zoom"], 1, 0.6, 8, 0],
+        "text-color": "rgba(232, 184, 152, 0.80)",
+        "text-halo-color": "rgba(10, 14, 20, 0.9)",
+        "text-halo-width": 2,
+        "text-opacity": ["interpolate", ["linear"], ["zoom"], 1, 0.7, 6, 0.9, 9, 0],
       },
     },
-    // Place labels — state/province names
+    // ── State abbreviations — amber, visible at overview zoom ─────────
     {
       id: "place-state",
       type: "symbol",
@@ -281,21 +402,21 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
       "source-layer": "place_label",
       filter: ["==", ["get", "class"], "state"],
       layout: {
-        "text-field": ["get", "name_en"],
-        "text-font": ["DIN Pro Regular", "Arial Unicode MS Regular"],
-        "text-size": ["interpolate", ["linear"], ["zoom"], 3, 9, 7, 12],
+        "text-field": ["coalesce", ["get", "abbr"], ["get", "name_en"]],
+        "text-font": ["DIN Pro Medium", "Arial Unicode MS Regular"],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 3, 9, 5, 11, 7, 13],
         "text-transform": "uppercase",
-        "text-letter-spacing": 0.12,
+        "text-letter-spacing": 0.15,
         "text-max-width": 7,
       },
       paint: {
-        "text-color": "#3D4350",
-        "text-halo-color": "#0F1114",
-        "text-halo-width": 1,
-        "text-opacity": ["interpolate", ["linear"], ["zoom"], 3, 0, 4, 0.5, 8, 0],
+        "text-color": "rgba(212, 149, 107, 0.55)",
+        "text-halo-color": "rgba(26, 18, 8, 0.85)",
+        "text-halo-width": 1.5,
+        "text-opacity": ["interpolate", ["linear"], ["zoom"], 3, 0, 4, 0.6, 7, 0.8, 10, 0],
       },
     },
-    // Place labels — city names
+    // ── City labels — warm amber, context layer ───────────────────────
     {
       id: "place-city",
       type: "symbol",
@@ -309,13 +430,13 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
         "text-max-width": 8,
       },
       paint: {
-        "text-color": "#5C6370",
-        "text-halo-color": "#0F1114",
+        "text-color": "rgba(232, 184, 152, 0.45)",
+        "text-halo-color": "rgba(26, 18, 8, 0.85)",
         "text-halo-width": 1.5,
-        "text-opacity": ["interpolate", ["linear"], ["zoom"], 4, 0, 6, 0.7, 14, 0.9],
+        "text-opacity": ["interpolate", ["linear"], ["zoom"], 4, 0, 6, 0.6, 14, 0.85],
       },
     },
-    // Place labels — neighborhoods/suburbs (high zoom)
+    // ── Neighborhood labels — high zoom only ──────────────────────────
     {
       id: "place-neighborhood",
       type: "symbol",
@@ -330,8 +451,8 @@ const PRISM_MAP_STYLE: mapboxgl.StyleSpecification = {
         "text-max-width": 7,
       },
       paint: {
-        "text-color": "#444B58",
-        "text-halo-color": "#0F1114",
+        "text-color": "rgba(212, 149, 107, 0.35)",
+        "text-halo-color": "rgba(26, 18, 8, 0.75)",
         "text-halo-width": 1,
         "text-opacity": ["interpolate", ["linear"], ["zoom"], 10, 0, 12, 0.6],
       },
@@ -515,11 +636,12 @@ export function MapPlaceholder({
   sentimentData = [],
   geoLensActive = false,
   activeTopicName,
+  enableAutoPan = false,
 }: MapPlaceholderProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
-  const emptyPopupRef = useRef<mapboxgl.Popup | null>(null);
+  const [popupData, setPopupData] = useState<PopupData | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [zoomGeneration, setZoomGeneration] = useState(0);
 
@@ -543,11 +665,12 @@ export function MapPlaceholder({
 
     mapboxgl.accessToken = MAPBOX_TOKEN;
 
+    const isMobileViewport = window.innerWidth < 768;
     const map = new mapboxgl.Map({
       container: mapContainer.current,
       style: PRISM_MAP_STYLE,
-      center: [-98, 38], // Center US
-      zoom: 3.5,
+      center: isMobileViewport ? [-96, 38] : [-98, 38],
+      zoom: isMobileViewport ? 2.8 : 3.5,
       minZoom: 2,
       maxZoom: 12,
       attributionControl: false,
@@ -561,13 +684,79 @@ export function MapPlaceholder({
 
     map.on("load", () => {
       setMapLoaded(true);
-      // Ensure map fills its container after layout settles
-      // Mapbox can miscalculate container size during dynamic layout;
-      // multiple resize calls at staggered timings cover edge cases.
       map.resize();
       requestAnimationFrame(() => map.resize());
       setTimeout(() => map.resize(), 100);
       setTimeout(() => map.resize(), 500);
+
+      // ── City Lights Layer ─────────────────────────────────────────
+      fetch("/data/cities.geojson")
+        .then((res) => res.json())
+        .then((geojson) => {
+          if (!map.getSource("city-lights-source")) {
+            map.addSource("city-lights-source", { type: "geojson", data: geojson });
+
+            // Outer halo — soft amber glow
+            map.addLayer({
+              id: "city-lights-outer",
+              type: "circle",
+              source: "city-lights-source",
+              paint: {
+                "circle-color": "#E8B898",
+                "circle-radius": [
+                  "step", ["get", "population"],
+                  6,       // under 100K
+                  100000, 10.5,  // 100K-500K
+                  500000, 18,    // 500K-1M
+                  1000000, 27,   // over 1M
+                ],
+                "circle-blur": 1.0,
+                "circle-opacity": 0.15,
+              },
+            });
+
+            // Inner glow — brighter amber core
+            map.addLayer({
+              id: "city-lights-inner",
+              type: "circle",
+              source: "city-lights-source",
+              paint: {
+                "circle-color": "#D4956B",
+                "circle-radius": [
+                  "step", ["get", "population"],
+                  4,       // under 100K
+                  100000, 7,     // 100K-500K
+                  500000, 12,    // 500K-1M
+                  1000000, 18,   // over 1M
+                ],
+                "circle-blur": 0.8,
+                "circle-opacity": 0.4,
+              },
+            });
+          }
+
+          // Breathing animation — subtle opacity pulse on inner layer
+          const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+          if (!prefersReducedMotion) {
+            let lastFrame = 0;
+            const FRAME_INTERVAL = 1000 / 30; // 30fps cap
+            const breathe = (timestamp: number) => {
+              if (!mapRef.current) return;
+              if (timestamp - lastFrame >= FRAME_INTERVAL) {
+                lastFrame = timestamp;
+                // Sine wave: oscillate opacity between 0.35 and 0.45 over 3000ms
+                const t = (timestamp % 3000) / 3000;
+                const opacity = 0.4 + 0.05 * Math.sin(t * Math.PI * 2);
+                try {
+                  map.setPaintProperty("city-lights-inner", "circle-opacity", opacity);
+                } catch { /* map may be removed */ }
+              }
+              requestAnimationFrame(breathe);
+            };
+            requestAnimationFrame(breathe);
+          }
+        })
+        .catch(() => { /* cities.geojson not found — skip */ });
     });
 
     // Re-render markers when crossing cluster zoom threshold
@@ -580,30 +769,81 @@ export function MapPlaceholder({
       }
     });
 
-    // Click on empty area → show "no perspectives here yet" prompt
+    // Click on empty area → show "no perspectives here yet" React overlay
+    // Suppress clicks on water/ocean using bounding box + water layer query
     map.on("click", (e) => {
-      // Remove any existing empty-area popup
-      if (emptyPopupRef.current) {
-        emptyPopupRef.current.remove();
-        emptyPopupRef.current = null;
+      const { lng, lat } = e.lngLat;
+
+      // Bounding box check: continental US only
+      if (lng < -130 || lng > -65 || lat < 24 || lat > 50) {
+        setPopupData(null);
+        return;
       }
 
-      const popup = new mapboxgl.Popup({
-        closeButton: true,
-        closeOnClick: true,
-        offset: 0,
-        className: "prism-popup",
-        maxWidth: "240px",
-      }).setLngLat(e.lngLat).setHTML(
-        `<div style="background:#181B20;border:1px solid #262A31;border-radius:10px;padding:12px 14px;font-family:'DM Sans',sans-serif;">
-          <p style="font-size:13px;color:#EDEDEF;margin:0 0 6px;">No perspectives here yet.</p>
-          <p style="font-size:11px;color:#9CA3AF;margin:0 0 8px;">Be the first to share what your community is experiencing.</p>
-          <a href="/create" style="display:inline-block;font-size:11px;color:#D4956B;text-decoration:none;font-weight:500;">Share a perspective →</a>
-        </div>`
-      ).addTo(map);
+      // Check if click is on water by querying the water layer
+      const waterFeatures = map.queryRenderedFeatures(e.point, { layers: ["water"] });
+      if (waterFeatures.length > 0) {
+        setPopupData(null);
+        return;
+      }
 
-      emptyPopupRef.current = popup;
+      setPopupData({ lngLat: [lng, lat] });
     });
+
+    // ── Slow Pan Animation (homepage only) ──────────────────────────
+    if (enableAutoPan) {
+      const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (!prefersReducedMotion) {
+        const isMobile = window.innerWidth < 768;
+        const scale = isMobile ? 0.5 : 1;
+        const waypoints: [number, number][] = [
+          [-96, 38], [-90, 40], [-100, 36], [-94, 42],
+        ];
+        let waypointIndex = 0;
+        let panTimeout: ReturnType<typeof setTimeout> | null = null;
+        let userInteracted = false;
+        let restartTimeout: ReturnType<typeof setTimeout> | null = null;
+
+        const startPan = () => {
+          if (!mapRef.current || userInteracted) return;
+          const next = waypoints[waypointIndex % waypoints.length];
+          const current = map.getCenter();
+          // Scale the pan distance on mobile
+          const targetLng = current.lng + (next[0] - current.lng) * scale;
+          const targetLat = current.lat + (next[1] - current.lat) * scale;
+
+          map.easeTo({
+            center: [targetLng, targetLat],
+            duration: 8000,
+            easing: (t: number) => t, // linear
+            essential: true,
+          });
+          waypointIndex++;
+          panTimeout = setTimeout(startPan, 8200);
+        };
+
+        // Start panning after a brief delay
+        map.once("idle", () => {
+          panTimeout = setTimeout(startPan, 1000);
+        });
+
+        // Stop on user interaction, restart after 5s inactivity
+        const stopPan = () => {
+          userInteracted = true;
+          if (panTimeout) clearTimeout(panTimeout);
+          map.stop();
+          if (restartTimeout) clearTimeout(restartTimeout);
+          restartTimeout = setTimeout(() => {
+            userInteracted = false;
+            startPan();
+          }, 5000);
+        };
+
+        map.on("mousedown", stopPan);
+        map.on("touchstart", stopPan);
+        map.on("wheel", stopPan);
+      }
+    }
 
     mapRef.current = map;
 
@@ -611,6 +851,7 @@ export function MapPlaceholder({
       map.remove();
       mapRef.current = null;
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Clear and re-add markers whenever data changes
@@ -665,7 +906,7 @@ export function MapPlaceholder({
       el.addEventListener("mouseleave", () => { popup.remove(); });
       el.addEventListener("click", (e) => {
         e.stopPropagation();
-        if (emptyPopupRef.current) { emptyPopupRef.current.remove(); emptyPopupRef.current = null; }
+        setPopupData(null);
         window.location.href = `/community/${c.id}`;
       });
 
@@ -830,11 +1071,7 @@ export function MapPlaceholder({
 
       el.addEventListener("click", (e) => {
         e.stopPropagation();
-        // Remove the empty-area popup if visible
-        if (emptyPopupRef.current) {
-          emptyPopupRef.current.remove();
-          emptyPopupRef.current = null;
-        }
+        setPopupData(null);
         popup.setLngLat([lng, lat]).addTo(mapRef.current!);
       });
 
@@ -918,6 +1155,18 @@ export function MapPlaceholder({
     <div className="relative w-full h-full rounded-xl overflow-hidden border border-prism-border shadow-inner">
       {/* Map container */}
       <div ref={mapContainer} className="w-full h-full" />
+
+      {/* React-managed popup overlay with AnimatePresence for exit animation */}
+      <AnimatePresence>
+        {popupData && mapRef.current && (
+          <MapPopup
+            key="map-popup"
+            lngLat={popupData.lngLat}
+            map={mapRef.current}
+            onClose={() => setPopupData(null)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Map status */}
 

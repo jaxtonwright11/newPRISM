@@ -51,34 +51,33 @@ test.describe("Smoke Tests", () => {
   });
 
   test("login page loads", async ({ page }) => {
-    const response = await page.goto("/login");
+    const response = await page.goto("/login", { waitUntil: "domcontentloaded" });
     expect(response?.status()).toBeLessThan(400);
 
     await expect(page.locator("text=Sign in to PRISM")).toBeVisible();
   });
 
   test("signup page loads", async ({ page }) => {
-    const response = await page.goto("/signup");
+    const response = await page.goto("/signup", { waitUntil: "domcontentloaded" });
     expect(response?.status()).toBeLessThan(400);
 
     await expect(page.locator("text=Join PRISM")).toBeVisible();
   });
 
   test("feed page loads", async ({ page }) => {
-    const response = await page.goto("/feed");
+    const response = await page.goto("/feed", { waitUntil: "domcontentloaded" });
     expect(response?.status()).toBeLessThan(400);
-    await page.waitForLoadState("domcontentloaded");
   });
 
   test("discover page loads", async ({ page }) => {
-    const response = await page.goto("/discover");
+    const response = await page.goto("/discover", { waitUntil: "domcontentloaded" });
     expect(response?.status()).toBeLessThan(400);
 
     await expect(page.getByRole("heading", { name: "Discover" })).toBeVisible();
   });
 
   test("landing page loads", async ({ page }) => {
-    const response = await page.goto("/landing");
+    const response = await page.goto("/landing", { waitUntil: "domcontentloaded" });
     expect(response?.status()).toBeLessThan(400);
 
     await expect(page.getByRole("heading", { name: "PRISM" })).toBeVisible();
@@ -87,16 +86,14 @@ test.describe("Smoke Tests", () => {
   // --- New tests ---
 
   test("admin page requires authentication", async ({ page }) => {
-    const response = await page.goto("/admin");
+    const response = await page.goto("/admin", { waitUntil: "domcontentloaded" });
     // Admin page should load (it's client-rendered, auth check happens in component)
     expect(response?.status()).toBeLessThan(500);
-    await page.waitForLoadState("domcontentloaded");
   });
 
   test("create page loads", async ({ page }) => {
-    const response = await page.goto("/create");
+    const response = await page.goto("/create", { waitUntil: "domcontentloaded" });
     expect(response?.status()).toBeLessThan(400);
-    await page.waitForLoadState("domcontentloaded");
 
     // Should have a create/compose UI element
     const body = await page.textContent("body");

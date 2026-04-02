@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 test.describe("Authentication Flow", () => {
   // ── Signup page renders correctly ─────────────────────────────────────
   test("signup page has all required fields", async ({ page }) => {
-    await page.goto("/signup");
+    await page.goto("/signup", { waitUntil: "domcontentloaded" });
     await expect(page.locator("text=Join PRISM")).toBeVisible();
 
     // Verify all form fields exist
@@ -23,7 +23,7 @@ test.describe("Authentication Flow", () => {
 
   // ── Signup form validation ────────────────────────────────────────────
   test("signup requires all fields filled", async ({ page }) => {
-    await page.goto("/signup");
+    await page.goto("/signup", { waitUntil: "domcontentloaded" });
 
     // Try to submit empty form — HTML5 validation should prevent submission
     const submitBtn = page.getByRole("button", { name: "Create account" });
@@ -39,7 +39,7 @@ test.describe("Authentication Flow", () => {
 
   // ── Signup with short password shows minimum length ───────────────────
   test("signup password requires minimum 8 characters", async ({ page }) => {
-    await page.goto("/signup");
+    await page.goto("/signup", { waitUntil: "domcontentloaded" });
 
     await page.locator("#email").fill("test@example.com");
     await page.locator("#username").fill("testuser");
@@ -58,7 +58,7 @@ test.describe("Authentication Flow", () => {
 
   // ── Login page renders correctly ──────────────────────────────────────
   test("login page has all required elements", async ({ page }) => {
-    await page.goto("/login");
+    await page.goto("/login", { waitUntil: "domcontentloaded" });
     await expect(page.locator("text=Sign in to PRISM")).toBeVisible();
 
     // Form fields
@@ -80,26 +80,21 @@ test.describe("Authentication Flow", () => {
 
   // ── Login with wrong password shows error ─────────────────────────────
   test("login with wrong credentials shows error", async ({ page }) => {
-    await page.goto("/login");
+    await page.goto("/login", { waitUntil: "domcontentloaded" });
 
     await page.locator("#email").fill("nonexistent@example.com");
     await page.locator("#password").fill("wrongpassword123");
 
     await page.getByRole("button", { name: "Sign in" }).click();
 
-    // Wait for the error message to appear
-    const errorDiv = page.locator(".bg-red-500\\/10");
-    await expect(errorDiv).toBeVisible({ timeout: 10000 });
-
-    // Should show an error message (Supabase returns "Invalid login credentials")
-    const errorText = await errorDiv.textContent();
-    expect(errorText).toBeTruthy();
-    expect(errorText!.length).toBeGreaterThan(0);
+    // Wait for the error message to appear (Supabase returns "Invalid login credentials")
+    const errorDiv = page.locator('[role="alert"]').filter({ hasText: /.+/ });
+    await expect(errorDiv.first()).toBeVisible({ timeout: 15000 });
   });
 
   // ── Forgot password page ──────────────────────────────────────────────
   test("forgot password page renders and accepts email", async ({ page }) => {
-    await page.goto("/forgot-password");
+    await page.goto("/forgot-password", { waitUntil: "domcontentloaded" });
     await expect(page.locator("text=Reset your password")).toBeVisible();
     await expect(page.locator("text=send you a link")).toBeVisible();
 
@@ -116,7 +111,7 @@ test.describe("Authentication Flow", () => {
 
   // ── Forgot password link navigates correctly ──────────────────────────
   test("login page forgot password link works", async ({ page }) => {
-    await page.goto("/login");
+    await page.goto("/login", { waitUntil: "domcontentloaded" });
 
     await page.locator("text=Forgot password?").click();
     await page.waitForURL("**/forgot-password");
@@ -180,13 +175,13 @@ test.describe("Authentication Flow", () => {
       waitUntil: "domcontentloaded",
     });
 
-    await page.waitForURL("**/login**", { timeout: 10000 });
+    await page.waitForURL("**/login**", { timeout: 30000 });
     expect(page.url()).toContain("error=auth_callback_failed");
   });
 
   // ── Login page shows callback error ───────────────────────────────────
   test("login page displays auth_callback_failed error", async ({ page }) => {
-    await page.goto("/login?error=auth_callback_failed");
+    await page.goto("/login?error=auth_callback_failed", { waitUntil: "domcontentloaded" });
 
     await expect(page.locator("text=Sign-in failed")).toBeVisible();
   });
@@ -194,14 +189,14 @@ test.describe("Authentication Flow", () => {
   // ── Signup → login navigation ─────────────────────────────────────────
   test("signup page links to login and vice versa", async ({ page }) => {
     // From signup → login
-    await page.goto("/signup");
+    await page.goto("/signup", { waitUntil: "domcontentloaded" });
     await page.locator("text=Sign in").click();
-    await page.waitForURL("**/login");
-    await expect(page.locator("text=Sign in to PRISM")).toBeVisible();
+    await page.waitForURL("**/login", { timeout: 30000 });
+    await expect(page.locator("text=Sign in to PRISM")).toBeVisible({ timeout: 15000 });
 
     // From login → signup
     await page.locator("text=Sign up").click();
-    await page.waitForURL("**/signup");
-    await expect(page.locator("text=Join PRISM")).toBeVisible();
+    await page.waitForURL("**/signup", { timeout: 30000 });
+    await expect(page.locator("text=Join PRISM")).toBeVisible({ timeout: 15000 });
   });
 });

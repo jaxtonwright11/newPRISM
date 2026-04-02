@@ -3,10 +3,95 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useAuth } from "@/lib/auth-context";
 import { PrismWordmark } from "@/components/prism-wordmark";
 import type { Community, Topic, CommunityType } from "@shared/types";
+
+function EarlyAccessForm() {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setStatus("error");
+      setErrorMsg("Please enter a valid email address.");
+      return;
+    }
+    setStatus("loading");
+    try {
+      const res = await fetch("/api/early-access", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Something went wrong.");
+      }
+      setStatus("success");
+    } catch (err) {
+      setStatus("error");
+      setErrorMsg(err instanceof Error ? err.message : "Something went wrong.");
+    }
+  };
+
+  if (status === "success") {
+    return (
+      <div className="flex items-center justify-center gap-2">
+        <svg className="w-5 h-5 text-[var(--accent-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p className="text-sm text-[var(--text-primary)] font-body font-medium">
+          You&apos;re on the list. We&apos;ll be in touch.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2 max-w-md mx-auto">
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => { setEmail(e.target.value); if (status === "error") setStatus("idle"); }}
+        placeholder="you@example.com"
+        className="flex-1 bg-[#0D1117] border border-[rgba(212,149,107,0.4)] rounded-lg px-4 py-3 text-white text-sm font-body placeholder-[#5C6370] focus:border-[#D4956B] focus:outline-none transition-colors"
+      />
+      <button
+        type="submit"
+        disabled={status === "loading"}
+        className="px-6 py-3 rounded-lg bg-[var(--accent-primary)] text-white text-sm font-body font-medium hover:shadow-lg hover:shadow-[var(--accent-primary)]/20 transition-all disabled:opacity-50 shrink-0 min-h-[44px]"
+      >
+        {status === "loading" ? "\u2026" : "Get early access"}
+      </button>
+      {status === "error" && errorMsg && (
+        <p className="text-xs text-red-400 font-body sm:col-span-2 text-center sm:text-left mt-1">{errorMsg}</p>
+      )}
+    </form>
+  );
+}
+
+/** Wrapper that renders children with whileInView animation, or static if reduced motion is preferred. */
+function RevealOnScroll({ children, className, delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+  const prefersReducedMotion = useReducedMotion();
+  if (prefersReducedMotion) {
+    return <div className={className}>{children}</div>;
+  }
+  return (
+    <motion.div
+      className={className}
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5, ease: "easeOut", delay }}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
 const MapPlaceholder = dynamic(
   () => import("@/components/map-placeholder").then((mod) => mod.MapPlaceholder),
@@ -34,6 +119,7 @@ type AhaStep = "map" | "topic" | "perspectives" | "signup";
 export default function Home() {
   const { session, loading: authLoading } = useAuth();
   const router = useRouter();
+  const prefersReducedMotion = useReducedMotion();
   const [communities, setCommunities] = useState<Community[]>([]);
   const [activeTopic, setActiveTopic] = useState<Topic | null>(null);
   const [perspectives, setPerspectives] = useState<AhaPerspective[]>([]);
@@ -116,28 +202,43 @@ export default function Home() {
   }
 
   return (
-    <div id="main-content" className="min-h-screen bg-[var(--bg-base)] flex flex-col relative overflow-hidden">
-      {/* Map — always visible as background */}
-      <div className="absolute inset-0 z-0">
-        <MapPlaceholder
-          communities={communities}
-          isAuthenticated={false}
-          hideOverlays
+    <div id="main-content" className="bg-[var(--bg-base)] flex flex-col relative">
+      {/* ═══════════════════════════════════════════════════════════════
+          HERO SECTION — full viewport, map background
+          ═══════════════════════════════════════════════════════════════ */}
+      <section className="relative min-h-screen flex flex-col overflow-hidden">
+        {/* Map background */}
+        <div className="absolute inset-0 z-0">
+          <MapPlaceholder
+            communities={communities}
+            isAuthenticated={false}
+            hideOverlays
+            enableAutoPan
+          />
+        </div>
+
+        {/* Radial gradient overlay — dark at text center, transparent at edges */}
+        <div
+          className="absolute inset-0 z-10 pointer-events-none"
+          style={{
+            background: "radial-gradient(ellipse at center bottom, rgba(10, 14, 20, 0.88) 0%, rgba(10, 14, 20, 0.45) 45%, transparent 72%)",
+          }}
         />
-      </div>
+        {/* Mobile: slightly stronger overlay */}
+        <div
+          className="absolute inset-0 z-10 pointer-events-none md:hidden"
+          style={{
+            background: "radial-gradient(ellipse at center bottom, rgba(10, 14, 20, 0.92) 0%, rgba(10, 14, 20, 0.50) 40%, transparent 68%)",
+          }}
+        />
 
-      {/* Gradient overlay at bottom for readability */}
-      <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-[var(--bg-base)] via-[var(--bg-base)]/85 to-transparent z-10 pointer-events-none" />
-
-      {/* Content overlay — pointer-events-none so map is interactive beneath */}
-      <div className="relative z-20 flex flex-col min-h-screen pointer-events-none">
-        {/* Header */}
-        <header className="flex items-center justify-between px-4 pt-4 pointer-events-auto">
+        {/* Nav bar */}
+        <header className="relative z-20 flex items-center justify-between px-4 md:px-6 pt-4 backdrop-blur-sm bg-black/20">
           <PrismWordmark size="md" />
           <div className="flex items-center gap-2">
             <button
               onClick={() => router.push("/login")}
-              className="px-4 py-2.5 text-sm font-body font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors min-h-[44px] flex items-center"
+              className="hidden md:flex px-4 py-2.5 text-sm font-body font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors min-h-[44px] items-center"
             >
               Log in
             </button>
@@ -145,33 +246,146 @@ export default function Home() {
               onClick={() => router.push("/signup")}
               className="px-4 py-2.5 rounded-lg bg-[var(--accent-primary)] text-white text-sm font-body font-medium hover:shadow-lg hover:shadow-[var(--accent-primary)]/20 transition-all min-h-[44px] flex items-center"
             >
-              Sign up
+              <span className="md:hidden">Join</span>
+              <span className="hidden md:inline">Sign up</span>
             </button>
           </div>
         </header>
 
-        {/* Spacer to push content to bottom */}
+        {/* Spacer */}
         <div className="flex-1" />
 
-        {/* AHA sequence content */}
-        <div className="px-4 pb-12 max-w-lg mx-auto w-full pointer-events-auto">
-          <AnimatePresence mode="wait">
-            {step === "map" && (
-              <motion.div
-                key="map-step"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.4 }}
-                className="space-y-4"
+        {/* Hero text — bottom center */}
+        <div className="relative z-20 px-4 pb-6 md:pb-12 max-w-2xl mx-auto w-full text-center">
+          {/* Credibility line — hidden on mobile */}
+          <p className="hidden md:block text-xs tracking-widest uppercase font-body text-[var(--accent-primary)]/60 mb-5">
+            Seed-funded &middot; UC Berkeley &middot; Harvard Kennedy School
+          </p>
+
+          <h1
+            className="font-display font-bold text-3xl md:text-6xl lg:text-7xl text-[var(--text-primary)] mb-4 md:mb-6 leading-tight"
+            style={{ textShadow: "0 2px 20px rgba(0,0,0,0.8)" }}
+          >
+            See how your community actually experiences the world
+          </h1>
+
+          <p
+            className="text-sm md:text-lg text-[var(--text-secondary)] font-body mb-6 md:mb-8 max-w-xl mx-auto leading-relaxed"
+            style={{ textShadow: "0 1px 8px rgba(0,0,0,0.6)" }}
+          >
+            PRISM maps perspectives from communities across America on the events shaping all of us — neighborhood by neighborhood, in their own words.
+          </p>
+
+          {/* CTAs */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
+            <button
+              onClick={() => router.push("/signup")}
+              className="w-full sm:w-auto px-8 py-3.5 min-h-[52px] rounded-xl bg-[var(--accent-primary)] text-white text-sm md:text-base font-body font-medium hover:shadow-lg hover:shadow-[var(--accent-primary)]/25 transition-all"
+            >
+              Share your perspective
+            </button>
+            <button
+              onClick={() => {
+                document.getElementById("below-fold")?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="hidden sm:flex items-center gap-1.5 px-6 py-3.5 min-h-[52px] text-sm font-body font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+            >
+              Explore the map
+              <span aria-hidden="true">&rarr;</span>
+            </button>
+          </div>
+
+          {/* Scroll indicator — hidden on mobile, static when reduced motion preferred */}
+          {prefersReducedMotion ? (
+            <div className="hidden md:flex justify-center">
+              <svg className="w-5 h-5 text-[var(--text-dim)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
+            </div>
+          ) : (
+            <motion.div
+              className="hidden md:flex justify-center"
+              animate={{ y: [0, 6, 0] }}
+              transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+            >
+              <svg className="w-5 h-5 text-[var(--text-dim)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
+            </motion.div>
+          )}
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          BELOW-FOLD SECTIONS
+          ═══════════════════════════════════════════════════════════════ */}
+      <div id="below-fold">
+        {/* Credibility ticker bar */}
+        <div className="bg-[#0A0D11] border-t border-b border-[var(--bg-elevated)] py-3 px-4">
+          <p className="text-center text-xs tracking-widest uppercase font-body text-[var(--accent-primary)]/50">
+            Seed-funded &middot; UC Berkeley &middot; Harvard Kennedy School &middot; Congressional AI Policy Intern
+          </p>
+        </div>
+
+        {/* How It Works — 3 cards */}
+        <section className="py-16 md:py-24 px-4 max-w-4xl mx-auto">
+          <RevealOnScroll>
+            <h2 className="font-display font-bold text-2xl md:text-3xl text-[var(--text-primary)] text-center mb-12">
+              How PRISM works
+            </h2>
+          </RevealOnScroll>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              {
+                step: "01",
+                title: "Communities share perspectives",
+                description: "Real people from real neighborhoods share how they experience the events shaping America.",
+              },
+              {
+                step: "02",
+                title: "See through different eyes",
+                description: "Explore how the same event looks completely different from Chicago\u2019s South Side vs. Rural Montana vs. Little Havana.",
+              },
+              {
+                step: "03",
+                title: "Add your voice",
+                description: "Your community has a perspective too. Share it and connect with neighborhoods you\u2019d never otherwise hear from.",
+              },
+            ].map((card, i) => (
+              <RevealOnScroll
+                key={card.step}
+                className="bg-[var(--bg-surface)] border border-[var(--bg-elevated)] rounded-xl p-6"
+                delay={i * 0.1}
               >
-                {/* Active Now topic card */}
-                {activeTopic && (
-                  <button
+                <span className="font-mono text-xs text-[var(--accent-primary)] font-medium">{card.step}</span>
+                <h3 className="font-display font-bold text-lg text-[var(--text-primary)] mt-2 mb-2">
+                  {card.title}
+                </h3>
+                <p className="text-sm text-[var(--text-secondary)] font-body leading-relaxed">
+                  {card.description}
+                </p>
+              </RevealOnScroll>
+            ))}
+          </div>
+        </section>
+
+        {/* AHA Moment — Active Topic Preview */}
+        {activeTopic && (
+          <section className="py-12 md:py-20 px-4 max-w-lg mx-auto">
+            <RevealOnScroll>
+              <AnimatePresence mode="wait">
+                {step === "map" && (
+                  <motion.button
+                    key="topic-card"
                     onClick={handleTopicTap}
-                    className="w-full text-left bg-[var(--bg-surface)]/95 backdrop-blur-md rounded-xl border border-[var(--bg-elevated)] p-4 shadow-xl shadow-black/30 hover:bg-[var(--bg-elevated)]/95 transition-colors"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.4 }}
+                    className="w-full text-left bg-[var(--bg-surface)] backdrop-blur-md rounded-xl border border-[var(--bg-elevated)] p-5 shadow-xl shadow-black/20 hover:bg-[var(--bg-elevated)] transition-colors"
                   >
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2 mb-3">
                       <span className="relative flex h-2 w-2">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent-live)] opacity-75" />
                         <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--accent-live)]" />
@@ -184,133 +398,127 @@ export default function Home() {
                       {activeTopic.title}
                     </p>
                     <p className="text-sm text-[var(--accent-primary)]">
-                      Tap to see how communities are experiencing this →
+                      Tap to see how communities are experiencing this &rarr;
                     </p>
-                  </button>
+                  </motion.button>
                 )}
 
-                {!activeTopic && (
-                  <div className="text-center py-8 space-y-4">
-                    <h1 className="font-display font-bold text-2xl text-[var(--text-primary)] mb-2">
-                      See how communities experience the same events.
-                    </h1>
-                    <p className="text-sm text-[var(--text-secondary)] font-body">
-                      Different neighborhoods. Same moment. Completely different worlds.
-                    </p>
-                    <button
-                      onClick={() => router.push("/signup")}
-                      className="px-6 py-3 rounded-xl bg-[var(--accent-primary)] text-white text-sm font-body font-medium hover:shadow-lg hover:shadow-[var(--accent-primary)]/20 transition-all"
-                    >
-                      Join PRISM
-                    </button>
-                  </div>
-                )}
-              </motion.div>
-            )}
-
-            {step === "topic" && (
-              <motion.div
-                key="loading-step"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex items-center justify-center py-12"
-              >
-                <div className="flex flex-col items-center gap-3">
-                  <div className="w-24 h-1 bg-[var(--bg-elevated)] rounded-full overflow-hidden">
-                    <div className="h-full bg-[var(--accent-primary)] rounded-full animate-shimmer" style={{ width: "80%" }} />
-                  </div>
-                  <span className="text-xs text-[var(--text-dim)] font-body">Loading perspectives...</span>
-                </div>
-              </motion.div>
-            )}
-
-            {step === "perspectives" && (
-              <motion.div
-                key="perspectives-step"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.5 }}
-                className="space-y-4"
-              >
-                {perspectives.length >= 2 && activeTopic ? (
-                  <PerspectiveComparison
-                    topicTitle={activeTopic.title}
-                    perspectives={perspectives}
-                    onSelectPerspective={() => setStep("signup")}
-                  />
-                ) : (
-                  <div className="bg-[var(--bg-surface)]/95 backdrop-blur-md rounded-xl border border-[var(--bg-elevated)] p-6 text-center">
-                    <div className="w-10 h-10 rounded-full bg-[var(--accent-primary)]/15 flex items-center justify-center mx-auto mb-3">
-                      <svg className="w-5 h-5 text-[var(--accent-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
-                      </svg>
+                {step === "topic" && (
+                  <motion.div
+                    key="loading-step"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="flex items-center justify-center py-12"
+                  >
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-24 h-1 bg-[var(--bg-elevated)] rounded-full overflow-hidden">
+                        <div className="h-full bg-[var(--accent-primary)] rounded-full animate-shimmer" style={{ width: "80%" }} />
+                      </div>
+                      <span className="text-xs text-[var(--text-dim)] font-body">Loading perspectives...</span>
                     </div>
-                    <h2 className="font-display font-bold text-lg text-[var(--text-primary)] mb-2">
-                      {activeTopic ? `Be the first voice on "${activeTopic.title}"` : "This conversation is just getting started."}
-                    </h2>
-                    <p className="text-sm text-[var(--text-secondary)] font-body mb-4">
-                      No perspectives yet. Your community&apos;s take could be the one that starts the conversation.
-                    </p>
-                    <button
-                      onClick={() => setStep("signup")}
-                      className="px-5 py-2.5 rounded-xl bg-[var(--accent-primary)] text-white text-sm font-body font-medium hover:shadow-lg hover:shadow-[var(--accent-primary)]/20 transition-all"
-                    >
-                      Share your perspective
-                    </button>
-                  </div>
+                  </motion.div>
                 )}
 
-                {/* Soft signup prompt */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 1.5 }}
-                  className="text-center"
-                >
-                  <button
-                    onClick={() => setStep("signup")}
-                    className="text-sm text-[var(--accent-primary)] font-body font-medium hover:underline"
+                {step === "perspectives" && (
+                  <motion.div
+                    key="perspectives-step"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.5 }}
+                    className="space-y-4"
                   >
-                    Connect with these communities →
-                  </button>
-                </motion.div>
-              </motion.div>
-            )}
+                    {perspectives.length >= 2 && activeTopic ? (
+                      <PerspectiveComparison
+                        topicTitle={activeTopic.title}
+                        perspectives={perspectives}
+                        onSelectPerspective={() => setStep("signup")}
+                      />
+                    ) : (
+                      <div className="bg-[var(--bg-surface)] rounded-xl border border-[var(--bg-elevated)] p-6 text-center">
+                        <h2 className="font-display font-bold text-lg text-[var(--text-primary)] mb-2">
+                          {activeTopic ? `Be the first voice on "${activeTopic.title}"` : "This conversation is just getting started."}
+                        </h2>
+                        <p className="text-sm text-[var(--text-secondary)] font-body mb-4">
+                          No perspectives yet. Your community&apos;s take could be the one that starts the conversation.
+                        </p>
+                        <button
+                          onClick={() => setStep("signup")}
+                          className="px-5 py-2.5 rounded-xl bg-[var(--accent-primary)] text-white text-sm font-body font-medium hover:shadow-lg hover:shadow-[var(--accent-primary)]/20 transition-all"
+                        >
+                          Share your perspective
+                        </button>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
 
-            {step === "signup" && (
-              <motion.div
-                key="signup-step"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-                className="bg-[var(--bg-surface)]/95 backdrop-blur-md rounded-xl border border-[var(--bg-elevated)] p-6 text-center shadow-xl"
-              >
-                <h2 className="font-display font-bold text-xl text-[var(--text-primary)] mb-2">
-                  Your perspective matters.
-                </h2>
-                <p className="text-sm text-[var(--text-secondary)] font-body mb-5">
-                  Join PRISM and share how your community experiences the world.
-                </p>
-                <div className="flex flex-col gap-2">
-                  <button
-                    onClick={() => router.push("/signup")}
-                    className="w-full py-2.5 rounded-xl bg-[var(--accent-primary)] text-white text-sm font-body font-medium hover:shadow-lg hover:shadow-[var(--accent-primary)]/20 transition-all"
+                {step === "signup" && (
+                  <motion.div
+                    key="signup-step"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4 }}
+                    className="bg-[var(--bg-surface)] rounded-xl border border-[var(--bg-elevated)] p-6 text-center shadow-xl"
                   >
-                    Create an account
-                  </button>
-                  <button
-                    onClick={() => router.push("/feed")}
-                    className="w-full py-2.5 rounded-xl text-sm font-body text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-                  >
-                    Continue browsing
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+                    <h2 className="font-display font-bold text-xl text-[var(--text-primary)] mb-2">
+                      Your perspective matters.
+                    </h2>
+                    <p className="text-sm text-[var(--text-secondary)] font-body mb-5">
+                      Join PRISM and share how your community experiences the world.
+                    </p>
+                    <div className="flex flex-col gap-2">
+                      <button
+                        onClick={() => router.push("/signup")}
+                        className="w-full py-2.5 rounded-xl bg-[var(--accent-primary)] text-white text-sm font-body font-medium hover:shadow-lg hover:shadow-[var(--accent-primary)]/20 transition-all"
+                      >
+                        Create an account
+                      </button>
+                      <button
+                        onClick={() => router.push("/feed")}
+                        className="w-full py-2.5 rounded-xl text-sm font-body text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                      >
+                        Continue browsing
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </RevealOnScroll>
+          </section>
+        )}
+
+        {/* Early Access Email Capture */}
+        <section className="py-16 md:py-24 px-4 bg-[#0D1117]/50">
+          <RevealOnScroll className="max-w-lg mx-auto text-center">
+            <h2 className="font-display font-bold text-2xl md:text-3xl text-[var(--text-primary)] mb-3">
+              Be one of the first voices on PRISM
+            </h2>
+            <p className="text-sm text-[var(--text-secondary)] font-body mb-8 max-w-md mx-auto leading-relaxed">
+              Early access members shape how the platform grows. No spam — just an invite when your community is ready.
+            </p>
+            <EarlyAccessForm />
+          </RevealOnScroll>
+        </section>
+
+        {/* Final CTA */}
+        <section className="py-16 md:py-24 px-4 text-center">
+          <RevealOnScroll className="max-w-md mx-auto">
+            <h2 className="font-display font-bold text-2xl md:text-3xl text-[var(--text-primary)] mb-3">
+              Every neighborhood has a story.
+            </h2>
+            <p className="text-sm text-[var(--text-secondary)] font-body mb-6">
+              PRISM makes sure those stories don&apos;t stay invisible.
+            </p>
+            <button
+              onClick={() => router.push("/signup")}
+              className="px-8 py-3.5 min-h-[52px] rounded-xl bg-[var(--accent-primary)] text-white text-sm md:text-base font-body font-medium hover:shadow-lg hover:shadow-[var(--accent-primary)]/25 transition-all"
+            >
+              Share your perspective
+            </button>
+          </RevealOnScroll>
+        </section>
       </div>
     </div>
   );

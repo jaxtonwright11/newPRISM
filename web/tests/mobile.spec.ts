@@ -7,8 +7,7 @@ test.use({ viewport: MOBILE_VIEWPORT });
 
 test.describe("Mobile responsiveness (390px)", () => {
   test("homepage — no horizontal scroll, CTA visible", async ({ page }) => {
-    await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
 
     // No horizontal overflow
     const scrollWidth = await page.evaluate(
@@ -29,8 +28,7 @@ test.describe("Mobile responsiveness (390px)", () => {
   });
 
   test("login page — form fits viewport", async ({ page }) => {
-    await page.goto("/login");
-    await page.waitForLoadState("networkidle");
+    await page.goto("/login", { waitUntil: "domcontentloaded" });
 
     const scrollWidth = await page.evaluate(
       () => document.documentElement.scrollWidth
@@ -55,8 +53,7 @@ test.describe("Mobile responsiveness (390px)", () => {
   });
 
   test("signup page — form fits viewport", async ({ page }) => {
-    await page.goto("/signup");
-    await page.waitForLoadState("networkidle");
+    await page.goto("/signup", { waitUntil: "domcontentloaded" });
 
     const scrollWidth = await page.evaluate(
       () => document.documentElement.scrollWidth
@@ -70,8 +67,7 @@ test.describe("Mobile responsiveness (390px)", () => {
   });
 
   test("discover page — no overflow", async ({ page }) => {
-    await page.goto("/discover");
-    await page.waitForLoadState("networkidle");
+    await page.goto("/discover", { waitUntil: "domcontentloaded" });
 
     const scrollWidth = await page.evaluate(
       () => document.documentElement.scrollWidth
@@ -85,8 +81,7 @@ test.describe("Mobile responsiveness (390px)", () => {
   });
 
   test("feed page — cards stack vertically", async ({ page }) => {
-    await page.goto("/feed");
-    await page.waitForLoadState("networkidle");
+    await page.goto("/feed", { waitUntil: "domcontentloaded" });
 
     const scrollWidth = await page.evaluate(
       () => document.documentElement.scrollWidth
@@ -100,8 +95,7 @@ test.describe("Mobile responsiveness (390px)", () => {
   });
 
   test("insights page — no overflow", async ({ page }) => {
-    await page.goto("/insights");
-    await page.waitForLoadState("networkidle");
+    await page.goto("/insights", { waitUntil: "domcontentloaded" });
 
     const scrollWidth = await page.evaluate(
       () => document.documentElement.scrollWidth
@@ -115,8 +109,7 @@ test.describe("Mobile responsiveness (390px)", () => {
   });
 
   test("map page — fills viewport", async ({ page }) => {
-    await page.goto("/map");
-    await page.waitForLoadState("networkidle");
+    await page.goto("/map", { waitUntil: "domcontentloaded" });
 
     const scrollWidth = await page.evaluate(
       () => document.documentElement.scrollWidth
@@ -130,8 +123,7 @@ test.describe("Mobile responsiveness (390px)", () => {
   });
 
   test("landing page — readable text width", async ({ page }) => {
-    await page.goto("/landing");
-    await page.waitForLoadState("networkidle");
+    await page.goto("/landing", { waitUntil: "domcontentloaded" });
 
     const scrollWidth = await page.evaluate(
       () => document.documentElement.scrollWidth
@@ -145,8 +137,7 @@ test.describe("Mobile responsiveness (390px)", () => {
   });
 
   test("admin page — no overflow", async ({ page }) => {
-    await page.goto("/admin");
-    await page.waitForLoadState("networkidle");
+    await page.goto("/admin", { waitUntil: "domcontentloaded" });
 
     const scrollWidth = await page.evaluate(
       () => document.documentElement.scrollWidth
@@ -160,8 +151,7 @@ test.describe("Mobile responsiveness (390px)", () => {
   });
 
   test("all touch targets are at least 44px", async ({ page }) => {
-    await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
 
     // Check all visible buttons and links
     const tooSmall = await page.evaluate(() => {
@@ -195,8 +185,7 @@ test.describe("Mobile responsiveness (390px)", () => {
   });
 
   test("bottom nav bar visible on tab pages", async ({ page }) => {
-    await page.goto("/discover");
-    await page.waitForLoadState("networkidle");
+    await page.goto("/discover", { waitUntil: "domcontentloaded" });
 
     // Bottom nav should be visible on mobile
     const nav = page.locator("nav").last();

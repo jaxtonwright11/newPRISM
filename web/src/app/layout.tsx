@@ -39,7 +39,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "PRISM — Community Perspectives",
   description:
-    "See how communities experience the same events. Geographic perspectives, visualized.",
+    "PRISM maps perspectives from communities across America on the events shaping all of us — neighborhood by neighborhood, in their own words.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     siteName: "PRISM",
     title: "PRISM — Community Perspectives",
     description:
-      "See how communities experience the same events. Geographic perspectives, visualized.",
+      "PRISM maps perspectives from communities across America on the events shaping all of us — neighborhood by neighborhood, in their own words.",
     url: siteUrl,
     images: [
       {
@@ -66,7 +66,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "PRISM — Community Perspectives",
     description:
-      "See how communities experience the same events. Geographic perspectives, visualized.",
+      "PRISM maps perspectives from communities across America on the events shaping all of us — neighborhood by neighborhood, in their own words.",
     images: [`${siteUrl}/api/og`],
   },
   other: {
