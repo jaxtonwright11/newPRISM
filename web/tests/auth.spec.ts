@@ -87,9 +87,12 @@ test.describe("Authentication Flow", () => {
 
     await page.getByRole("button", { name: "Sign in" }).click();
 
-    // Wait for the error message to appear (Supabase returns "Invalid login credentials")
-    const errorDiv = page.locator('[role="alert"]').filter({ hasText: /.+/ });
-    await expect(errorDiv.first()).toBeVisible({ timeout: 15000 });
+    // Wait for Supabase to return "Invalid login credentials" error.
+    // After clicking "Sign in", the button changes to "Signing in..." then back.
+    // Wait for the button text to revert (indicating the request completed),
+    // then check for the error alert.
+    await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible({ timeout: 25000 });
+    await expect(page.getByRole("alert").first()).toBeVisible({ timeout: 5000 });
   });
 
   // ── Forgot password page ──────────────────────────────────────────────
