@@ -211,27 +211,6 @@ function HowItWorksSection() {
 
 // ─── AHA Moment Preview Section ─────────────────────────────────────────────
 function AhaPreviewSection() {
-  const previewPerspectives = [
-    {
-      quote: "When the factory closed, everyone said learn to code. But my grandmother can't code. She just lost her pharmacy.",
-      community: "Rural Appalachia",
-      region: "West Virginia",
-      type: "rural" as CommunityType,
-    },
-    {
-      quote: "Remote workers moved here and our rent doubled in a year. They see opportunity. We see displacement.",
-      community: "Mexican-American Diaspora",
-      region: "El Paso, TX",
-      type: "diaspora" as CommunityType,
-    },
-    {
-      quote: "We relocated for quality of life. Now the locals resent us. Nobody told us we'd be the gentrifiers.",
-      community: "Bay Area Tech Workers",
-      region: "San Francisco, CA",
-      type: "civic" as CommunityType,
-    },
-  ];
-
   return (
     <section className="py-24 md:py-32 px-4 bg-prism-bg-base border-t border-prism-border/30">
       <div className="max-w-4xl mx-auto">
@@ -254,57 +233,31 @@ function AhaPreviewSection() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {previewPerspectives.map((p, i) => (
-            <motion.div
-              key={i}
-              className="p-5 rounded-xl bg-prism-bg-surface border border-prism-border relative overflow-hidden cursor-pointer hover:border-prism-accent-primary/30 transition-colors"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{ duration: 0.6, delay: i * 0.15 }}
-              onClick={() => window.location.href = "/discover"}
-            >
-              {/* Left color accent */}
-              <div
-                className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl"
-                style={{ backgroundColor: COMMUNITY_COLORS[p.type] }}
-              />
-
-              {/* Community label */}
-              <div className="flex items-center gap-2 mb-4">
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: COMMUNITY_COLORS[p.type] }}
-                />
-                <span className="text-xs font-medium" style={{ color: COMMUNITY_COLORS[p.type] }}>
-                  {p.community}
-                </span>
-                <span className="text-[10px] text-prism-text-dim">
-                  · {p.region}
-                </span>
-              </div>
-
-              {/* Quote */}
-              <p className="font-body text-prism-text-primary leading-relaxed text-sm">
-                &ldquo;{p.quote}&rdquo;
-              </p>
-            </motion.div>
-          ))}
-        </div>
-
+        {/* Empty state: no perspectives yet */}
         <motion.div
-          className="text-center mt-10"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
+          className="text-center py-12 px-6 rounded-xl bg-prism-bg-surface border border-prism-border"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.5 }}
+          transition={{ duration: 0.6, delay: 0.15 }}
         >
+          <div className="w-12 h-12 rounded-full bg-prism-accent-primary/10 flex items-center justify-center mx-auto mb-4">
+            <svg className="w-6 h-6 text-prism-accent-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
+            </svg>
+          </div>
+          <h3 className="font-display font-bold text-lg text-prism-text-primary mb-2">
+            Perspectives are coming.
+          </h3>
+          <p className="text-sm text-prism-text-secondary max-w-md mx-auto mb-6">
+            Real communities are joining PRISM. Be one of the first voices and see how different
+            neighborhoods experience the same events.
+          </p>
           <Link
-            href="/discover"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-prism-accent-primary/10 border border-prism-accent-primary/20 text-prism-accent-primary text-sm font-medium hover:bg-prism-accent-primary/20 transition-colors"
+            href="/signup"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-prism-accent-primary text-white text-sm font-medium hover:shadow-lg hover:shadow-prism-accent-primary/20 transition-all"
           >
-            Explore real perspectives
+            Be one of the first
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
             </svg>
