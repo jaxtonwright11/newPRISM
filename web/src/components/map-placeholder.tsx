@@ -689,8 +689,8 @@ export function MapPlaceholder({
       setTimeout(() => map.resize(), 100);
       setTimeout(() => map.resize(), 500);
 
-      // ── City Lights Layer ─────────────────────────────────────────
-      fetch("/data/cities.geojson")
+      // ── City Lights Layer (only for authenticated map, not landing page) ──
+      if (isAuthenticated) fetch("/data/cities.geojson")
         .then((res) => res.json())
         .then((geojson) => {
           if (!map.getSource("city-lights-source")) {

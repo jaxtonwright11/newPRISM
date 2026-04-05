@@ -26,7 +26,7 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://prism-app.vercel.app";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://web-liard-psi-12.vercel.app";
 
 export const viewport: Viewport = {
   themeColor: "#0F1114",
@@ -37,9 +37,9 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "PRISM — Community Perspectives",
+  title: "PRISM - Community Perspectives",
   description:
-    "PRISM maps perspectives from communities across America on the events shaping all of us — neighborhood by neighborhood, in their own words.",
+    "PRISM maps perspectives from communities across America on the events shaping all of us, neighborhood by neighborhood, in their own words.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -49,24 +49,24 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "PRISM",
-    title: "PRISM — Community Perspectives",
+    title: "PRISM - Community Perspectives",
     description:
-      "PRISM maps perspectives from communities across America on the events shaping all of us — neighborhood by neighborhood, in their own words.",
+      "PRISM maps perspectives from communities across America on the events shaping all of us, neighborhood by neighborhood, in their own words.",
     url: siteUrl,
     images: [
       {
         url: `${siteUrl}/api/og`,
         width: 1200,
         height: 630,
-        alt: "PRISM — Geographic Community Perspectives",
+        alt: "PRISM - Geographic Community Perspectives",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "PRISM — Community Perspectives",
+    title: "PRISM - Community Perspectives",
     description:
-      "PRISM maps perspectives from communities across America on the events shaping all of us — neighborhood by neighborhood, in their own words.",
+      "PRISM maps perspectives from communities across America on the events shaping all of us, neighborhood by neighborhood, in their own words.",
     images: [`${siteUrl}/api/og`],
   },
   other: {

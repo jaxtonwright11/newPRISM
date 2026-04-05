@@ -95,7 +95,14 @@ function RevealOnScroll({ children, className, delay = 0 }: { children: React.Re
 
 const MapPlaceholder = dynamic(
   () => import("@/components/map-placeholder").then((mod) => mod.MapPlaceholder),
-  { ssr: false }
+  {
+    ssr: false,
+    loading: () => (
+      <div className="absolute inset-0 bg-[#1A1208]">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0A1628]/40 to-[#1A1208] animate-pulse" />
+      </div>
+    ),
+  }
 );
 
 const PerspectiveComparison = dynamic(
@@ -221,14 +228,14 @@ export default function Home() {
         <div
           className="absolute inset-0 z-10 pointer-events-none"
           style={{
-            background: "radial-gradient(ellipse at center bottom, rgba(10, 14, 20, 0.88) 0%, rgba(10, 14, 20, 0.45) 45%, transparent 72%)",
+            background: "radial-gradient(ellipse at center bottom, rgba(10, 14, 20, 0.55) 0%, rgba(10, 14, 20, 0.30) 45%, transparent 72%)",
           }}
         />
         {/* Mobile: slightly stronger overlay */}
         <div
           className="absolute inset-0 z-10 pointer-events-none md:hidden"
           style={{
-            background: "radial-gradient(ellipse at center bottom, rgba(10, 14, 20, 0.92) 0%, rgba(10, 14, 20, 0.50) 40%, transparent 68%)",
+            background: "radial-gradient(ellipse at center bottom, rgba(10, 14, 20, 0.55) 0%, rgba(10, 14, 20, 0.35) 40%, transparent 68%)",
           }}
         />
 
@@ -259,11 +266,11 @@ export default function Home() {
         <div className="relative z-20 px-4 pb-6 md:pb-12 max-w-2xl mx-auto w-full text-center">
           {/* Credibility line — hidden on mobile */}
           <p className="hidden md:block text-xs tracking-widest uppercase font-body text-[var(--accent-primary)]/60 mb-5">
-            Seed-funded &middot; UC Berkeley &middot; Harvard Kennedy School
+            UC Berkeley Founded
           </p>
 
           <h1
-            className="font-display font-bold text-3xl md:text-6xl lg:text-7xl text-[var(--text-primary)] mb-4 md:mb-6 leading-tight"
+            className="font-display font-semibold md:font-bold text-[1.65rem] md:text-5xl lg:text-6xl text-[var(--text-primary)] mb-4 md:mb-6 leading-tight"
             style={{ textShadow: "0 2px 20px rgba(0,0,0,0.8)" }}
           >
             See how your community actually experiences the world
@@ -273,7 +280,7 @@ export default function Home() {
             className="text-sm md:text-lg text-[var(--text-secondary)] font-body mb-6 md:mb-8 max-w-xl mx-auto leading-relaxed"
             style={{ textShadow: "0 1px 8px rgba(0,0,0,0.6)" }}
           >
-            PRISM maps perspectives from communities across America on the events shaping all of us — neighborhood by neighborhood, in their own words.
+            PRISM maps perspectives from communities across America on the events shaping all of us, neighborhood by neighborhood, in their own words.
           </p>
 
           {/* CTAs */}
@@ -323,7 +330,7 @@ export default function Home() {
         {/* Credibility ticker bar */}
         <div className="bg-[#0A0D11] border-t border-b border-[var(--bg-elevated)] py-3 px-4">
           <p className="text-center text-xs tracking-widest uppercase font-body text-[var(--accent-primary)]/50">
-            Seed-funded &middot; UC Berkeley &middot; Harvard Kennedy School &middot; Congressional AI Policy Intern
+            UC Berkeley Founded &middot; Congressional AI Policy Intern
           </p>
         </div>
 
@@ -496,7 +503,7 @@ export default function Home() {
               Be one of the first voices on PRISM
             </h2>
             <p className="text-sm text-[var(--text-secondary)] font-body mb-8 max-w-md mx-auto leading-relaxed">
-              Early access members shape how the platform grows. No spam — just an invite when your community is ready.
+              Early access members shape how the platform grows. No spam, just an invite when your community is ready.
             </p>
             <EarlyAccessForm />
           </RevealOnScroll>

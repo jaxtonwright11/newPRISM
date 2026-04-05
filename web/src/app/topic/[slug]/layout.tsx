@@ -8,7 +8,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
 
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://prism-app.vercel.app";
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://web-liard-psi-12.vercel.app";
     const res = await fetch(`${baseUrl}/api/topics/${slug}`, {
       next: { revalidate: 60 },
     });
@@ -18,17 +18,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       const topic = data.topic;
       if (topic) {
         return {
-          title: `${topic.title} — PRISM`,
+          title: `${topic.title} - PRISM`,
           description: topic.summary || `See how ${topic.community_count} communities are experiencing ${topic.title} on PRISM.`,
           openGraph: {
-            title: `${topic.title} — PRISM`,
+            title: `${topic.title} - PRISM`,
             description: topic.summary || `${topic.perspective_count} perspectives from ${topic.community_count} communities.`,
             type: "article",
             siteName: "PRISM",
           },
           twitter: {
             card: "summary",
-            title: `${topic.title} — PRISM`,
+            title: `${topic.title} - PRISM`,
             description: topic.summary || `${topic.perspective_count} perspectives from ${topic.community_count} communities.`,
           },
         };
@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   return {
-    title: "Topic — PRISM",
+    title: "Topic - PRISM",
     description: "See how communities experience the world differently.",
   };
 }
