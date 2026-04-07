@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useAuth } from "@/lib/auth-context";
 import { PrismWordmark } from "@/components/prism-wordmark";
+import { ShimmerButton } from "@/components/shimmer-button";
 import type { Community, Topic, CommunityType } from "@shared/types";
 
 function EarlyAccessForm() {
@@ -285,12 +286,14 @@ export default function Home() {
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
-            <button
+            <ShimmerButton
+              size="lg"
               onClick={() => router.push("/signup")}
-              className="w-full sm:w-auto px-8 py-3.5 min-h-[52px] rounded-xl bg-[var(--accent-primary)] text-white text-sm md:text-base font-body font-medium hover:shadow-lg hover:shadow-[var(--accent-primary)]/25 transition-all"
+              fullWidth
+              className="sm:w-auto"
             >
               Share your perspective
-            </button>
+            </ShimmerButton>
             <button
               onClick={() => {
                 document.getElementById("below-fold")?.scrollIntoView({ behavior: "smooth" });
@@ -518,12 +521,12 @@ export default function Home() {
             <p className="text-sm text-[var(--text-secondary)] font-body mb-6">
               PRISM makes sure those stories don&apos;t stay invisible.
             </p>
-            <button
+            <ShimmerButton
+              size="lg"
               onClick={() => router.push("/signup")}
-              className="px-8 py-3.5 min-h-[52px] rounded-xl bg-[var(--accent-primary)] text-white text-sm md:text-base font-body font-medium hover:shadow-lg hover:shadow-[var(--accent-primary)]/25 transition-all"
             >
               Share your perspective
-            </button>
+            </ShimmerButton>
           </RevealOnScroll>
         </section>
       </div>

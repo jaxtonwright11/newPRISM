@@ -262,7 +262,7 @@ export default function OnboardingPage() {
                   Communities are being formed.
                 </p>
                 <p className="text-xs text-[var(--text-secondary)] mb-3">
-                  You&apos;ll be notified when ones near you join. In the meantime, you can register your own community.
+                  You&apos;ll be notified when communities near you join. In the meantime, you can register your own.
                 </p>
                 <button
                   onClick={() => router.push("/apply")}
@@ -431,7 +431,7 @@ export default function OnboardingPage() {
               Welcome to PRISM.
             </h1>
             <p className="text-base text-[var(--text-secondary)] font-body mb-4 max-w-sm">
-              Your perspective is live. Now see how other communities experience the same world differently.
+              Your perspective is live. Now see how other communities experience the same events.
             </p>
             <button
               onClick={() => router.push("/feed")}

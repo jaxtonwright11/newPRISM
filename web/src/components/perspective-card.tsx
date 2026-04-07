@@ -123,10 +123,12 @@ export function PerspectiveCard({
 
   return (
     <motion.div
-      className="relative rounded-xl bg-[var(--bg-surface)] overflow-hidden cursor-pointer group transition-all duration-200 hover:bg-[var(--bg-elevated)] hover:shadow-lg hover:shadow-black/20"
+      className="relative rounded-xl bg-[var(--bg-surface)] overflow-hidden cursor-pointer group"
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: animationDelay / 1000, ease: "easeOut" }}
+      whileHover={{ y: -2, boxShadow: "0 8px 30px rgba(0,0,0,0.25)" }}
+      whileTap={{ scale: 0.985 }}
+      transition={{ type: "spring", stiffness: 400, damping: 25, delay: animationDelay / 1000 }}
       onClick={() => onSelect?.(id)}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -188,12 +190,15 @@ export function PerspectiveCard({
               { emoji: string; label: string },
             ][]
           ).map(([type, { emoji, label }]) => (
-            <button
+            <motion.button
               key={type}
               onClick={() => handleReaction(type)}
-              className={`flex items-center gap-1 px-2 py-1.5 rounded-full text-xs transition-all duration-150 min-h-[36px] ${
+              whileTap={{ scale: 1.3 }}
+              animate={activeReaction === type ? { scale: [1, 1.2, 1] } : {}}
+              transition={{ type: "spring", stiffness: 500, damping: 15 }}
+              className={`flex items-center gap-1 px-2 py-1.5 rounded-full text-xs transition-colors duration-150 min-h-[36px] ${
                 activeReaction === type
-                  ? "bg-[var(--accent-primary)]/20 text-[var(--accent-primary)] scale-105"
+                  ? "bg-[var(--accent-primary)]/20 text-[var(--accent-primary)]"
                   : "text-[var(--text-dim)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)]"
               }`}
               title={label}
@@ -203,10 +208,13 @@ export function PerspectiveCard({
               {totalReactions > 0 && (
                 <span className="font-mono text-[10px]">{totalReactions}</span>
               )}
-            </button>
+            </motion.button>
           ))}
-          <button
+          <motion.button
             onClick={handleBookmark}
+            whileTap={{ scale: 1.2 }}
+            animate={bookmarked ? { scale: [1, 1.25, 1] } : {}}
+            transition={{ type: "spring", stiffness: 500, damping: 15 }}
             className={`p-1.5 rounded transition-all duration-150 ${
               bookmarked
                 ? "text-[var(--accent-primary)]"
@@ -224,7 +232,7 @@ export function PerspectiveCard({
             >
               <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
             </svg>
-          </button>
+          </motion.button>
           <ShareButton perspectiveId={id} quote={quote} />
           <ReportButton contentType="perspective" contentId={id} />
         </div>

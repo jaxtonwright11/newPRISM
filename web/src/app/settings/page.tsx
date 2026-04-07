@@ -447,7 +447,7 @@ export default function SettingsPage() {
               disabled={deleting}
               onClick={async () => {
                 if (!window.confirm("Are you sure you want to delete your account? All your posts, perspectives, reactions, and messages will be permanently removed.")) return;
-                if (!window.confirm("This is your last chance. Type OK in the next prompt to confirm.")) return;
+                if (!window.confirm("This is your last chance. Type DELETE in the next prompt to confirm.")) return;
                 const confirmation = window.prompt("Type DELETE to permanently delete your account:");
                 if (confirmation !== "DELETE") return;
 

@@ -152,13 +152,13 @@ function HowItWorksSection() {
     {
       number: "02",
       title: "Select a topic",
-      description: "From immigration policy to remote work economics - choose a topic and see which communities are experiencing it right now.",
+      description: "From immigration policy to remote work economics \u2014 choose a topic and see which communities are experiencing it right now.",
       color: COMMUNITY_COLORS.diaspora,
     },
     {
       number: "03",
       title: "Read perspectives side by side",
-      description: "Same event. Completely different worlds. A perspective from Chicago sits next to one from Rural Appalachia. That moment of understanding is why PRISM exists.",
+      description: "Same event. Completely different worlds. A perspective from Chicago sits next to one from rural Appalachia. That moment of understanding is why PRISM exists.",
       color: COMMUNITY_COLORS.rural,
     },
   ];

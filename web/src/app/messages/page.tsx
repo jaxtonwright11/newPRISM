@@ -351,7 +351,7 @@ export default function MessagesPage() {
         >
           <div className="p-4">
             <p className="text-xs text-prism-text-dim mb-4">
-              Topic-anchored connections only. Conversations begin with shared context.
+              Conversations are tied to a shared topic. Start there.
             </p>
 
             {loading ? (

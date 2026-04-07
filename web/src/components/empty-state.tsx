@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useMemo } from "react";
 
 interface EmptyStateProps {
   heading: string;
@@ -12,6 +13,64 @@ interface EmptyStateProps {
   onCtaClick?: () => void;
   secondaryLabel?: string;
   secondaryHref?: string;
+}
+
+// Community colors from the design system
+const COMMUNITY_COLORS = [
+  "#3B82F6", // civic
+  "#A855F7", // diaspora
+  "#F59E0B", // rural
+  "#22C55E", // policy
+  "#06B6D4", // academic
+  "#F97316", // cultural
+];
+
+function FloatingParticles() {
+  const particles = useMemo(() =>
+    Array.from({ length: 12 }, (_, i) => ({
+      id: i,
+      color: COMMUNITY_COLORS[i % COMMUNITY_COLORS.length],
+      size: 3 + Math.random() * 4,
+      x: 10 + Math.random() * 80,
+      y: 10 + Math.random() * 80,
+      duration: 6 + Math.random() * 8,
+      delay: Math.random() * 4,
+      dx: -15 + Math.random() * 30,
+      dy: -15 + Math.random() * 30,
+    })),
+  []);
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+      {particles.map((p) => (
+        <motion.div
+          key={p.id}
+          className="absolute rounded-full"
+          style={{
+            width: p.size,
+            height: p.size,
+            left: `${p.x}%`,
+            top: `${p.y}%`,
+            backgroundColor: p.color,
+            boxShadow: `0 0 ${p.size * 2}px ${p.color}40`,
+          }}
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{
+            opacity: [0, 0.5, 0.3, 0.5, 0],
+            scale: [0.5, 1, 0.8, 1, 0.5],
+            x: [0, p.dx, -p.dx * 0.5, p.dx * 0.7, 0],
+            y: [0, p.dy, -p.dy * 0.5, p.dy * 0.7, 0],
+          }}
+          transition={{
+            duration: p.duration,
+            delay: p.delay,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+      ))}
+    </div>
+  );
 }
 
 const ICONS: Record<string, React.ReactNode> = {
@@ -78,20 +137,25 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <motion.div
-      className="flex flex-col items-center justify-center py-16 px-6 text-center"
+      className="relative flex flex-col items-center justify-center py-16 px-6 text-center"
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
+      <FloatingParticles />
+
       {icon && ICONS[icon] && (
         <motion.div
-          className="mb-5 text-[var(--text-dim)] opacity-40"
+          className="mb-5 text-[var(--text-dim)]"
           initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 0.4 }}
+          animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.1 }}
         >
-          <div className="w-14 h-14 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--bg-overlay)] flex items-center justify-center" aria-hidden="true">
-            {ICONS[icon]}
+          <div className="relative w-16 h-16 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--bg-overlay)] flex items-center justify-center" aria-hidden="true">
+            <div className="absolute inset-0 rounded-2xl bg-[var(--accent-primary)]/[0.06]" />
+            <div className="relative opacity-50">
+              {ICONS[icon]}
+            </div>
           </div>
         </motion.div>
       )}
@@ -171,14 +235,14 @@ export const EMPTY_STATES = {
   },
   map: {
     heading: "The map is waiting.",
-    body: "Every dot on this map represents a real community sharing their perspective. Right now it's quiet - your community could be the first.",
+    body: "Every dot on this map represents a real community sharing their perspective. Right now it's quiet \u2014 your community could be the first.",
     icon: "map" as const,
     ctaLabel: "Register a community",
     ctaHref: "/apply",
   },
   discover: {
     heading: "Be the first to share.",
-    body: "This is where you'll see how different communities experience the same events - side by side. Add a perspective to get it started.",
+    body: "This is where you'll see how different communities experience the same events \u2014 side by side. Add a perspective to get it started.",
     icon: "compass" as const,
     ctaLabel: "Share a perspective",
     ctaHref: "/create",

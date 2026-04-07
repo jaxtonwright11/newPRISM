@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 
 interface Tab {
   href: string;
@@ -34,36 +35,46 @@ export function TabBar() {
 
           if (tab.isCreate) {
             return (
-              <Link
-                key={tab.href}
-                href={tab.href}
-                className="flex items-center justify-center w-12 h-12 rounded-full bg-[var(--accent-primary)] text-white shadow-lg shadow-[var(--accent-primary)]/25 hover:shadow-xl hover:shadow-[var(--accent-primary)]/30 active:scale-95 hover:scale-105 transition-all duration-200"
-                role="tab"
-                aria-label="Create perspective"
-              >
-                <Icon />
-              </Link>
+              <motion.div key={tab.href} whileTap={{ scale: 0.9 }} whileHover={{ scale: 1.08 }}>
+                <Link
+                  href={tab.href}
+                  className="flex items-center justify-center w-12 h-12 rounded-full bg-[var(--accent-primary)] text-white shadow-lg shadow-[var(--accent-primary)]/25"
+                  role="tab"
+                  aria-label="Create perspective"
+                >
+                  <Icon />
+                </Link>
+              </motion.div>
             );
           }
 
           return (
-            <Link
-              key={tab.href}
-              href={tab.href}
-              className={`flex flex-col items-center justify-center min-w-[48px] min-h-[48px] gap-0.5 rounded-xl transition-all duration-200 ${
-                isActive
-                  ? "text-[var(--accent-primary)]"
-                  : "text-[var(--text-dim)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)]/50"
-              }`}
-              role="tab"
-              aria-selected={isActive}
-              aria-label={tab.label}
-            >
-              <Icon filled={isActive} />
-              <span className="font-body font-medium text-[10px] leading-none">
-                {tab.label}
-              </span>
-            </Link>
+            <motion.div key={tab.href} whileTap={{ scale: 0.9 }} className="relative">
+              <Link
+                href={tab.href}
+                className={`flex flex-col items-center justify-center min-w-[48px] min-h-[48px] gap-0.5 rounded-xl transition-colors duration-200 ${
+                  isActive
+                    ? "text-[var(--accent-primary)]"
+                    : "text-[var(--text-dim)] hover:text-[var(--text-secondary)]"
+                }`}
+                role="tab"
+                aria-selected={isActive}
+                aria-label={tab.label}
+              >
+                <Icon filled={isActive} />
+                <span className="font-body font-medium text-[10px] leading-none">
+                  {tab.label}
+                </span>
+              </Link>
+              {isActive && (
+                <motion.div
+                  className="absolute -bottom-1 left-1/2 w-1 h-1 rounded-full bg-[var(--accent-primary)]"
+                  layoutId="tab-indicator"
+                  style={{ x: "-50%" }}
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                />
+              )}
+            </motion.div>
           );
         })}
       </div>
