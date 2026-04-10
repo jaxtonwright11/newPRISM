@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { applyRateLimit, parseJsonBody } from "@/lib/api";
 import { getAdminUser } from "@/lib/admin";
-import { getSupabaseWithAuth } from "@/lib/supabase";
+import { getSupabaseServer } from "@/lib/supabase";
 import { z } from "zod";
 
 const createPerspectiveSchema = z.object({
@@ -22,10 +22,7 @@ export async function POST(request: Request) {
   const admin = await getAdminUser(request);
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const token = request.headers.get("authorization")?.replace("Bearer ", "");
-  if (!token) return NextResponse.json({ error: "Missing auth" }, { status: 401 });
-
-  const supabase = getSupabaseWithAuth(token);
+  const supabase = getSupabaseServer();
   if (!supabase) return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
 
   const { data, error } = await supabase
