@@ -75,6 +75,15 @@ describe("POST /api/invites", () => {
     await expect(response.json()).resolves.toEqual({ error: "Invalid token" });
   });
 
+  it("returns 503 when supabase auth client is unavailable", async () => {
+    getSupabaseWithAuthMock.mockReturnValue(null);
+
+    const response = await POST(createRequest("Bearer token-2"));
+
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toEqual({ error: "Service unavailable" });
+  });
+
   it("returns 500 when invite insert fails", async () => {
     const insertSingleMock = vi
       .fn()
