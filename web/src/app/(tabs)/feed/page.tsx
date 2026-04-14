@@ -57,6 +57,7 @@ export default function FeedPage() {
   const [bufferedPerspectives, setBufferedPerspectives] = useState<DisplayPerspective[]>([]);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [borrowedDensity, setBorrowedDensity] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const { session } = useAuth();
   const unreadCount = useUnreadCount();
@@ -136,6 +137,7 @@ export default function FeedPage() {
           ? (json.data?.perspectives ?? json.data ?? [])
           : (json.data ?? []);
         setFeedPerspectives(perspectives);
+        setBorrowedDensity(json.meta?.borrowed_density === true);
         if (perspectives.length < 30) setHasMore(false);
       } catch {
         setFeedPerspectives([]);
@@ -387,6 +389,13 @@ export default function FeedPage() {
           <FeedSkeleton count={4} />
         ) : feedPerspectives.length > 0 ? (
           <div className="flex flex-col gap-2 animate-fade-in" role="feed" aria-label="Perspectives feed">
+            {borrowedDensity && activeTab === "nearby" && (
+              <div className="mb-2 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--bg-overlay)]">
+                <p className="text-[11px] text-[var(--text-secondary)]">
+                  Showing perspectives from communities across PRISM. Follow nearby communities to see local content here.
+                </p>
+              </div>
+            )}
             {feedPerspectives.map((p, i) => (
               <PerspectiveCard
                 key={p.id}

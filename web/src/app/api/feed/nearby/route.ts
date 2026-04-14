@@ -107,11 +107,34 @@ export async function GET(request: Request) {
       const pagedPosts = posts.slice(offset, offset + limit);
       const pagedPerspectives = perspectives.slice(offset, offset + limit);
 
+      // Borrowed density: if both nearby posts and perspectives are empty,
+      // fall back to recent perspectives from any community
+      if (pagedPosts.length === 0 && pagedPerspectives.length === 0 && offset === 0) {
+        const { data: fallback } = await supabase
+          .from("perspectives")
+          .select("*, community:communities(id, name, region, community_type, color_hex, verified)")
+          .eq("verified", true)
+          .order("created_at", { ascending: false })
+          .limit(15);
+
+        return NextResponse.json({
+          data: { posts: [], perspectives: fallback ?? [] },
+          meta: {
+            total: fallback?.length ?? 0,
+            feed_type: "nearby",
+            borrowed_density: true,
+            borrowed_message: "Showing perspectives from communities across PRISM",
+            has_more: false,
+          },
+        });
+      }
+
       return NextResponse.json({
         data: { posts: pagedPosts, perspectives: pagedPerspectives },
         meta: {
           total: posts.length + perspectives.length,
           feed_type: "nearby",
+          borrowed_density: false,
           has_more: offset + limit < posts.length || offset + limit < perspectives.length,
         },
       });
