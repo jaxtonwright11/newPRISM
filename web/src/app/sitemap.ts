@@ -11,7 +11,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/discover`, lastModified: new Date(), changeFrequency: "hourly", priority: 0.8 },
     { url: `${SITE_URL}/map`, lastModified: new Date(), changeFrequency: "hourly", priority: 0.8 },
     { url: `${SITE_URL}/login`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.3 },
-    { url: `${SITE_URL}/signup`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.3 },
   ];
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -39,5 +38,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticRoutes, ...topicRoutes, ...communityRoutes];
+  const compareRoutes: MetadataRoute.Sitemap = (topicsRes.data ?? []).map((t) => ({
+    url: `${SITE_URL}/compare/${t.slug}`,
+    lastModified: new Date(t.updated_at),
+    changeFrequency: "daily" as const,
+    priority: 0.8,
+  }));
+
+  return [...staticRoutes, ...topicRoutes, ...compareRoutes, ...communityRoutes];
 }
