@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
+import { prismEvents } from "@/lib/posthog";
 
 interface Perspective {
   id: string;
@@ -24,6 +25,12 @@ interface TopicComparisonProps {
 export function TopicComparison({ topicTitle, topicSummary, perspectives, slug }: TopicComparisonProps) {
   const [shared, setShared] = useState(false);
   const shown = perspectives.slice(0, 4);
+
+  // Track comparison view for activation funnel
+  useEffect(() => {
+    const uniqueCommunities = new Set(perspectives.map((p) => p.community.name));
+    prismEvents.activationComparisonViewed(slug, uniqueCommunities.size);
+  }, [slug, perspectives]);
 
   const handleShare = useCallback(() => {
     const url = `${window.location.origin}/compare/${slug}`;
