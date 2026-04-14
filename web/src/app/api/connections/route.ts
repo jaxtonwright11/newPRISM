@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { applyRateLimit, parseJsonBody, slugSchema } from "@/lib/api";
+import { applyRateLimit, parseJsonBody } from "@/lib/api";
 import { getSupabaseWithAuth } from "@/lib/supabase";
 import { z } from "zod";
 
 const connectionCreateBodySchema = z.object({
-  recipient_id: slugSchema,
-  topic_id: slugSchema.optional().nullable(),
-  perspective_id: slugSchema.optional().nullable(),
+  recipient_id: z.string().uuid(),
+  topic_id: z.string().uuid().optional().nullable(),
+  perspective_id: z.string().uuid().optional().nullable(),
   intro_message: z.string().trim().min(1).max(500),
 });
 

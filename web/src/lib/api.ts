@@ -6,20 +6,32 @@ type BucketState = {
   resetAt: number;
 };
 
-const RATE_LIMIT_WINDOW_MS = 60_000;
-const RATE_LIMIT_MAX_REQUESTS = Number.parseInt(
+const DEFAULT_WINDOW_MS = 60_000;
+const DEFAULT_MAX_REQUESTS = Number.parseInt(
   process.env.API_RATE_LIMIT_MAX ?? "120",
   10
 );
-const VALIDATED_RATE_LIMIT_MAX_REQUESTS =
-  Number.isFinite(RATE_LIMIT_MAX_REQUESTS) && RATE_LIMIT_MAX_REQUESTS > 0
-    ? RATE_LIMIT_MAX_REQUESTS
+const VALIDATED_DEFAULT_MAX =
+  Number.isFinite(DEFAULT_MAX_REQUESTS) && DEFAULT_MAX_REQUESTS > 0
+    ? DEFAULT_MAX_REQUESTS
     : 120;
+
+// Stricter limits for sensitive routes (per 60s window)
+const ROUTE_LIMITS: Record<string, number> = {
+  "auth-login": 5,
+  "auth-signup": 5,
+  "auth-forgot-password": 3,
+  "insights-summary": 5,     // Claude API credits
+  "connections-create": 10,
+  "posts-create": 15,
+  "search": 30,
+};
+
 const buckets = new Map<string, BucketState>();
 let lastCleanupMs = 0;
 
 function cleanupBuckets(nowMs: number): void {
-  if (nowMs - lastCleanupMs < RATE_LIMIT_WINDOW_MS) return;
+  if (nowMs - lastCleanupMs < DEFAULT_WINDOW_MS) return;
 
   buckets.forEach((bucket, key) => {
     if (bucket.resetAt <= nowMs) {
@@ -50,6 +62,7 @@ export function applyRateLimit(
   const nowMs = Date.now();
   cleanupBuckets(nowMs);
 
+  const maxRequests = ROUTE_LIMITS[routeKey] ?? VALIDATED_DEFAULT_MAX;
   const ip = getClientIp(request);
   const bucketKey = `${routeKey}:${ip}`;
   const existingBucket = buckets.get(bucketKey);
@@ -57,12 +70,12 @@ export function applyRateLimit(
   if (!existingBucket || existingBucket.resetAt <= nowMs) {
     buckets.set(bucketKey, {
       count: 1,
-      resetAt: nowMs + RATE_LIMIT_WINDOW_MS,
+      resetAt: nowMs + DEFAULT_WINDOW_MS,
     });
     return null;
   }
 
-  if (existingBucket.count >= VALIDATED_RATE_LIMIT_MAX_REQUESTS) {
+  if (existingBucket.count >= maxRequests) {
     const retryAfterSeconds = Math.max(
       1,
       Math.ceil((existingBucket.resetAt - nowMs) / 1000)
@@ -76,7 +89,7 @@ export function applyRateLimit(
         status: 429,
         headers: {
           "Retry-After": String(retryAfterSeconds),
-          "X-RateLimit-Limit": String(VALIDATED_RATE_LIMIT_MAX_REQUESTS),
+          "X-RateLimit-Limit": String(maxRequests),
           "X-RateLimit-Remaining": "0",
         },
       }

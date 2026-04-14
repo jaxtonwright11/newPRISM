@@ -2,10 +2,10 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // Routes that require authentication
-const protectedRoutes = ['/settings', '/profile', '/messages', '/bookmarks', '/notifications'];
+const protectedRoutes = ['/settings', '/profile', '/messages', '/bookmarks', '/notifications', '/admin'];
 
 // Routes that are always public
-const publicRoutes = ['/', '/login', '/signup', '/onboarding', '/search', '/landing', '/apply', '/admin', '/forgot-password', '/reset-password'];
+const publicRoutes = ['/', '/login', '/signup', '/onboarding', '/search', '/landing', '/apply', '/forgot-password', '/reset-password'];
 
 // Prefixes that are always public
 const publicPrefixes = ['/topic/', '/community/', '/perspective/', '/post/', '/profile/', '/api/', '/_next/', '/favicon', '/auth/'];

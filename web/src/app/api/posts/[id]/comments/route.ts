@@ -29,7 +29,7 @@ export async function GET(
 
   const { data, error } = await supabase
     .from("comments")
-    .select("id, content, created_at, user_id, user:users(id, username, display_name, avatar_url)")
+    .select("id, content, created_at, user_id, user:users!inner(id, username, display_name, avatar_url, ghost_mode)")
     .eq("post_id", parsed.data)
     .order("created_at", { ascending: true })
     .limit(50);
@@ -38,7 +38,16 @@ export async function GET(
     return NextResponse.json({ error: "Failed to load comments" }, { status: 500 });
   }
 
-  return NextResponse.json({ data: data ?? [] });
+  // Anonymize ghost mode users
+  const sanitized = (data ?? []).map((c) => {
+    const u = c.user as unknown as { ghost_mode?: boolean } | null;
+    if (u?.ghost_mode) {
+      return { ...c, user: { id: c.user_id, username: "anonymous", display_name: "Anonymous", avatar_url: null } };
+    }
+    return c;
+  });
+
+  return NextResponse.json({ data: sanitized });
 }
 
 export async function POST(

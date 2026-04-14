@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
@@ -15,29 +15,77 @@ export default function LoginPage() {
   );
 }
 
+// Progressive lockout: 0→0s, 1→0s, 2→0s, 3→5s, 4→15s, 5→30s, 6+→60s
+const LOCKOUT_TIERS = [0, 0, 0, 5, 15, 30, 60];
+function getLockoutSeconds(attempts: number): number {
+  return LOCKOUT_TIERS[Math.min(attempts, LOCKOUT_TIERS.length - 1)];
+}
+
 function LoginPageInner() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockedUntil, setLockedUntil] = useState<number>(0);
+  const [cooldownRemaining, setCooldownRemaining] = useState(0);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect") || "/";
+  const rawRedirect = searchParams.get("redirect") || "/";
+  // Prevent open redirect — only allow relative paths
+  const redirectTo = rawRedirect.startsWith("/") && !rawRedirect.startsWith("//") ? rawRedirect : "/";
   const callbackError = searchParams.get("error");
   const { signIn, signInWithGoogle } = useAuth();
 
+  // Countdown timer for lockout display
+  useEffect(() => {
+    if (lockedUntil <= Date.now()) {
+      setCooldownRemaining(0);
+      return;
+    }
+    setCooldownRemaining(Math.ceil((lockedUntil - Date.now()) / 1000));
+    const interval = setInterval(() => {
+      const remaining = Math.ceil((lockedUntil - Date.now()) / 1000);
+      if (remaining <= 0) {
+        setCooldownRemaining(0);
+        clearInterval(interval);
+      } else {
+        setCooldownRemaining(remaining);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [lockedUntil]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Check if still locked out
+    if (Date.now() < lockedUntil) {
+      setError(`Too many attempts. Try again in ${Math.ceil((lockedUntil - Date.now()) / 1000)}s.`);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     const { error } = await signIn(email, password);
 
     if (error) {
-      setError(error.message);
+      const newAttempts = failedAttempts + 1;
+      setFailedAttempts(newAttempts);
+      const lockoutSec = getLockoutSeconds(newAttempts);
+      if (lockoutSec > 0) {
+        const until = Date.now() + lockoutSec * 1000;
+        setLockedUntil(until);
+        setError(`Invalid credentials. Account locked for ${lockoutSec}s.`);
+      } else {
+        setError(error.message);
+      }
       setLoading(false);
     } else {
+      setFailedAttempts(0);
+      setLockedUntil(0);
       router.push(redirectTo);
     }
   };
@@ -142,9 +190,14 @@ function LoginPageInner() {
           <ShimmerButton
             type="submit"
             loading={loading}
+            disabled={cooldownRemaining > 0}
             fullWidth
           >
-            {loading ? "Signing in..." : "Sign in"}
+            {cooldownRemaining > 0
+              ? `Locked (${cooldownRemaining}s)`
+              : loading
+                ? "Signing in..."
+                : "Sign in"}
           </ShimmerButton>
         </form>
 

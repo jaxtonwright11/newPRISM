@@ -4,11 +4,11 @@ import { getSupabase, getSupabaseWithAuth } from "@/lib/supabase";
 
 import { z } from "zod";
 
-const feedQuerySchema = z
-  .object({
-    topic: slugSchema.optional(),
-  })
-  .strict();
+const feedQuerySchema = z.object({
+  topic: slugSchema.optional(),
+  offset: z.string().optional(),
+  limit: z.string().optional(),
+});
 
 export async function GET(request: Request) {
   const rateLimitResponse = applyRateLimit(request, "feed-nearby");

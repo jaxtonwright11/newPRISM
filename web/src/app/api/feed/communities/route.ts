@@ -4,11 +4,11 @@ import { getSupabase, getSupabaseWithAuth } from "@/lib/supabase";
 
 import { z } from "zod";
 
-const feedQuerySchema = z
-  .object({
-    topic: slugSchema.optional(),
-  })
-  .strict();
+const feedQuerySchema = z.object({
+  topic: slugSchema.optional(),
+  offset: z.string().optional(),
+  limit: z.string().optional(),
+});
 
 export async function GET(request: Request) {
   const rateLimitResponse = applyRateLimit(request, "feed-communities");
@@ -68,6 +68,12 @@ export async function GET(request: Request) {
 
       if (followedCommunityIds.length > 0) {
         query = query.in("community_id", followedCommunityIds);
+      } else {
+        // User follows no communities — return empty rather than all perspectives
+        return NextResponse.json({
+          data: [],
+          meta: { total: 0, feed_type: "communities", next_cursor: null, has_more: false },
+        });
       }
 
       if (topic) {

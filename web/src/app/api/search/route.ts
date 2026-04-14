@@ -21,7 +21,9 @@ export async function GET(request: Request) {
   try {
     const supabase = getSupabase();
     if (supabase) {
-      const searchPattern = `%${q}%`;
+      // Escape special PostgREST filter characters to prevent filter injection
+      const escaped = q.replace(/[\\%_(),."']/g, (ch) => `\\${ch}`);
+      const searchPattern = `%${escaped}%`;
 
       // Search in parallel
       const [perspectivesRes, topicsRes, communitiesRes, usersRes] = await Promise.all([

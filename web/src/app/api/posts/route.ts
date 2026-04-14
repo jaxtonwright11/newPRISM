@@ -4,7 +4,7 @@ import { getSupabaseWithAuth } from "@/lib/supabase";
 import { z } from "zod";
 
 const postCreateBodySchema = z.object({
-  content: z.string().trim().min(1).max(1000),
+  content: z.string().trim().min(1).max(2000),
   topic_id: z.string().uuid().optional().nullable(),
   community_id: z.string().uuid().optional(),
   post_type: z.enum(["permanent", "story"]).optional(),

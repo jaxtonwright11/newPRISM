@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { useToast } from "@/components/toast";
 import { useGhostMode } from "@/lib/use-ghost-mode";
 import { isPushSupported, isPushSubscribed, subscribeToPush, unsubscribeFromPush } from "@/lib/push";
 import type { RadiusMiles } from "@shared/types";
@@ -30,6 +31,7 @@ export default function SettingsPage() {
   const { session, signOut } = useAuth();
   const { ghostMode, toggleGhostMode } = useGhostMode();
   const router = useRouter();
+  const { toast } = useToast();
   const [user, setUser] = useState<SettingsUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [displayName, setDisplayName] = useState("");
@@ -131,7 +133,7 @@ export default function SettingsPage() {
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch {
-      // silently fail
+      toast("Failed to save. Check your connection and try again.");
     } finally {
       setSaving(false);
     }
