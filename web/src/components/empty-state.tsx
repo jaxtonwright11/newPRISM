@@ -206,7 +206,7 @@ export const EMPTY_STATES = {
     ctaLabel: "Share a perspective",
     ctaHref: "/create",
     secondaryLabel: "Invite friends to PRISM",
-    secondaryHref: "/landing",
+    secondaryHref: "/",
   },
   feedForYou: {
     heading: "Your personalized feed.",
@@ -247,7 +247,7 @@ export const EMPTY_STATES = {
     ctaLabel: "Share a perspective",
     ctaHref: "/create",
     secondaryLabel: "Invite friends",
-    secondaryHref: "/landing",
+    secondaryHref: "/",
   },
   profile: {
     heading: "Your story starts here.",

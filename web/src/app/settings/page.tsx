@@ -432,7 +432,7 @@ export default function SettingsPage() {
         <button
           onClick={async () => {
             await signOut();
-            router.push("/landing");
+            router.push("/");
           }}
           className="w-full py-3 rounded-xl bg-prism-bg-surface border border-prism-border text-sm text-prism-text-secondary hover:text-prism-text-primary hover:border-prism-text-dim/30 transition-all"
         >
@@ -461,7 +461,7 @@ export default function SettingsPage() {
                   });
                   if (res.ok) {
                     await signOut();
-                    router.push("/landing");
+                    router.push("/");
                   } else {
                     const data = await res.json();
                     alert(data.error ?? "Failed to delete account. Please try again.");

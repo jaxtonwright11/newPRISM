@@ -17,7 +17,7 @@ export function PWAInstallPrompt() {
 
     // Don't show on auth, onboarding, or landing pages
     const path = window.location.pathname;
-    const suppressedPaths = ["/login", "/signup", "/onboarding", "/landing"];
+    const suppressedPaths = ["/login", "/signup", "/onboarding"];
     if (suppressedPaths.some((p) => path.startsWith(p))) return;
 
     // Track page views — only show after user has visited 2+ pages
