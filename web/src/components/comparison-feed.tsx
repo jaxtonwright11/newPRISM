@@ -106,7 +106,7 @@ function ComparisonCard({ group, onComparisonViewed, onScrollToNext, hasNext }: 
 
       {/* Perspectives */}
       <div className="divide-y divide-[var(--bg-elevated)]/50">
-        {shown.map((p, i) => {
+        {shown.map((p) => {
           const comm = Array.isArray(p.community) ? p.community[0] : p.community;
           const color = (comm as { color_hex: string })?.color_hex ?? COMMUNITY_COLORS[(comm as { community_type: CommunityType })?.community_type] ?? "#3B82F6";
           const name = (comm as { name: string })?.name ?? "Community";
@@ -217,6 +217,7 @@ export function ComparisonFeed() {
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const activationFiredRef = useRef(false);
   const comparisonTopicsViewedRef = useRef(new Set<string>());
+  const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   // First-session detection and day-2 return tracking
   useEffect(() => {
@@ -246,6 +247,13 @@ export function ComparisonFeed() {
       prismEvents.activationEventCompleted();
     }
   }, []);
+
+  const scrollToCard = useCallback((index: number) => {
+    const nextGroup = groups[index];
+    if (!nextGroup) return;
+    const el = cardRefs.current.get(nextGroup.topic.id);
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [groups]);
 
   useEffect(() => {
     const headers: Record<string, string> = {};
@@ -322,15 +330,6 @@ export function ComparisonFeed() {
   if (groups.length === 0) {
     return <FirstSessionCard />;
   }
-
-  const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-
-  const scrollToCard = useCallback((index: number) => {
-    const nextGroup = groups[index];
-    if (!nextGroup) return;
-    const el = cardRefs.current.get(nextGroup.topic.id);
-    el?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [groups]);
 
   return (
     <div className="flex flex-col gap-3">
