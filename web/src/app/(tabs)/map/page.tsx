@@ -82,6 +82,33 @@ export default function MapPage() {
         activeTopicName={selectedTopic?.title}
       />
 
+      {/* Cold-start overlay — when no communities or topics exist yet */}
+      {communities.length === 0 && topics.length === 0 && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+          <div className="bg-prism-bg-surface/95 backdrop-blur-md rounded-2xl border border-prism-border p-6 shadow-lg shadow-black/30 max-w-xs text-center pointer-events-auto">
+            <div className="w-12 h-12 rounded-full bg-prism-accent-primary/10 flex items-center justify-center mx-auto mb-3">
+              <svg className="w-6 h-6 text-prism-accent-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+                <path d="M2 12h20" />
+              </svg>
+            </div>
+            <p className="text-sm font-medium text-prism-text-primary mb-1">
+              The map comes alive with communities
+            </p>
+            <p className="text-xs text-prism-text-dim mb-4">
+              As communities share perspectives, their voices light up the map. Explore what&apos;s happening now on Discover.
+            </p>
+            <Link
+              href="/discover"
+              className="inline-block px-5 py-2 rounded-lg bg-prism-accent-primary text-white text-sm font-medium hover:bg-prism-accent-glow transition-colors"
+            >
+              Explore perspectives
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Active Now overlay — only when no topic is selected for lens */}
       {activeTopic && !selectedTopicId && (
         <Link
