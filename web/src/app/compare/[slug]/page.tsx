@@ -82,9 +82,11 @@ export default async function TopicComparePage({ params }: Props) {
   const { slug } = await params;
   const data = await getTopicWithPerspectives(slug);
 
-  if (!data || data.perspectives.length < 2) {
+  if (!data) {
     notFound();
   }
+
+  const hasComparison = data.perspectives.length >= 2;
 
   return (
     <div className="min-h-screen bg-prism-bg-base">
@@ -101,16 +103,46 @@ export default async function TopicComparePage({ params }: Props) {
       </header>
 
       <div className="max-w-2xl mx-auto px-4 py-8">
-        <TopicComparison
-          topicTitle={data.topic.title}
-          topicSummary={data.topic.summary}
-          perspectives={data.perspectives}
-          slug={slug}
-        />
+        {hasComparison ? (
+          <TopicComparison
+            topicTitle={data.topic.title}
+            topicSummary={data.topic.summary}
+            perspectives={data.perspectives}
+            slug={slug}
+          />
+        ) : (
+          <div className="text-center py-12">
+            <div className="w-14 h-14 rounded-full bg-prism-accent-primary/10 flex items-center justify-center mx-auto mb-4">
+              <svg className="w-7 h-7 text-prism-accent-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+              </svg>
+            </div>
+            <h1 className="font-display font-bold text-xl text-prism-text-primary mb-2">
+              {data.topic.title}
+            </h1>
+            {data.topic.summary && (
+              <p className="text-sm text-prism-text-secondary mb-4 max-w-md mx-auto">{data.topic.summary}</p>
+            )}
+            {data.perspectives.length === 1 && (
+              <div className="max-w-md mx-auto mb-6 p-4 rounded-xl bg-prism-bg-surface border border-prism-border text-left"
+                style={{ borderLeftWidth: "3px", borderLeftColor: data.perspectives[0].community.color_hex }}>
+                <p className="text-xs font-semibold text-prism-text-dim mb-1">{data.perspectives[0].community.name}</p>
+                <p className="text-sm text-prism-text-primary leading-relaxed">&ldquo;{data.perspectives[0].quote}&rdquo;</p>
+              </div>
+            )}
+            <p className="text-sm text-prism-text-dim mb-4">
+              {data.perspectives.length === 0
+                ? "No communities have shared their perspective on this topic yet."
+                : "One community has shared so far. The comparison view opens when a second community weighs in."}
+            </p>
+          </div>
+        )}
 
         <div className="mt-8 text-center space-y-3">
           <p className="text-sm text-prism-text-secondary">
-            {data.perspectives.length} communities sharing perspectives on this topic
+            {hasComparison
+              ? `${data.perspectives.length} communities sharing perspectives on this topic`
+              : "Be the voice that starts the conversation"}
           </p>
           <Link
             href="/signup"
