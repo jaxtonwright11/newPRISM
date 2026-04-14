@@ -245,11 +245,22 @@ export default function DiscoverPage() {
         ) : perspectives.length > 0 ? (
           <div className="flex flex-col gap-3 animate-fade-in" role="feed" aria-label="Discover perspectives">
             {showComparison && (
-              <PerspectiveComparison
-                topicTitle={selectedTopicTitle}
-                perspectives={perspectives}
-                onSelectPerspective={setSelectedPerspectiveId}
-              />
+              <>
+                <PerspectiveComparison
+                  topicTitle={selectedTopicTitle}
+                  perspectives={perspectives}
+                  onSelectPerspective={setSelectedPerspectiveId}
+                />
+                <Link
+                  href={`/compare/${selectedTopicSlug}`}
+                  className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-prism-bg-surface border border-prism-border hover:border-prism-accent-primary/30 transition-colors -mt-1"
+                >
+                  <svg className="w-4 h-4 text-prism-accent-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                  </svg>
+                  <span className="text-sm font-medium text-prism-accent-primary">See full comparison</span>
+                </Link>
+              </>
             )}
             {perspectives.map((p, i) => (
               <PerspectiveCard
