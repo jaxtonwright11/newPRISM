@@ -143,3 +143,21 @@ export interface BookmarkedTopic {
   topic_id: string;
   bookmarked_at: string;
 }
+
+/** Perspective with embedded community info, as returned by feed/discover APIs. */
+export interface DisplayPerspective {
+  id: string;
+  quote: string;
+  context: string | null;
+  category_tag: string | null;
+  reaction_count: number;
+  bookmark_count: number;
+  created_at?: string;
+  community: {
+    name: string;
+    region: string;
+    community_type: CommunityType;
+    color_hex: string;
+    verified: boolean;
+  };
+}

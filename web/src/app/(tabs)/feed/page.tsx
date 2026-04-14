@@ -13,7 +13,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useRealtime } from "@/lib/use-realtime";
 import { useUnreadCount } from "@/lib/use-unread-count";
 import { usePullToRefresh } from "@/lib/use-pull-to-refresh";
-import type { Community, CommunityType, Topic } from "@shared/types";
+import type { Community, CommunityType, DisplayPerspective, Topic } from "@shared/types";
 import Link from "next/link";
 
 const MapPlaceholder = dynamic(
@@ -27,23 +27,6 @@ const PerspectiveDetail = dynamic(
 );
 
 type FeedTab = "for-you" | "following" | "nearby";
-
-interface DisplayPerspective {
-  id: string;
-  quote: string;
-  context: string | null;
-  category_tag: string | null;
-  reaction_count: number;
-  bookmark_count: number;
-  created_at?: string;
-  community: {
-    name: string;
-    region: string;
-    community_type: CommunityType;
-    color_hex: string;
-    verified: boolean;
-  };
-}
 
 export default function FeedPage() {
   const [activeTab, setActiveTab] = useState<FeedTab>("for-you");

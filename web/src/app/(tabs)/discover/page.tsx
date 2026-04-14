@@ -12,30 +12,13 @@ import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/components/toast";
 import { useRealtime } from "@/lib/use-realtime";
 import { prismEvents } from "@/lib/posthog";
-import type { Topic, Community, CommunityType } from "@shared/types";
+import type { Topic, Community, CommunityType, DisplayPerspective } from "@shared/types";
 import { ActivityBar } from "@/components/activity-bar";
 
 const PerspectiveDetail = dynamic(
   () => import("@/components/perspective-detail").then((mod) => mod.PerspectiveDetail),
   { ssr: false }
 );
-
-interface DisplayPerspective {
-  id: string;
-  quote: string;
-  context: string | null;
-  category_tag: string | null;
-  reaction_count: number;
-  bookmark_count: number;
-  created_at?: string;
-  community: {
-    name: string;
-    region: string;
-    community_type: CommunityType;
-    color_hex: string;
-    verified: boolean;
-  };
-}
 
 export default function DiscoverPage() {
   const [topics, setTopics] = useState<Topic[]>([]);
