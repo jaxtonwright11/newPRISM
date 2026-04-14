@@ -19,12 +19,12 @@ export async function GET(request: Request) {
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-  // Find perspectives created in the last hour
+  // Find perspectives created in the last hour, including their topic
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
 
   const { data: newPerspectives } = await supabase
     .from("perspectives")
-    .select("id, quote, community_id, community:communities(name)")
+    .select("id, quote, community_id, topic_id, community:communities(name), topic:topics(title, slug)")
     .eq("verified", true)
     .gte("created_at", oneHourAgo);
 
@@ -33,23 +33,35 @@ export async function GET(request: Request) {
   }
 
   // Group by community to avoid duplicate notifications
-  const communityMap = new Map<string, string>();
+  const communityMap = new Map<string, { name: string; topicSlug: string | null; topicTitle: string | null }>();
   for (const p of newPerspectives) {
     if (p.community_id && !communityMap.has(p.community_id)) {
       const community = Array.isArray(p.community) ? p.community[0] : p.community;
-      communityMap.set(p.community_id, (community as { name: string })?.name ?? "A community");
+      const topic = Array.isArray(p.topic) ? p.topic[0] : p.topic;
+      communityMap.set(p.community_id, {
+        name: (community as { name: string })?.name ?? "A community",
+        topicSlug: (topic as { slug: string })?.slug ?? null,
+        topicTitle: (topic as { title: string })?.title ?? null,
+      });
     }
   }
 
   let totalSent = 0;
-  for (const [communityId, communityName] of communityMap) {
+  for (const [communityId, info] of communityMap) {
     const count = newPerspectives.filter((p) => p.community_id === communityId).length;
+    // Deep-link to comparison view if topic exists, otherwise feed
+    const url = info.topicSlug ? `/compare/${info.topicSlug}` : "/feed";
+    const title = info.topicTitle
+      ? `New perspective on "${info.topicTitle}"`
+      : `${info.name} shared a perspective`;
+    const body = count > 1
+      ? `${count} new perspectives from ${info.name}`
+      : newPerspectives.find((p) => p.community_id === communityId)!.quote.slice(0, 100);
+
     const sent = await sendPushToCommunityFollowers(communityId, {
-      title: `${communityName} shared a perspective`,
-      body: count > 1
-        ? `${count} new perspectives from ${communityName}`
-        : newPerspectives.find((p) => p.community_id === communityId)!.quote.slice(0, 100),
-      url: "/feed",
+      title,
+      body,
+      url,
       icon: "/icons/icon-192.svg",
     });
     totalSent += sent;
