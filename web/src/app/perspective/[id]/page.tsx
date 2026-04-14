@@ -300,6 +300,31 @@ export default function PerspectivePage() {
           <CommentThread perspectiveId={perspective.id} />
         </div>
 
+        {/* Core loop: lead to comparison view for this topic */}
+        {topic && (
+          <Link
+            href={`/compare/${topic.slug}`}
+            className="mt-4 flex items-center gap-3 p-4 rounded-xl bg-prism-bg-surface border border-prism-border hover:border-prism-accent-primary/30 transition-colors"
+          >
+            <div className="w-10 h-10 rounded-xl bg-prism-accent-primary/10 flex items-center justify-center shrink-0">
+              <svg className="w-5 h-5 text-prism-accent-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-prism-text-primary">
+                See how other communities experience this
+              </p>
+              <p className="text-xs text-prism-text-dim mt-0.5">
+                Compare perspectives on &ldquo;{topic.title}&rdquo;
+              </p>
+            </div>
+            <svg className="w-4 h-4 text-prism-text-dim shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
+        )}
+
         {/* Signup CTA for unauthenticated users */}
         {!session && (
           <div className="mt-4 p-4 rounded-xl bg-prism-bg-surface border border-prism-border text-center">
