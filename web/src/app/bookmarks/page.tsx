@@ -165,17 +165,28 @@ export default function BookmarksPage() {
               bookmarkedTopics.map((topic) => (
                 <Link
                   key={topic.id}
-                  href={`/topic/${topic.slug}`}
-                  className="block bg-prism-bg-surface rounded-xl border border-prism-border p-4 hover:bg-prism-bg-elevated transition-colors"
+                  href={topic.community_count >= 2 ? `/compare/${topic.slug}` : `/topic/${topic.slug}`}
+                  className="block bg-prism-bg-surface rounded-xl border border-prism-border p-4 hover:bg-prism-bg-elevated hover:border-prism-accent-primary/30 transition-colors"
                 >
-                  <h2 className="text-sm font-medium text-prism-text-primary mb-1">{topic.title}</h2>
-                  {topic.summary && (
-                    <p className="text-xs text-prism-text-secondary line-clamp-2 mb-2">{topic.summary}</p>
-                  )}
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono text-prism-text-dim">
-                      {topic.perspective_count} perspectives · {topic.community_count} communities
-                    </span>
+                  <div className="flex items-start gap-3">
+                    {topic.community_count >= 2 && (
+                      <div className="w-8 h-8 rounded-lg bg-prism-accent-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                        <svg className="w-4 h-4 text-prism-accent-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                        </svg>
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h2 className="text-sm font-medium text-prism-text-primary mb-1">{topic.title}</h2>
+                      {topic.summary && (
+                        <p className="text-xs text-prism-text-secondary line-clamp-2 mb-2">{topic.summary}</p>
+                      )}
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono text-prism-text-dim">
+                          {topic.perspective_count} perspectives · {topic.community_count} communities
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </Link>
               ))
