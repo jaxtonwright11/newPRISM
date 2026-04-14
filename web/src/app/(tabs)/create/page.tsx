@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import { StreakToast } from "@/components/streak-toast";
+import { useToast } from "@/components/toast";
 import { prismEvents } from "@/lib/posthog";
 import Link from "next/link";
 import type { Topic } from "@shared/types";
@@ -23,11 +23,10 @@ export default function CreatePage() {
   const [submitting, setSubmitting] = useState(false);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
-  const [postType, setPostType] = useState<"permanent" | "story">("permanent");
-  const [streakCount, setStreakCount] = useState<number | null>(null);
+  const postType = "permanent" as const;
   const { session } = useAuth();
   const router = useRouter();
-  const dismissStreak = useCallback(() => setStreakCount(null), []);
+  const { toast } = useToast();
 
   // Fetch active topics for prompts
   useEffect(() => {
@@ -95,21 +94,20 @@ export default function CreatePage() {
       if (res.ok) {
         prismEvents.postCreated(postType, 0, false);
         const json = await res.json();
-        // Sync server streak to localStorage
+        // Sync server streak to localStorage (backend tracking preserved)
         if (json.streak) {
           localStorage.setItem("prism_streak", JSON.stringify({
             count: json.streak,
             lastPostDate: new Date().toISOString().split("T")[0],
           }));
-          setStreakCount(json.streak);
-          // Navigate after showing toast
-          setTimeout(() => router.push("/feed"), 2000);
-          return;
         }
         router.push("/feed");
+      } else {
+        const err = await res.json().catch(() => null);
+        toast(err?.error ?? "Failed to post. Please try again.");
       }
     } catch {
-      // Silently fail
+      toast("Something went wrong. Check your connection and try again.");
     } finally {
       setSubmitting(false);
     }
@@ -223,35 +221,6 @@ export default function CreatePage() {
           </div>
         )}
 
-        {/* Post type toggle */}
-        <div className="flex items-center gap-2 mt-3">
-          <button
-            onClick={() => setPostType("permanent")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-              postType === "permanent"
-                ? "bg-prism-accent-primary/15 text-prism-accent-primary border border-prism-accent-primary/30"
-                : "bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-transparent"
-            }`}
-          >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-            </svg>
-            Post
-          </button>
-          <button
-            onClick={() => setPostType("story")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-              postType === "story"
-                ? "bg-prism-accent-primary/15 text-prism-accent-primary border border-prism-accent-primary/30"
-                : "bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-transparent"
-            }`}
-          >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            Story (24h)
-          </button>
-        </div>
 
         {/* Character count */}
         <div className="flex justify-end mt-2">
@@ -264,9 +233,6 @@ export default function CreatePage() {
           </span>
         </div>
       </div>
-      {streakCount !== null && (
-        <StreakToast streak={streakCount} onDismiss={dismissStreak} />
-      )}
     </div>
   );
 }

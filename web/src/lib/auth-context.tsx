@@ -6,13 +6,14 @@ import { subscribeToPush } from '@/lib/push';
 import { identifyUser, resetUser } from '@/lib/posthog';
 
 type AuthResult = { error: AuthError | null };
+type SignUpResult = { error: AuthError | null; confirmationRequired: boolean };
 
 type AuthContextType = {
   user: User | null;
   session: Session | null;
   supabase: SupabaseClient;
   loading: boolean;
-  signUp: (email: string, password: string, username: string) => Promise<AuthResult>;
+  signUp: (email: string, password: string, username: string) => Promise<SignUpResult>;
   signIn: (email: string, password: string) => Promise<AuthResult>;
   signInWithGoogle: () => Promise<AuthResult>;
   signOut: () => Promise<void>;
@@ -67,12 +68,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [supabase]);
 
   const signUp = async (email: string, password: string, username: string) => {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { username } },
     });
-    return { error };
+    return { error, confirmationRequired: !error && !data.session };
   };
 
   const signIn = async (email: string, password: string) => {

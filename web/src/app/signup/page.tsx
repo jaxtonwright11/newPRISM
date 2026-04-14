@@ -15,6 +15,7 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmationSent, setConfirmationSent] = useState(false);
   const router = useRouter();
   const { signUp, signInWithGoogle } = useAuth();
 
@@ -23,13 +24,27 @@ export default function SignupPage() {
     setLoading(true);
     setError(null);
 
-    const { error } = await signUp(email, password, username);
+    const trimmedUsername = username.trim().toLowerCase();
+    if (trimmedUsername.length < 3 || trimmedUsername.length > 30) {
+      setError("Username must be 3–30 characters.");
+      setLoading(false);
+      return;
+    }
+    if (!/^[a-z0-9_]+$/.test(trimmedUsername)) {
+      setError("Username can only contain letters, numbers, and underscores.");
+      setLoading(false);
+      return;
+    }
+
+    const { error, confirmationRequired } = await signUp(email, password, trimmedUsername);
 
     if (error) {
       setError(error.message);
       setLoading(false);
+    } else if (confirmationRequired) {
+      setConfirmationSent(true);
+      setLoading(false);
     } else {
-      // Auto-login: no email confirmation required
       prismEvents.authSignupCompleted("direct");
       router.push('/onboarding');
     }
@@ -69,8 +84,39 @@ export default function SignupPage() {
           </div>
         )}
 
+        {/* Email confirmation sent */}
+        {confirmationSent && (
+          <div className="text-center space-y-4">
+            <div className="p-4 rounded-xl bg-prism-bg-surface border border-prism-border">
+              <div className="text-2xl mb-2">✉️</div>
+              <h2 className="text-lg font-semibold text-prism-text-primary mb-1">Check your email</h2>
+              <p className="text-sm text-prism-text-secondary">
+                We sent a confirmation link to <span className="text-prism-text-primary font-medium">{email}</span>. Click the link to activate your account.
+              </p>
+            </div>
+            <p className="text-xs text-prism-text-dim">
+              Didn&apos;t get it? Check your spam folder or{" "}
+              <button
+                type="button"
+                onClick={() => setConfirmationSent(false)}
+                className="text-prism-accent-primary hover:underline"
+              >
+                try again
+              </button>
+            </p>
+            <p className="mt-4">
+              <Link
+                href="/login"
+                className="text-sm text-prism-accent-primary hover:underline"
+              >
+                Already confirmed? Sign in
+              </Link>
+            </p>
+          </div>
+        )}
+
         {/* Signup form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {!confirmationSent && <><form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label
               htmlFor="email"
@@ -209,6 +255,7 @@ export default function SignupPage() {
             Sign in
           </Link>
         </p>
+        </>}
 
         {/* Back to home */}
         <p className="text-center mt-4">

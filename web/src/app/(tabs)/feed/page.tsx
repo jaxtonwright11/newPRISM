@@ -7,14 +7,12 @@ import { PerspectiveCard } from "@/components/perspective-card";
 import { FeedSkeleton } from "@/components/skeleton";
 import { PrismWordmark } from "@/components/prism-wordmark";
 import { EmptyState, EMPTY_STATES } from "@/components/empty-state";
+import { FirstSessionCard } from "@/components/first-session-card";
 import { COMMUNITY_COLORS } from "@/lib/constants";
 import { useAuth } from "@/lib/auth-context";
 import { useRealtime } from "@/lib/use-realtime";
 import { useUnreadCount } from "@/lib/use-unread-count";
 import { usePullToRefresh } from "@/lib/use-pull-to-refresh";
-import { CommunityPulse } from "@/components/community-pulse";
-import { GeoFomoBanner } from "@/components/geo-fomo-banner";
-import { StreakMilestoneModal } from "@/components/streak-milestone-modal";
 import type { Community, CommunityType, Topic } from "@shared/types";
 import Link from "next/link";
 
@@ -72,7 +70,6 @@ export default function FeedPage() {
 
   const [activeNowTopic, setActiveNowTopic] = useState<Topic | null>(null);
   const [welcomeBack, setWelcomeBack] = useState<string | null>(null);
-  const [pulseOpen, setPulseOpen] = useState(false);
   const [activePrompt, setActivePrompt] = useState<{ prompt_text: string; topic_name?: string } | null>(null);
 
   // Fetch active perspective prompt
@@ -180,8 +177,8 @@ export default function FeedPage() {
           const endpoint = activeTab === "for-you"
             ? `/api/feed/for-you?offset=${feedPerspectives.length}`
             : activeTab === "following"
-              ? "/api/feed/communities"
-              : "/api/feed/nearby";
+              ? `/api/feed/communities?offset=${feedPerspectives.length}`
+              : `/api/feed/nearby?offset=${feedPerspectives.length}`;
           fetch(endpoint, { headers })
             .then((res) => res.json())
             .then((json) => {
@@ -246,15 +243,6 @@ export default function FeedPage() {
             </button>
           ))}
         </div>
-        <button
-          onClick={() => setPulseOpen(true)}
-          className="w-10 min-h-[44px] flex items-center justify-center text-[var(--text-dim)] hover:text-prism-accent-primary transition-colors"
-          aria-label="Community Pulse"
-        >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
-          </svg>
-        </button>
         <Link href="/search" className="w-10 min-h-[44px] flex items-center justify-center text-[var(--text-dim)] hover:text-[var(--text-primary)] transition-colors" aria-label="Search">
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
@@ -384,8 +372,6 @@ export default function FeedPage() {
             </button>
           </div>
         )}
-        {/* Geographic FOMO banner */}
-        <GeoFomoBanner />
         {/* New perspectives banner */}
         {newPerspectiveCount > 0 && (
           <button
@@ -415,7 +401,7 @@ export default function FeedPage() {
               />
             ))}
             {/* Infinite scroll sentinel */}
-            {hasMore && activeTab === "for-you" && (
+            {hasMore && (
               <div ref={loadMoreRef} className="flex justify-center py-4">
                 {loadingMore && (
                   <div className="w-5 h-5 rounded-full border-2 border-[var(--accent-primary)] border-t-transparent animate-spin" />
@@ -460,10 +446,11 @@ export default function FeedPage() {
               })}
             </div>
           </div>
+        ) : activeTab === "for-you" ? (
+          <FirstSessionCard />
         ) : (
           <EmptyState {...(
-            activeTab === "for-you" ? EMPTY_STATES.feedForYou
-            : activeTab === "following" ? EMPTY_STATES.feedFollowing
+            activeTab === "following" ? EMPTY_STATES.feedFollowing
             : EMPTY_STATES.feedNearby
           )} />
         )}
@@ -484,9 +471,6 @@ export default function FeedPage() {
         />
       )}
 
-      {/* Community Pulse panel */}
-      <CommunityPulse isOpen={pulseOpen} onClose={() => setPulseOpen(false)} />
-      <StreakMilestoneModal />
     </div>
   );
 }

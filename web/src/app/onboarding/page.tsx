@@ -74,16 +74,24 @@ export default function OnboardingPage() {
     }
   }, []);
 
-  // Fetch community suggestions when moving to step 2
-  async function fetchSuggestions() {
+  // Fetch community suggestions — skip Step 2 if fewer than 5 available
+  async function fetchSuggestionsAndAdvance() {
     setLoadingSuggestions(true);
     try {
       const params = userCoords ? `?lat=${userCoords.lat}&lng=${userCoords.lng}` : "";
       const res = await fetch(`/api/communities/suggest${params}`);
       const data = await res.json();
-      setSuggestedCommunities(data.suggestions ?? []);
+      const suggestions = data.suggestions ?? [];
+      setSuggestedCommunities(suggestions);
+      if (suggestions.length < 5) {
+        // Not enough communities to make matching worthwhile — skip to perspective step
+        setStep(3);
+      } else {
+        setStep(2);
+      }
     } catch {
       setSuggestedCommunities([]);
+      setStep(3);
     } finally {
       setLoadingSuggestions(false);
     }
@@ -216,8 +224,7 @@ export default function OnboardingPage() {
                     // Non-critical
                   }
                 }
-                fetchSuggestions();
-                setStep(2);
+                fetchSuggestionsAndAdvance();
               }}
               disabled={!location.trim()}
               className="w-full max-w-sm py-3 rounded-xl bg-[var(--accent-primary)] text-white font-body font-medium text-base disabled:opacity-40 transition-opacity"
@@ -226,7 +233,7 @@ export default function OnboardingPage() {
             </button>
 
             <button
-              onClick={() => { fetchSuggestions(); setStep(2); }}
+              onClick={() => setStep(3)}
               className="mt-3 text-sm text-[var(--text-secondary)] font-body hover:text-[var(--text-primary)] transition-colors"
             >
               Skip for now
