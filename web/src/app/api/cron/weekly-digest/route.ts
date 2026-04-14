@@ -22,15 +22,15 @@ export async function GET(request: Request) {
   const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
   try {
-    // 1. Gather stats for the digest
-    const [perspectivesRes, topicsRes, communitiesRes, usersRes] = await Promise.all([
+    // 1. Gather stats and featured comparison for the digest
+    const [perspectivesRes, topicsRes, communitiesRes, usersRes, comparisonRes] = await Promise.all([
       supabase
         .from("perspectives")
         .select("id", { count: "exact", head: true })
         .gte("created_at", oneWeekAgo),
       supabase
         .from("topics")
-        .select("title")
+        .select("title, slug")
         .eq("status", "active")
         .order("created_at", { ascending: false })
         .limit(5),
@@ -44,7 +44,52 @@ export async function GET(request: Request) {
         .from("user_profiles")
         .select("id", { count: "exact", head: true })
         .gte("created_at", oneWeekAgo),
+      // Featured comparison: find a topic with 2+ perspectives from different communities
+      supabase
+        .from("perspectives")
+        .select("quote, topic:topics(title, slug), community:communities(name, color_hex)")
+        .eq("verified", true)
+        .order("created_at", { ascending: false })
+        .limit(100),
     ]);
+
+    // Build featured comparison: find 2 perspectives from different communities on the same topic
+    let featuredComparison: { topicTitle: string; topicSlug: string; perspectives: { quote: string; communityName: string; color: string }[] } | null = null;
+    const compData = comparisonRes.data ?? [];
+    const topicGroups = new Map<string, typeof compData>();
+    for (const p of compData) {
+      const topic = Array.isArray(p.topic) ? p.topic[0] : p.topic;
+      if (!topic) continue;
+      const slug = (topic as { slug: string }).slug;
+      const group = topicGroups.get(slug) ?? [];
+      group.push(p);
+      topicGroups.set(slug, group);
+    }
+    for (const [, group] of topicGroups) {
+      const seen = new Set<string>();
+      const diverse: { quote: string; communityName: string; color: string }[] = [];
+      for (const p of group) {
+        const community = Array.isArray(p.community) ? p.community[0] : p.community;
+        const name = (community as { name: string })?.name;
+        if (name && !seen.has(name) && diverse.length < 2) {
+          seen.add(name);
+          diverse.push({
+            quote: p.quote.slice(0, 150),
+            communityName: name,
+            color: (community as { color_hex: string })?.color_hex ?? "#D4956B",
+          });
+        }
+      }
+      if (diverse.length >= 2) {
+        const topic = Array.isArray(group[0].topic) ? group[0].topic[0] : group[0].topic;
+        featuredComparison = {
+          topicTitle: (topic as { title: string }).title,
+          topicSlug: (topic as { slug: string }).slug,
+          perspectives: diverse,
+        };
+        break;
+      }
+    }
 
     const stats = {
       newPerspectives: perspectivesRes.count ?? 0,
@@ -86,12 +131,12 @@ export async function GET(request: Request) {
     let sent = 0;
     let failed = 0;
     for (const [, email] of emailMap) {
-      const result = await sendDigestEmail(email, digest);
+      const result = await sendDigestEmail(email, digest, featuredComparison);
       if (result.success) sent++;
       else failed++;
     }
 
-    return NextResponse.json({ sent, failed, total_subscribers: emailMap.size });
+    return NextResponse.json({ sent, failed, total_subscribers: emailMap.size, has_comparison: !!featuredComparison });
   } catch (err) {
     return NextResponse.json({ error: "Digest failed", details: String(err) }, { status: 500 });
   }
