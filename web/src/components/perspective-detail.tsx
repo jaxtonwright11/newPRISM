@@ -5,6 +5,7 @@ import type { CommunityType, ReactionType } from "@shared/types";
 import { REACTION_LABELS, COMMUNITY_COLORS } from "@/lib/constants";
 import { useAuth } from "@/lib/auth-context";
 import { prismEvents } from "@/lib/posthog";
+import { CommentThread } from "@/components/comment-thread";
 
 interface PerspectiveDetailProps {
   id: string;
@@ -337,6 +338,9 @@ export function PerspectiveDetail({
               </button>
             </div>
           </div>
+
+          {/* Comments */}
+          <CommentThread perspectiveId={id} />
         </div>
       </div>
     </div>

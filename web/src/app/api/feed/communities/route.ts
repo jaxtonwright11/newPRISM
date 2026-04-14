@@ -91,12 +91,34 @@ export async function GET(request: Request) {
       const { data, error } = await query;
 
       if (!error && data) {
+        // Borrowed density: if followed communities have no content, show broader perspectives
+        if (data.length === 0 && offset === 0 && followedCommunityIds.length > 0) {
+          const { data: fallback } = await supabase
+            .from("perspectives")
+            .select("*, community:communities(id, name, region, community_type, color_hex, verified)")
+            .eq("verified", true)
+            .order("created_at", { ascending: false })
+            .limit(15);
+
+          return NextResponse.json({
+            data: fallback ?? [],
+            meta: {
+              total: fallback?.length ?? 0,
+              feed_type: "communities",
+              borrowed_density: true,
+              borrowed_message: "Your followed communities haven't shared yet. Here are perspectives from across PRISM.",
+              has_more: false,
+            },
+          });
+        }
+
         const lastItem = data[data.length - 1] as Record<string, unknown> | undefined;
         return NextResponse.json({
           data,
           meta: {
             total: data.length,
             feed_type: "communities",
+            borrowed_density: false,
             next_cursor: data.length === limit ? (lastItem?.created_at as string | undefined) : null,
             has_more: data.length === limit,
           },

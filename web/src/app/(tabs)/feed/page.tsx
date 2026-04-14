@@ -372,10 +372,12 @@ export default function FeedPage() {
           <FeedSkeleton count={4} />
         ) : feedPerspectives.length > 0 ? (
           <div className="flex flex-col gap-2 animate-fade-in" role="feed" aria-label="Perspectives feed">
-            {borrowedDensity && activeTab === "nearby" && (
+            {borrowedDensity && (
               <div className="mb-2 px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--bg-overlay)]">
                 <p className="text-[11px] text-[var(--text-secondary)]">
-                  Showing perspectives from communities across PRISM. Follow nearby communities to see local content here.
+                  {activeTab === "following"
+                    ? "Your followed communities haven't shared yet. Here are perspectives from across PRISM."
+                    : "Showing perspectives from communities across PRISM. Follow nearby communities to see local content here."}
                 </p>
               </div>
             )}
