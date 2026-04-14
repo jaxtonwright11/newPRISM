@@ -167,16 +167,5 @@ export async function POST(request: Request) {
     );
   }
 
-  // Fire-and-forget: update user's streak
-  let streakCount = 0;
-  try {
-    const { data: streakData } = await supabase.rpc("update_user_streak", { p_user_id: user.id });
-    if (streakData?.[0]) {
-      streakCount = streakData[0].streak_count;
-    }
-  } catch {
-    // Non-critical
-  }
-
-  return NextResponse.json({ data, streak: streakCount }, { status: 201 });
+  return NextResponse.json({ data }, { status: 201 });
 }

@@ -93,14 +93,6 @@ export default function CreatePage() {
       });
       if (res.ok) {
         prismEvents.postCreated(postType, 0, false);
-        const json = await res.json();
-        // Sync server streak to localStorage (backend tracking preserved)
-        if (json.streak) {
-          localStorage.setItem("prism_streak", JSON.stringify({
-            count: json.streak,
-            lastPostDate: new Date().toISOString().split("T")[0],
-          }));
-        }
         router.push("/feed");
       } else {
         const err = await res.json().catch(() => null);
