@@ -63,4 +63,22 @@ export const prismEvents = {
 
   authSignupCompleted: (source: "organic" | "aha" | "direct") =>
     trackEvent("auth_signup_completed", { source }),
+
+  // Activation funnel events
+  activationFirstSessionStart: () =>
+    trackEvent("activation_first_session_start"),
+
+  activationComparisonViewed: (topicSlug: string, communityCount: number) =>
+    trackEvent("activation_comparison_viewed", { topic_slug: topicSlug, community_count: communityCount }),
+
+  activationComparisonReacted: (topicSlug: string) =>
+    trackEvent("activation_comparison_reacted", { topic_slug: topicSlug }),
+
+  activationEventCompleted: () =>
+    trackEvent("activation_event_completed", {
+      description: "User read perspectives from 2+ communities on same topic",
+    }),
+
+  returnDay2: () =>
+    trackEvent("return_day_2"),
 };

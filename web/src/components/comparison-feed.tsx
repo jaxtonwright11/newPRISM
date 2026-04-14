@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { COMMUNITY_COLORS } from "@/lib/constants";
+import { prismEvents } from "@/lib/posthog";
 import type { CommunityType } from "@shared/types";
 import { FirstSessionCard } from "@/components/first-session-card";
 
@@ -35,13 +36,27 @@ interface ComparisonGroup {
   has_comparison: boolean;
 }
 
-function ComparisonCard({ group }: { group: ComparisonGroup }) {
+function ComparisonCard({ group, onComparisonViewed }: { group: ComparisonGroup; onComparisonViewed?: (topicSlug: string, count: number) => void }) {
   const { session } = useAuth();
   const [reacted, setReacted] = useState(false);
+  const trackedRef = useRef(false);
+
+  const shown = group.perspectives.slice(0, 4);
+  const isComparison = shown.length >= 2;
+
+  // Track when a comparison is viewed
+  useEffect(() => {
+    if (isComparison && !trackedRef.current) {
+      trackedRef.current = true;
+      prismEvents.activationComparisonViewed(group.topic.slug, shown.length);
+      onComparisonViewed?.(group.topic.slug, shown.length);
+    }
+  }, [isComparison, group.topic.slug, shown.length, onComparisonViewed]);
 
   const handleReact = useCallback(async () => {
     if (reacted || !session?.access_token) return;
     setReacted(true);
+    prismEvents.activationComparisonReacted(group.topic.slug);
     // React to all perspectives in this comparison
     for (const p of group.perspectives) {
       fetch(`/api/perspectives/${p.id}/react`, {
@@ -53,10 +68,7 @@ function ComparisonCard({ group }: { group: ComparisonGroup }) {
         body: JSON.stringify({ reaction_type: "want_to_understand" }),
       }).catch(() => {});
     }
-  }, [reacted, session?.access_token, group.perspectives]);
-
-  const shown = group.perspectives.slice(0, 4);
-  const isComparison = shown.length >= 2;
+  }, [reacted, session?.access_token, group.perspectives, group.topic.slug]);
 
   return (
     <motion.div
@@ -191,6 +203,37 @@ export function ComparisonFeed() {
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const activationFiredRef = useRef(false);
+  const comparisonTopicsViewedRef = useRef(new Set<string>());
+
+  // First-session detection and day-2 return tracking
+  useEffect(() => {
+    const FIRST_VISIT_KEY = "prism_first_visit_ts";
+    const DAY2_FIRED_KEY = "prism_day2_fired";
+    const now = Date.now();
+    const firstVisit = localStorage.getItem(FIRST_VISIT_KEY);
+
+    if (!firstVisit) {
+      localStorage.setItem(FIRST_VISIT_KEY, String(now));
+      prismEvents.activationFirstSessionStart();
+    } else {
+      const elapsed = now - Number(firstVisit);
+      const oneDayMs = 24 * 60 * 60 * 1000;
+      if (elapsed >= oneDayMs && !localStorage.getItem(DAY2_FIRED_KEY)) {
+        localStorage.setItem(DAY2_FIRED_KEY, "1");
+        prismEvents.returnDay2();
+      }
+    }
+  }, []);
+
+  // Callback when a comparison is viewed — fire activation event after 2+ topics
+  const handleComparisonViewed = useCallback((topicSlug: string) => {
+    comparisonTopicsViewedRef.current.add(topicSlug);
+    if (comparisonTopicsViewedRef.current.size >= 2 && !activationFiredRef.current) {
+      activationFiredRef.current = true;
+      prismEvents.activationEventCompleted();
+    }
+  }, []);
 
   useEffect(() => {
     const headers: Record<string, string> = {};
@@ -271,7 +314,7 @@ export function ComparisonFeed() {
   return (
     <div className="flex flex-col gap-3">
       {groups.map((group) => (
-        <ComparisonCard key={group.topic.id} group={group} />
+        <ComparisonCard key={group.topic.id} group={group} onComparisonViewed={handleComparisonViewed} />
       ))}
 
       {hasMore && (
