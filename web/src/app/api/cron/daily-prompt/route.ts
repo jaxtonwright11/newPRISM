@@ -53,7 +53,7 @@ export async function GET(request: Request) {
     const sent = await sendPushBroadcast({
       title: "A new perspective prompt is live",
       body: `Communities are posting about ${topicName} right now. ${count ?? 0} perspectives so far today.`,
-      url: topic?.slug ? `/topic/${topic.slug}` : "/feed",
+      url: topic?.slug ? `/compare/${topic.slug}` : "/feed",
     });
 
     return NextResponse.json({ sent, prompt_id: prompt.id, topic: topicName });
