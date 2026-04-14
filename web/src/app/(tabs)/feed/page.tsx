@@ -7,7 +7,7 @@ import { PerspectiveCard } from "@/components/perspective-card";
 import { FeedSkeleton } from "@/components/skeleton";
 import { PrismWordmark } from "@/components/prism-wordmark";
 import { EmptyState, EMPTY_STATES } from "@/components/empty-state";
-import { FirstSessionCard } from "@/components/first-session-card";
+import { ComparisonFeed } from "@/components/comparison-feed";
 import { COMMUNITY_COLORS } from "@/lib/constants";
 import { useAuth } from "@/lib/auth-context";
 import { useRealtime } from "@/lib/use-realtime";
@@ -381,7 +381,9 @@ export default function FeedPage() {
             {newPerspectiveCount} new perspective{newPerspectiveCount > 1 ? "s" : ""} - tap to see
           </button>
         )}
-        {feedLoading ? (
+        {activeTab === "for-you" ? (
+          <ComparisonFeed />
+        ) : feedLoading ? (
           <FeedSkeleton count={4} />
         ) : feedPerspectives.length > 0 ? (
           <div className="flex flex-col gap-2 animate-fade-in" role="feed" aria-label="Perspectives feed">
@@ -400,7 +402,6 @@ export default function FeedPage() {
                 animationDelay={i * 50}
               />
             ))}
-            {/* Infinite scroll sentinel */}
             {hasMore && (
               <div ref={loadMoreRef} className="flex justify-center py-4">
                 {loadingMore && (
@@ -408,7 +409,6 @@ export default function FeedPage() {
                 )}
               </div>
             )}
-            {/* End of feed CTA */}
             {!hasMore && feedPerspectives.length > 0 && (
               <div className="py-8 text-center">
                 <p className="text-xs text-[var(--text-dim)] mb-3">You&apos;re all caught up</p>
@@ -416,7 +416,7 @@ export default function FeedPage() {
                   href="/discover"
                   className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--accent-primary)]/10 border border-[var(--accent-primary)]/20 text-sm text-[var(--accent-primary)] hover:bg-[var(--accent-primary)]/15 transition-colors"
                 >
-                  Explore more communities →
+                  Explore more communities &rarr;
                 </Link>
               </div>
             )}
@@ -446,8 +446,6 @@ export default function FeedPage() {
               })}
             </div>
           </div>
-        ) : activeTab === "for-you" ? (
-          <FirstSessionCard />
         ) : (
           <EmptyState {...(
             activeTab === "following" ? EMPTY_STATES.feedFollowing
