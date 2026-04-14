@@ -89,7 +89,7 @@ describe("POST /api/invites", () => {
     mockedParseJsonBody.mockResolvedValue(
       createParsedBody("dfd26f59-0ebf-4340-8855-a3764148694f")
     );
-    mockedRandomBytes.mockReturnValue(Buffer.from("abc123def456", "utf8"));
+    mockedRandomBytes.mockReturnValue(Buffer.from("abc123", "utf8"));
 
     const single = vi.fn().mockResolvedValue({
       data: null,
@@ -131,7 +131,7 @@ describe("POST /api/invites", () => {
 
     mockedApplyRateLimit.mockReturnValue(null);
     mockedParseJsonBody.mockResolvedValue(createParsedBody());
-    mockedRandomBytes.mockReturnValue(Buffer.from("zzzzzzzzzzzz", "utf8"));
+    mockedRandomBytes.mockReturnValue(Buffer.from("zzzzzz", "utf8"));
 
     const inviteRecord = {
       id: "invite-1",
