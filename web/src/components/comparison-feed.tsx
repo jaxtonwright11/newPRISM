@@ -36,7 +36,7 @@ interface ComparisonGroup {
   has_comparison: boolean;
 }
 
-function ComparisonCard({ group, onComparisonViewed }: { group: ComparisonGroup; onComparisonViewed?: (topicSlug: string, count: number) => void }) {
+function ComparisonCard({ group, onComparisonViewed, onScrollToNext, hasNext }: { group: ComparisonGroup; onComparisonViewed?: (topicSlug: string, count: number) => void; onScrollToNext?: () => void; hasNext?: boolean }) {
   const { session } = useAuth();
   const [reacted, setReacted] = useState(false);
   const trackedRef = useRef(false);
@@ -191,6 +191,18 @@ function ComparisonCard({ group, onComparisonViewed }: { group: ComparisonGroup;
             Add your voice
           </Link>
         )}
+
+        {reacted && hasNext && onScrollToNext && (
+          <button
+            onClick={onScrollToNext}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-medium text-[var(--accent-primary)] hover:bg-[var(--accent-primary)]/10 transition-all ml-auto"
+          >
+            Next comparison
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            </svg>
+          </button>
+        )}
       </div>
     </motion.div>
   );
@@ -311,10 +323,26 @@ export function ComparisonFeed() {
     return <FirstSessionCard />;
   }
 
+  const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+
+  const scrollToCard = useCallback((index: number) => {
+    const nextGroup = groups[index];
+    if (!nextGroup) return;
+    const el = cardRefs.current.get(nextGroup.topic.id);
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [groups]);
+
   return (
     <div className="flex flex-col gap-3">
-      {groups.map((group) => (
-        <ComparisonCard key={group.topic.id} group={group} onComparisonViewed={handleComparisonViewed} />
+      {groups.map((group, i) => (
+        <div key={group.topic.id} ref={(el) => { if (el) cardRefs.current.set(group.topic.id, el); }}>
+          <ComparisonCard
+            group={group}
+            onComparisonViewed={handleComparisonViewed}
+            hasNext={i < groups.length - 1}
+            onScrollToNext={() => scrollToCard(i + 1)}
+          />
+        </div>
       ))}
 
       {hasMore && (
