@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY ?? "";
+const FALLBACK_COMPARISON_COLOR = "#D4956B";
 
 let resend: Resend | null = null;
 
@@ -8,6 +9,25 @@ function getResend(): Resend | null {
   if (!RESEND_API_KEY) return null;
   if (!resend) resend = new Resend(RESEND_API_KEY);
   return resend;
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function sanitizeHexColor(value: string): string {
+  return /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(value)
+    ? value
+    : FALLBACK_COMPARISON_COLOR;
+}
+
+function sanitizeSubject(value: string): string {
+  return value.replace(/[\r\n]+/g, " ").trim();
 }
 
 /**
@@ -26,18 +46,19 @@ export async function sendDigestEmail(
   if (!client) return { success: false, error: "Resend not configured" };
 
   const appUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://web-liard-psi-12.vercel.app";
+  const escapedDigest = escapeHtml(digest).replace(/\n/g, "<br>");
 
   const comparisonHtml = comparison ? `
     <div style="margin: 24px 0; padding: 20px; border-radius: 12px; background: #181B20; border: 1px solid #262A31;">
       <p style="font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #D4956B; margin: 0 0 6px 0;">Same topic &middot; Different worlds</p>
-      <h2 style="font-size: 16px; font-weight: 700; margin: 0 0 16px 0; color: #EDEDEF;">${comparison.topicTitle}</h2>
+      <h2 style="font-size: 16px; font-weight: 700; margin: 0 0 16px 0; color: #EDEDEF;">${escapeHtml(comparison.topicTitle)}</h2>
       ${comparison.perspectives.map(p => `
-        <div style="padding: 12px 0 12px 16px; border-left: 3px solid ${p.color}; margin-bottom: 12px;">
-          <p style="font-size: 11px; font-weight: 600; color: #9CA3AF; margin: 0 0 4px 0;">${p.communityName}</p>
-          <p style="font-size: 14px; color: #EDEDEF; margin: 0; line-height: 1.5;">&ldquo;${p.quote}&rdquo;</p>
+        <div style="padding: 12px 0 12px 16px; border-left: 3px solid ${sanitizeHexColor(p.color)}; margin-bottom: 12px;">
+          <p style="font-size: 11px; font-weight: 600; color: #9CA3AF; margin: 0 0 4px 0;">${escapeHtml(p.communityName)}</p>
+          <p style="font-size: 14px; color: #EDEDEF; margin: 0; line-height: 1.5;">&ldquo;${escapeHtml(p.quote)}&rdquo;</p>
         </div>
       `).join("")}
-      <a href="${appUrl}/compare/${comparison.topicSlug}" style="display: inline-block; margin-top: 8px; color: #D4956B; text-decoration: none; font-size: 13px; font-weight: 500;">
+      <a href="${appUrl}/compare/${encodeURIComponent(comparison.topicSlug)}" style="display: inline-block; margin-top: 8px; color: #D4956B; text-decoration: none; font-size: 13px; font-weight: 500;">
         See the full comparison &rarr;
       </a>
     </div>
@@ -48,7 +69,7 @@ export async function sendDigestEmail(
       from: "PRISM <digest@prism-app.com>",
       to,
       subject: comparison
-        ? `This week on PRISM: ${comparison.topicTitle}`
+        ? `This week on PRISM: ${sanitizeSubject(comparison.topicTitle)}`
         : "Your PRISM Weekly Digest",
       html: `
         <div style="font-family: 'DM Sans', sans-serif; max-width: 600px; margin: 0 auto; background: #0F1114; color: #EDEDEF; padding: 32px;">
@@ -58,7 +79,7 @@ export async function sendDigestEmail(
           </div>
           ${comparisonHtml}
           <div style="white-space: pre-line; line-height: 1.65; font-size: 15px; color: #9CA3AF;">
-            ${digest.replace(/\n/g, "<br>")}
+            ${escapedDigest}
           </div>
           <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #262A31;">
             <a href="${appUrl}/feed" style="color: #D4956B; text-decoration: none; font-size: 14px; font-weight: 500;">
