@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const sendSpy = vi.fn(async () => ({}));
+const sendSpy = vi.fn((payload: unknown) => Promise.resolve(payload));
 
 vi.mock("resend", () => {
   class Resend {
@@ -42,7 +42,11 @@ describe("sendDigestEmail", () => {
     expect(result).toEqual({ success: true });
     expect(sendSpy).toHaveBeenCalledTimes(1);
 
-    const payload = sendSpy.mock.calls[0][0] as { subject: string; html: string };
+    const firstCall = sendSpy.mock.calls[0];
+    if (!firstCall) {
+      throw new Error("Expected resend send to be called");
+    }
+    const payload = (firstCall as unknown[])[0] as { subject: string; html: string };
     expect(payload.subject).toBe("This week on PRISM: Topic <img src=x onerror=alert(1)>");
 
     expect(payload.html).toContain("Topic &lt;img src=x onerror=alert(1)&gt;");
@@ -64,7 +68,11 @@ describe("sendDigestEmail", () => {
       perspectives: [],
     });
 
-    const payload = sendSpy.mock.calls[0][0] as { subject: string };
+    const firstCall = sendSpy.mock.calls[0];
+    if (!firstCall) {
+      throw new Error("Expected resend send to be called");
+    }
+    const payload = (firstCall as unknown[])[0] as { subject: string };
     expect(payload.subject).toBe("This week on PRISM: Weekly topic Bcc: victim@example.com");
     expect(payload.subject).not.toContain("\r");
     expect(payload.subject).not.toContain("\n");
