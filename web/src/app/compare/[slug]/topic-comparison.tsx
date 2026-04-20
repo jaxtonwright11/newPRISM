@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { prismEvents } from "@/lib/posthog";
+import { getUniqueCommunityCount } from "@/lib/topic-comparison";
 
 interface Perspective {
   id: string;
@@ -28,8 +29,7 @@ export function TopicComparison({ topicTitle, topicSummary, perspectives, slug }
 
   // Track comparison view for activation funnel
   useEffect(() => {
-    const uniqueCommunities = new Set(perspectives.map((p) => p.community.name));
-    prismEvents.activationComparisonViewed(slug, uniqueCommunities.size);
+    prismEvents.activationComparisonViewed(slug, getUniqueCommunityCount(perspectives));
   }, [slug, perspectives]);
 
   const handleShare = useCallback(() => {

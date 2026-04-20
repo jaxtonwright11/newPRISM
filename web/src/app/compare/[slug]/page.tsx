@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getSupabaseServer } from "@/lib/supabase";
+import { buildTopicComparisonDescription, hasTopicComparison } from "@/lib/topic-comparison";
 import { TopicComparison } from "./topic-comparison";
 
 interface Props {
@@ -52,10 +53,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!data) return { title: "PRISM" };
 
   const { topic, perspectives } = data;
-  const communityNames = perspectives.slice(0, 3).map((p) => p.community.name).join(", ");
-  const description = perspectives.length >= 2
-    ? `See how ${communityNames} experience "${topic.title}" — same topic, completely different worlds.`
-    : topic.summary ?? `Perspectives on ${topic.title}`;
+  const description = buildTopicComparisonDescription({
+    topicTitle: topic.title,
+    topicSummary: topic.summary,
+    perspectives,
+  });
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://web-liard-psi-12.vercel.app";
 
@@ -86,7 +88,7 @@ export default async function TopicComparePage({ params }: Props) {
     notFound();
   }
 
-  const hasComparison = data.perspectives.length >= 2;
+  const hasComparison = hasTopicComparison(data.perspectives.length);
 
   return (
     <div className="min-h-screen bg-prism-bg-base">
