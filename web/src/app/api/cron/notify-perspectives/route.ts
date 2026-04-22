@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { sendPushToCommunityFollowers } from "@/lib/send-push";
+import { buildCommunityNotificationPayloads } from "./notification-payload";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
@@ -32,36 +33,14 @@ export async function GET(request: Request) {
     return NextResponse.json({ notified: 0, perspectives: 0 });
   }
 
-  // Group by community to avoid duplicate notifications
-  const communityMap = new Map<string, { name: string; topicSlug: string | null; topicTitle: string | null }>();
-  for (const p of newPerspectives) {
-    if (p.community_id && !communityMap.has(p.community_id)) {
-      const community = Array.isArray(p.community) ? p.community[0] : p.community;
-      const topic = Array.isArray(p.topic) ? p.topic[0] : p.topic;
-      communityMap.set(p.community_id, {
-        name: (community as { name: string })?.name ?? "A community",
-        topicSlug: (topic as { slug: string })?.slug ?? null,
-        topicTitle: (topic as { title: string })?.title ?? null,
-      });
-    }
-  }
+  const payloads = buildCommunityNotificationPayloads(newPerspectives);
 
   let totalSent = 0;
-  for (const [communityId, info] of communityMap) {
-    const count = newPerspectives.filter((p) => p.community_id === communityId).length;
-    // Deep-link to comparison view if topic exists, otherwise feed
-    const url = info.topicSlug ? `/compare/${info.topicSlug}` : "/feed";
-    const title = info.topicTitle
-      ? `New perspective on "${info.topicTitle}"`
-      : `${info.name} shared a perspective`;
-    const body = count > 1
-      ? `${count} new perspectives from ${info.name}`
-      : newPerspectives.find((p) => p.community_id === communityId)!.quote.slice(0, 100);
-
-    const sent = await sendPushToCommunityFollowers(communityId, {
-      title,
-      body,
-      url,
+  for (const payload of payloads) {
+    const sent = await sendPushToCommunityFollowers(payload.communityId, {
+      title: payload.title,
+      body: payload.body,
+      url: payload.url,
       icon: "/icons/icon-192.svg",
     });
     totalSent += sent;
@@ -70,6 +49,6 @@ export async function GET(request: Request) {
   return NextResponse.json({
     notified: totalSent,
     perspectives: newPerspectives.length,
-    communities: communityMap.size,
+    communities: payloads.length,
   });
 }
