@@ -6,14 +6,15 @@ const { sendEmailMock, resendConstructorMock } = vi.hoisted(() => ({
 }));
 
 vi.mock("resend", () => ({
-  Resend: vi.fn().mockImplementation((apiKey: string) => {
-    resendConstructorMock(apiKey);
-    return {
-      emails: {
-        send: sendEmailMock,
-      },
+  Resend: class MockResend {
+    emails = {
+      send: sendEmailMock,
     };
-  }),
+
+    constructor(apiKey: string) {
+      resendConstructorMock(apiKey);
+    }
+  },
 }));
 
 const ORIGINAL_ENV = process.env;
