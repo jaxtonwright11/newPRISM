@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { applyRateLimit } from "@/lib/api";
-import { getSupabase } from "@/lib/supabase";
+import { getSupabaseServer } from "@/lib/supabase";
 import type { InsightData } from "@shared/insights";
 
 export async function GET(request: NextRequest) {
   const rateLimited = applyRateLimit(request, "insights");
   if (rateLimited) return rateLimited;
 
-  const supabase = getSupabase();
+  const supabase = getSupabaseServer();
   if (!supabase) {
     return NextResponse.json({ insights: null });
   }

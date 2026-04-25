@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { applyRateLimit } from "@/lib/api";
-import { getSupabase } from "@/lib/supabase";
+import { getSupabaseServer } from "@/lib/supabase";
 import { z } from "zod";
 import type { CommunitySentiment } from "@shared/map-sentiment";
 
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "topic_id (UUID) is required" }, { status: 400 });
   }
 
-  const supabase = getSupabase();
+  const supabase = getSupabaseServer();
   if (!supabase) {
     return NextResponse.json({ sentiments: [] });
   }
