@@ -6,6 +6,75 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 const CRON_SECRET = process.env.CRON_SECRET ?? "";
 
+type NullableRelation<T> = T | T[] | null | undefined;
+
+function firstRelation<T>(relation: NullableRelation<T>): T | null {
+  if (Array.isArray(relation)) return relation[0] ?? null;
+  return relation ?? null;
+}
+
+type PerspectiveNotificationSource = {
+  quote: string;
+  community_id: string | null;
+  community?: NullableRelation<{ name?: string | null }>;
+  topic?: NullableRelation<{ title?: string | null; slug?: string | null }>;
+};
+
+type CommunityNotification = {
+  communityId: string;
+  payload: {
+    title: string;
+    body: string;
+    url: string;
+    icon: string;
+  };
+};
+
+export function buildPerspectiveNotifications(
+  perspectives: PerspectiveNotificationSource[]
+): CommunityNotification[] {
+  const communityMap = new Map<
+    string,
+    {
+      name: string;
+      topicSlug: string | null;
+      topicTitle: string | null;
+    }
+  >();
+
+  for (const perspective of perspectives) {
+    if (perspective.community_id && !communityMap.has(perspective.community_id)) {
+      const community = firstRelation(perspective.community);
+      const topic = firstRelation(perspective.topic);
+
+      communityMap.set(perspective.community_id, {
+        name: community?.name ?? "A community",
+        topicSlug: topic?.slug ?? null,
+        topicTitle: topic?.title ?? null,
+      });
+    }
+  }
+
+  return Array.from(communityMap, ([communityId, info]) => {
+    const count = perspectives.filter((p) => p.community_id === communityId).length;
+    const firstPerspective = perspectives.find((p) => p.community_id === communityId);
+
+    return {
+      communityId,
+      payload: {
+        title: info.topicTitle
+          ? `New perspective on "${info.topicTitle}"`
+          : `${info.name} shared a perspective`,
+        body: count > 1
+          ? `${count} new perspectives from ${info.name}`
+          : (firstPerspective?.quote ?? "").slice(0, 100),
+        url: info.topicSlug ? `/compare/${info.topicSlug}` : "/feed",
+        icon: "/icons/icon-192.svg",
+      },
+    };
+  });
+}
+
 export async function GET(request: Request) {
   // Verify cron secret (Vercel sends this header)
   const authHeader = request.headers.get("authorization");
@@ -32,44 +101,17 @@ export async function GET(request: Request) {
     return NextResponse.json({ notified: 0, perspectives: 0 });
   }
 
-  // Group by community to avoid duplicate notifications
-  const communityMap = new Map<string, { name: string; topicSlug: string | null; topicTitle: string | null }>();
-  for (const p of newPerspectives) {
-    if (p.community_id && !communityMap.has(p.community_id)) {
-      const community = Array.isArray(p.community) ? p.community[0] : p.community;
-      const topic = Array.isArray(p.topic) ? p.topic[0] : p.topic;
-      communityMap.set(p.community_id, {
-        name: (community as { name: string })?.name ?? "A community",
-        topicSlug: (topic as { slug: string })?.slug ?? null,
-        topicTitle: (topic as { title: string })?.title ?? null,
-      });
-    }
-  }
+  const notifications = buildPerspectiveNotifications(newPerspectives);
 
   let totalSent = 0;
-  for (const [communityId, info] of communityMap) {
-    const count = newPerspectives.filter((p) => p.community_id === communityId).length;
-    // Deep-link to comparison view if topic exists, otherwise feed
-    const url = info.topicSlug ? `/compare/${info.topicSlug}` : "/feed";
-    const title = info.topicTitle
-      ? `New perspective on "${info.topicTitle}"`
-      : `${info.name} shared a perspective`;
-    const body = count > 1
-      ? `${count} new perspectives from ${info.name}`
-      : newPerspectives.find((p) => p.community_id === communityId)!.quote.slice(0, 100);
-
-    const sent = await sendPushToCommunityFollowers(communityId, {
-      title,
-      body,
-      url,
-      icon: "/icons/icon-192.svg",
-    });
+  for (const notification of notifications) {
+    const sent = await sendPushToCommunityFollowers(notification.communityId, notification.payload);
     totalSent += sent;
   }
 
   return NextResponse.json({
     notified: totalSent,
     perspectives: newPerspectives.length,
-    communities: communityMap.size,
+    communities: notifications.length,
   });
 }

@@ -65,7 +65,7 @@ function ComparisonCard({ group, onComparisonViewed, onScrollToNext, hasNext }: 
           "Content-Type": "application/json",
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ reaction_type: "want_to_understand" }),
+        body: JSON.stringify({ reaction_type: "i_didnt_know_this" }),
       }).catch(() => {});
     }
   }, [reacted, session?.access_token, group.perspectives, group.topic.slug]);
