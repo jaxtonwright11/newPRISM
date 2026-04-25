@@ -13,7 +13,7 @@ export const REACTION_LABELS: Record<
   ReactionType,
   { emoji: string; label: string }
 > = {
-  this_resonates: { emoji: "✦", label: "This resonates" },
-  seeing_differently: { emoji: "◇", label: "Seeing this differently" },
-  want_to_understand: { emoji: "→", label: "I want to understand more" },
+  i_see_this: { emoji: "✦", label: "I see this" },
+  i_didnt_know_this: { emoji: "◇", label: "I didn't know this" },
+  i_agree: { emoji: "→", label: "I agree" },
 };

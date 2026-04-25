@@ -270,14 +270,14 @@ export default function TopicDetailPage() {
 
               {/* Sentiment summary bars */}
               <div className="space-y-2">
-                {(["this_resonates", "seeing_differently", "want_to_understand"] as ReactionType[]).map((reaction) => {
+                {(["i_see_this", "i_didnt_know_this", "i_agree"] as ReactionType[]).map((reaction) => {
                   const count = sentimentData.filter((s) => s.dominant_reaction === reaction).length;
                   if (count === 0) return null;
                   const pct = Math.round((count / sentimentData.length) * 100);
                   const colors: Record<ReactionType, string> = {
-                    this_resonates: "#4ADE80",
-                    seeing_differently: "#F59E0B",
-                    want_to_understand: "#3B82F6",
+                    i_see_this: "#4ADE80",
+                    i_didnt_know_this: "#F59E0B",
+                    i_agree: "#3B82F6",
                   };
                   return (
                     <div key={reaction} className="flex items-center gap-3">
@@ -305,9 +305,9 @@ export default function TopicDetailPage() {
               <div className="flex flex-wrap gap-1.5 mt-3">
                 {sentimentData.slice(0, 6).map((s) => {
                   const colors: Record<string, string> = {
-                    this_resonates: "#4ADE80",
-                    seeing_differently: "#F59E0B",
-                    want_to_understand: "#3B82F6",
+                    i_see_this: "#4ADE80",
+                    i_didnt_know_this: "#F59E0B",
+                    i_agree: "#3B82F6",
                   };
                   return (
                     <span

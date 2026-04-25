@@ -12,8 +12,10 @@ const perspectiveIdParamsSchema = z.object({
   id: z.string().uuid(),
 });
 
+export const allowedReactionTypes = ["i_see_this", "i_didnt_know_this", "i_agree"] as const;
+
 const reactionBodySchema = z.object({
-  reaction_type: z.enum(["this_resonates", "seeing_differently", "want_to_understand"]),
+  reaction_type: z.enum(allowedReactionTypes),
 });
 
 export async function GET(
@@ -111,7 +113,7 @@ export async function POST(
 
   if (error) {
     return NextResponse.json(
-      { error: "Failed to save reaction"},
+      { error: "Failed to save reaction" },
       { status: 500 }
     );
   }
@@ -187,7 +189,7 @@ export async function DELETE(
 
   if (error) {
     return NextResponse.json(
-      { error: "Failed to remove reaction"},
+      { error: "Failed to remove reaction" },
       { status: 500 }
     );
   }

@@ -6,10 +6,10 @@ export interface CommunitySentiment {
   longitude: number;
   region: string;
   perspective_count: number;
-  dominant_reaction: "this_resonates" | "seeing_differently" | "want_to_understand";
+  dominant_reaction: "i_see_this" | "i_didnt_know_this" | "i_agree";
   reaction_counts: {
-    this_resonates: number;
-    seeing_differently: number;
-    want_to_understand: number;
+    i_see_this: number;
+    i_didnt_know_this: number;
+    i_agree: number;
   };
 }
