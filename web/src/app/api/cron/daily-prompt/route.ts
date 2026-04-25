@@ -6,6 +6,29 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 const CRON_SECRET = process.env.CRON_SECRET ?? "";
 
+type TopicRelation = { title?: string | null; slug?: string | null } | null;
+type PromptWithTopic = {
+  id: string;
+  topic?: TopicRelation | TopicRelation[];
+};
+
+function unwrapRelation<T>(relation: T | T[] | null | undefined): T | null {
+  if (Array.isArray(relation)) return relation[0] ?? null;
+  return relation ?? null;
+}
+
+export function buildDailyPromptPushTarget(prompt: PromptWithTopic): {
+  topicName: string;
+  url: string;
+} {
+  const topic = unwrapRelation(prompt.topic);
+
+  return {
+    topicName: topic?.title ?? "today's topic",
+    url: topic?.slug ? `/compare/${topic.slug}` : "/feed",
+  };
+}
+
 /**
  * Daily Perspective Window — sends a push notification when a prompt goes live.
  * Called by Vercel cron at a random-ish time between 9 AM and 6 PM UTC.
@@ -39,8 +62,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ sent: 0, reason: "no active prompt" });
     }
 
-    const topic = Array.isArray(prompt.topic) ? prompt.topic[0] : prompt.topic;
-    const topicName = topic?.title ?? "today's topic";
+    const { topicName, url } = buildDailyPromptPushTarget(prompt);
 
     // Count perspectives posted today for context
     const todayStart = new Date();
@@ -53,7 +75,7 @@ export async function GET(request: Request) {
     const sent = await sendPushBroadcast({
       title: "A new perspective prompt is live",
       body: `Communities are posting about ${topicName} right now. ${count ?? 0} perspectives so far today.`,
-      url: topic?.slug ? `/compare/${topic.slug}` : "/feed",
+      url,
     });
 
     return NextResponse.json({ sent, prompt_id: prompt.id, topic: topicName });

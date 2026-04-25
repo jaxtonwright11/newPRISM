@@ -1,6 +1,6 @@
 export type CommunityType = 'civic' | 'diaspora' | 'rural' | 'policy' | 'academic' | 'cultural';
 export type TopicStatus = 'active' | 'trending' | 'hot' | 'cooling' | 'archived';
-export type ReactionType = 'this_resonates' | 'seeing_differently' | 'want_to_understand';
+export type ReactionType = 'i_see_this' | 'i_didnt_know_this' | 'i_agree';
 export type ConnectionStatus = 'pending' | 'accepted' | 'declined';
 export type PostType = 'permanent' | 'story';
 export type VerificationLevel = 1 | 2 | 3;

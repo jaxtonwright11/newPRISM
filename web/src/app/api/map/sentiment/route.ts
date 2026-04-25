@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { applyRateLimit } from "@/lib/api";
-import { getSupabase } from "@/lib/supabase";
+import { getSupabaseServer } from "@/lib/supabase";
 import { z } from "zod";
 import type { CommunitySentiment } from "@shared/map-sentiment";
 
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "topic_id (UUID) is required" }, { status: 400 });
   }
 
-  const supabase = getSupabase();
+  const supabase = getSupabaseServer();
   if (!supabase) {
     return NextResponse.json({ sentiments: [] });
   }
@@ -55,9 +55,9 @@ export async function GET(request: NextRequest) {
     for (const r of reactions ?? []) {
       if (!perspectiveReactions[r.perspective_id]) {
         perspectiveReactions[r.perspective_id] = {
-          this_resonates: 0,
-          seeing_differently: 0,
-          want_to_understand: 0,
+          i_see_this: 0,
+          i_didnt_know_this: 0,
+          i_agree: 0,
         };
       }
       perspectiveReactions[r.perspective_id][r.reaction_type] =
@@ -87,8 +87,8 @@ export async function GET(request: NextRequest) {
           longitude: comm.longitude,
           region: comm.region,
           perspective_count: 0,
-          dominant_reaction: "this_resonates",
-          reaction_counts: { this_resonates: 0, seeing_differently: 0, want_to_understand: 0 },
+          dominant_reaction: "i_see_this",
+          reaction_counts: { i_see_this: 0, i_didnt_know_this: 0, i_agree: 0 },
         };
       }
 
@@ -96,24 +96,24 @@ export async function GET(request: NextRequest) {
 
       const pReactions = perspectiveReactions[p.id];
       if (pReactions) {
-        communityMap[comm.id].reaction_counts.this_resonates += pReactions.this_resonates || 0;
-        communityMap[comm.id].reaction_counts.seeing_differently += pReactions.seeing_differently || 0;
-        communityMap[comm.id].reaction_counts.want_to_understand += pReactions.want_to_understand || 0;
+        communityMap[comm.id].reaction_counts.i_see_this += pReactions.i_see_this || 0;
+        communityMap[comm.id].reaction_counts.i_didnt_know_this += pReactions.i_didnt_know_this || 0;
+        communityMap[comm.id].reaction_counts.i_agree += pReactions.i_agree || 0;
       }
     }
 
     // Determine dominant reaction per community
     const sentiments = Object.values(communityMap).map((cs) => {
-      const { this_resonates, seeing_differently, want_to_understand } = cs.reaction_counts;
-      const max = Math.max(this_resonates, seeing_differently, want_to_understand);
+      const { i_see_this, i_didnt_know_this, i_agree } = cs.reaction_counts;
+      const max = Math.max(i_see_this, i_didnt_know_this, i_agree);
       if (max === 0) {
-        cs.dominant_reaction = "this_resonates"; // default
-      } else if (max === seeing_differently) {
-        cs.dominant_reaction = "seeing_differently";
-      } else if (max === want_to_understand) {
-        cs.dominant_reaction = "want_to_understand";
+        cs.dominant_reaction = "i_see_this"; // default
+      } else if (max === i_didnt_know_this) {
+        cs.dominant_reaction = "i_didnt_know_this";
+      } else if (max === i_agree) {
+        cs.dominant_reaction = "i_agree";
       } else {
-        cs.dominant_reaction = "this_resonates";
+        cs.dominant_reaction = "i_see_this";
       }
       return cs;
     });

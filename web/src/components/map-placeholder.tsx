@@ -110,9 +110,9 @@ export interface HeatPoint {
 
 /** Sentiment-based pin colors by dominant reaction */
 const SENTIMENT_COLORS: Record<ReactionType, string> = {
-  this_resonates: "#4ADE80",       // green — agreement
-  seeing_differently: "#F59E0B",   // amber — different view
-  want_to_understand: "#3B82F6",   // blue — curiosity
+  i_see_this: "#4ADE80",
+  i_didnt_know_this: "#F59E0B",
+  i_agree: "#3B82F6",
 };
 
 interface MapPlaceholderProps {

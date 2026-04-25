@@ -236,14 +236,14 @@ export default function InsightsPage() {
                         <div className="flex items-center gap-3">
                           <div className="flex items-center gap-1.5">
                             <span className="text-[9px] text-prism-text-dim uppercase">Urban:</span>
-                            <span className="text-[10px] font-medium" style={{ color: f.coastal_sentiment in REACTION_LABELS ? (f.coastal_sentiment === "this_resonates" ? "#4ADE80" : f.coastal_sentiment === "seeing_differently" ? "#F59E0B" : "#3B82F6") : "#9CA3AF" }}>
+                            <span className="text-[10px] font-medium" style={{ color: f.coastal_sentiment in REACTION_LABELS ? (f.coastal_sentiment === "i_see_this" ? "#4ADE80" : f.coastal_sentiment === "i_didnt_know_this" ? "#F59E0B" : "#3B82F6") : "#9CA3AF" }}>
                               {REACTION_LABELS[f.coastal_sentiment as ReactionType]?.label ?? f.coastal_sentiment}
                             </span>
                           </div>
                           <span className="text-prism-text-dim text-[10px]">vs</span>
                           <div className="flex items-center gap-1.5">
                             <span className="text-[9px] text-prism-text-dim uppercase">Rural:</span>
-                            <span className="text-[10px] font-medium" style={{ color: f.rural_sentiment in REACTION_LABELS ? (f.rural_sentiment === "this_resonates" ? "#4ADE80" : f.rural_sentiment === "seeing_differently" ? "#F59E0B" : "#3B82F6") : "#9CA3AF" }}>
+                            <span className="text-[10px] font-medium" style={{ color: f.rural_sentiment in REACTION_LABELS ? (f.rural_sentiment === "i_see_this" ? "#4ADE80" : f.rural_sentiment === "i_didnt_know_this" ? "#F59E0B" : "#3B82F6") : "#9CA3AF" }}>
                               {REACTION_LABELS[f.rural_sentiment as ReactionType]?.label ?? f.rural_sentiment}
                             </span>
                           </div>
