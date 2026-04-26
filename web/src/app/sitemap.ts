@@ -15,7 +15,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return staticRoutes;
+  if (!(url?.startsWith("http://") || url?.startsWith("https://")) || !key) return staticRoutes;
 
   const supabase = createClient(url, key);
 

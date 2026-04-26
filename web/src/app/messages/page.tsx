@@ -35,7 +35,7 @@ function MessageThread({
   connection: Connection;
   currentUserId: string;
 }) {
-  const { session, supabase } = useAuth();
+  const { session, supabase, isSupabaseConfigured } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState("");
   const [loading, setLoading] = useState(true);
@@ -72,6 +72,8 @@ function MessageThread({
 
   // Subscribe to Realtime for new messages
   useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) return;
+
     const channel = supabase
       .channel(`messages:${connection.id}`)
       .on(
@@ -96,7 +98,7 @@ function MessageThread({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [connection.id, supabase]);
+  }, [connection.id, isSupabaseConfigured, supabase]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -279,7 +281,7 @@ function formatTime(iso: string): string {
 }
 
 export default function MessagesPage() {
-  const { session, user, supabase } = useAuth();
+  const { session, user, supabase, isSupabaseConfigured } = useAuth();
   const [connections, setConnections] = useState<Connection[]>([]);
   const [activeConnectionId, setActiveConnectionId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -287,7 +289,7 @@ export default function MessagesPage() {
   // Fetch accepted connections
   useEffect(() => {
     async function fetchConnections() {
-      if (!session?.access_token || !user) {
+      if (!session?.access_token || !user || !isSupabaseConfigured || !supabase) {
         setLoading(false);
         return;
       }
@@ -315,7 +317,7 @@ export default function MessagesPage() {
       }
     }
     fetchConnections();
-  }, [session?.access_token, user, supabase]);
+  }, [session?.access_token, user, supabase, isSupabaseConfigured]);
 
   const activeConnection = connections.find((c) => c.id === activeConnectionId);
 
