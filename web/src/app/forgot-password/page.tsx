@@ -5,6 +5,8 @@ import Link from "next/link";
 import { createBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { PrismWordmark } from "@/components/prism-wordmark";
 
+const authConfigError = "Authentication is not configured. Please try again later.";
+
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -17,6 +19,11 @@ export default function ForgotPasswordPage() {
     setError(null);
 
     const supabase = createBrowserSupabaseClient();
+    if (!supabase) {
+      setError(authConfigError);
+      setLoading(false);
+      return;
+    }
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,

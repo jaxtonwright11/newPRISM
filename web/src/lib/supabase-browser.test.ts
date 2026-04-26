@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createBrowserSupabaseClient } from "./supabase-browser";
+import {
+  createBrowserSupabaseClient,
+  supabaseConfigError,
+} from "./supabase-browser";
 
 const supabaseModuleMock = vi.hoisted(() => ({
   createClient: vi.fn(() => ({})),
@@ -15,20 +18,20 @@ describe("createBrowserSupabaseClient", () => {
     vi.clearAllMocks();
   });
 
-  it("uses a local fallback URL when the configured URL is invalid", () => {
+  it("returns null when the configured URL is invalid", () => {
     process.env = {
       ...originalEnv,
       NEXT_PUBLIC_SUPABASE_URL: "yo",
       NEXT_PUBLIC_SUPABASE_ANON_KEY: "anon-key",
     };
 
-    createBrowserSupabaseClient();
+    const client = createBrowserSupabaseClient();
 
-    expect(supabaseModuleMock.createClient).toHaveBeenCalledWith(
-      "http://localhost:54321",
-      "anon-key",
-      expect.any(Object)
+    expect(client).toBeNull();
+    expect(supabaseConfigError().message).toBe(
+      "Supabase is not configured."
     );
+    expect(supabaseModuleMock.createClient).not.toHaveBeenCalled();
   });
 
   it("uses configured credentials when the URL is valid", () => {
