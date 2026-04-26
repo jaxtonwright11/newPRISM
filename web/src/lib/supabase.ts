@@ -2,6 +2,10 @@ import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 let _client: SupabaseClient | null | undefined;
 
+function hasValidSupabaseUrl(url: string | undefined): url is string {
+  return url?.startsWith("http://") === true || url?.startsWith("https://") === true;
+}
+
 /**
  * Returns a lazily-initialised Supabase client when valid credentials
  * are configured, or null when running with no Supabase configured.
@@ -13,7 +17,7 @@ export function getSupabase(): SupabaseClient | null {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
-  _client = url.startsWith("http") && key ? createClient(url, key) : null;
+  _client = hasValidSupabaseUrl(url) && key ? createClient(url, key) : null;
   return _client;
 }
 
@@ -24,7 +28,7 @@ export function getSupabase(): SupabaseClient | null {
 export function getSupabaseServer() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !serviceKey) return null;
+  if (!hasValidSupabaseUrl(url) || !serviceKey) return null;
   return createClient(url, serviceKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
@@ -37,7 +41,7 @@ export function getSupabaseServer() {
 export function getSupabaseWithAuth(accessToken: string) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !anonKey) return null;
+  if (!hasValidSupabaseUrl(url) || !anonKey) return null;
   return createClient(url, anonKey, {
     global: { headers: { Authorization: `Bearer ${accessToken}` } },
     auth: { autoRefreshToken: false, persistSession: false },

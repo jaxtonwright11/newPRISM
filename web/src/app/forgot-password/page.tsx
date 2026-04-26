@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { createClient } from "@supabase/supabase-js";
+import { createBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { PrismWordmark } from "@/components/prism-wordmark";
 
 export default function ForgotPasswordPage() {
@@ -16,10 +16,7 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     setError(null);
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
+    const supabase = createBrowserSupabaseClient();
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
