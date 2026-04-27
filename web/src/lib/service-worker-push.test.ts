@@ -64,6 +64,7 @@ function loadServiceWorker() {
       match: vi.fn(),
     },
     fetch: vi.fn(),
+    URL,
     Response,
   };
 
@@ -129,5 +130,43 @@ describe("service worker push notifications", () => {
     await waitUntil.mock.calls[0]?.[0];
 
     expect(openWindow).toHaveBeenCalledWith("/compare/daily-prompt");
+  });
+
+  it("falls back to the feed for external notification urls", async () => {
+    const { handlers, openWindow } = loadServiceWorker();
+    const waitUntil = vi.fn();
+
+    handlers.notificationclick?.({
+      notification: {
+        close: vi.fn(),
+        data: {
+          url: "https://evil.example/phishing",
+        },
+      },
+      waitUntil,
+    });
+
+    await waitUntil.mock.calls[0]?.[0];
+
+    expect(openWindow).toHaveBeenCalledWith("/feed");
+  });
+
+  it("falls back to the feed for protocol-relative notification urls", async () => {
+    const { handlers, openWindow } = loadServiceWorker();
+    const waitUntil = vi.fn();
+
+    handlers.notificationclick?.({
+      notification: {
+        close: vi.fn(),
+        data: {
+          url: "//evil.example/phishing",
+        },
+      },
+      waitUntil,
+    });
+
+    await waitUntil.mock.calls[0]?.[0];
+
+    expect(openWindow).toHaveBeenCalledWith("/feed");
   });
 });
