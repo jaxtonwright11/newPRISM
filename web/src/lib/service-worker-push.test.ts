@@ -25,6 +25,12 @@ type NotificationClickEventStub = {
   waitUntil: (promise: Promise<unknown>) => void;
 };
 
+type WindowClientStub = {
+  url: string;
+  navigate: ReturnType<typeof vi.fn>;
+  focus: ReturnType<typeof vi.fn>;
+};
+
 function loadServiceWorker() {
   const handlers: ServiceWorkerHandlers = {};
   const showNotification = vi.fn().mockResolvedValue(undefined);
@@ -168,5 +174,33 @@ describe("service worker push notifications", () => {
     await waitUntil.mock.calls[0]?.[0];
 
     expect(openWindow).toHaveBeenCalledWith("/feed");
+  });
+
+  it("does not reuse windows from a different origin that mention PRISM origin", async () => {
+    const { handlers, matchAll, openWindow } = loadServiceWorker();
+    const waitUntil = vi.fn();
+    const maliciousWindow: WindowClientStub = {
+      url: "https://evil.example/redirect?next=https://prism.example",
+      navigate: vi.fn().mockResolvedValue(undefined),
+      focus: vi.fn().mockResolvedValue(undefined),
+    };
+
+    matchAll.mockResolvedValue([maliciousWindow]);
+
+    handlers.notificationclick?.({
+      notification: {
+        close: vi.fn(),
+        data: {
+          url: "/compare/safe-topic",
+        },
+      },
+      waitUntil,
+    });
+
+    await waitUntil.mock.calls[0]?.[0];
+
+    expect(maliciousWindow.navigate).not.toHaveBeenCalled();
+    expect(maliciousWindow.focus).not.toHaveBeenCalled();
+    expect(openWindow).toHaveBeenCalledWith("/compare/safe-topic");
   });
 });

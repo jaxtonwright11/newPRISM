@@ -59,6 +59,14 @@ function normalizeNotificationUrl(rawUrl) {
   }
 }
 
+function isPrismClient(client) {
+  try {
+    return new URL(client.url).origin === self.location.origin;
+  } catch {
+    return false;
+  }
+}
+
 self.addEventListener("push", (event) => {
   if (!event.data) return;
 
@@ -105,7 +113,7 @@ self.addEventListener("notificationclick", (event) => {
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
       // Focus existing PRISM tab if open
       for (const client of clients) {
-        if (client.url.includes(self.location.origin) && "focus" in client) {
+        if (isPrismClient(client) && "focus" in client) {
           client.navigate(url);
           return client.focus();
         }
