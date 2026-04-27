@@ -57,7 +57,11 @@ self.addEventListener("push", (event) => {
     };
   }
 
-  const { title = "PRISM", body, icon, badge, data, tag } = payload;
+  const { title = "PRISM", body, icon, badge, data, tag, url } = payload;
+  const notificationData = { ...(data || {}) };
+  if (url) {
+    notificationData.url = url;
+  }
 
   event.waitUntil(
     self.registration.showNotification(title, {
@@ -66,7 +70,7 @@ self.addEventListener("push", (event) => {
       badge: badge || "/icons/icon-192.svg",
       tag: tag || "prism-default",
       renotify: !!tag,
-      data: data || {},
+      data: notificationData,
       actions: payload.actions || [],
       vibrate: [100, 50, 100],
     })
