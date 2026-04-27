@@ -30,14 +30,20 @@ function loadServiceWorker() {
   const showNotification = vi.fn().mockResolvedValue(undefined);
   const openWindow = vi.fn().mockResolvedValue(undefined);
   const matchAll = vi.fn().mockResolvedValue([]);
+  const addEventListener = vi.fn((eventName: string, handler: unknown) => {
+    if (eventName === "push") {
+      handlers.push = handler as ServiceWorkerHandlers["push"];
+      return;
+    }
+
+    if (eventName === "notificationclick") {
+      handlers.notificationclick = handler as ServiceWorkerHandlers["notificationclick"];
+    }
+  });
 
   const sandbox = {
     self: {
-      addEventListener: vi.fn(
-        (eventName: keyof ServiceWorkerHandlers, handler: ServiceWorkerHandlers[typeof eventName]) => {
-          handlers[eventName] = handler;
-        }
-      ),
+      addEventListener,
       registration: {
         showNotification,
       },
