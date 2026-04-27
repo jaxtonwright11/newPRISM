@@ -42,6 +42,31 @@ self.addEventListener("fetch", (event) => {
 });
 
 // ─── Push Notifications ────────────────────────────────────────────────────
+function normalizeNotificationUrl(rawUrl) {
+  if (typeof rawUrl !== "string" || rawUrl.length === 0) {
+    return "/feed";
+  }
+
+  try {
+    const parsedUrl = new URL(rawUrl, self.location.origin);
+    if (parsedUrl.origin !== self.location.origin) {
+      return "/feed";
+    }
+
+    return `${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`;
+  } catch {
+    return "/feed";
+  }
+}
+
+function isPrismClient(client) {
+  try {
+    return new URL(client.url).origin === self.location.origin;
+  } catch {
+    return false;
+  }
+}
+
 self.addEventListener("push", (event) => {
   if (!event.data) return;
 
@@ -57,7 +82,13 @@ self.addEventListener("push", (event) => {
     };
   }
 
-  const { title = "PRISM", body, icon, badge, data, tag } = payload;
+  const { title = "PRISM", body, icon, badge, data, tag, url } = payload;
+  const notificationData = { ...(data || {}) };
+  if (url) {
+    notificationData.url = normalizeNotificationUrl(url);
+  } else if (notificationData.url) {
+    notificationData.url = normalizeNotificationUrl(notificationData.url);
+  }
 
   event.waitUntil(
     self.registration.showNotification(title, {
@@ -66,7 +97,7 @@ self.addEventListener("push", (event) => {
       badge: badge || "/icons/icon-192.svg",
       tag: tag || "prism-default",
       renotify: !!tag,
-      data: data || {},
+      data: notificationData,
       actions: payload.actions || [],
       vibrate: [100, 50, 100],
     })
@@ -76,13 +107,13 @@ self.addEventListener("push", (event) => {
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
-  const url = event.notification.data?.url || "/feed";
+  const url = normalizeNotificationUrl(event.notification.data?.url);
 
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
       // Focus existing PRISM tab if open
       for (const client of clients) {
-        if (client.url.includes(self.location.origin) && "focus" in client) {
+        if (isPrismClient(client) && "focus" in client) {
           client.navigate(url);
           return client.focus();
         }
