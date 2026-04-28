@@ -72,6 +72,8 @@ function MessageThread({
 
   // Subscribe to Realtime for new messages
   useEffect(() => {
+    if (!supabase) return;
+
     const channel = supabase
       .channel(`messages:${connection.id}`)
       .on(
@@ -293,6 +295,8 @@ export default function MessagesPage() {
       }
 
       try {
+        if (!supabase) return;
+
         const { data, error } = await supabase
           .from("community_connections")
           .select(`

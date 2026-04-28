@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { createClient, SupabaseClient, User, Session, AuthError } from '@supabase/supabase-js';
 import { subscribeToPush } from '@/lib/push';
 import { identifyUser, resetUser } from '@/lib/posthog';
+import { isValidSupabaseUrl } from '@/lib/supabase';
 
 type AuthResult = { error: AuthError | null };
 type SignUpResult = { error: AuthError | null; confirmationRequired: boolean };
@@ -11,7 +12,7 @@ type SignUpResult = { error: AuthError | null; confirmationRequired: boolean };
 type AuthContextType = {
   user: User | null;
   session: Session | null;
-  supabase: SupabaseClient;
+  supabase: SupabaseClient | null;
   loading: boolean;
   signUp: (email: string, password: string, username: string) => Promise<SignUpResult>;
   signIn: (email: string, password: string) => Promise<AuthResult>;
@@ -23,24 +24,29 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Create browser client
-  const [supabase] = useState(() =>
-    createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        auth: {
-          persistSession: true,
-          autoRefreshToken: true,
-          debug: false,
-        },
-      }
-    )
-  );
+  const [supabase] = useState(() => {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!isValidSupabaseUrl(url) || !anonKey) return null;
+
+    return createClient(url, anonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        debug: false,
+      },
+    });
+  });
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -68,6 +74,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [supabase]);
 
   const signUp = async (email: string, password: string, username: string) => {
+    if (!supabase) {
+      return { error: new AuthError('Authentication is not configured'), confirmationRequired: false };
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -77,11 +87,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
+    if (!supabase) {
+      return { error: new AuthError('Authentication is not configured') };
+    }
+
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error };
   };
 
   const signInWithGoogle = async () => {
+    if (!supabase) {
+      return { error: new AuthError('Authentication is not configured') };
+    }
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/auth/callback` },
@@ -90,6 +108,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    if (!supabase) return;
+
     await supabase.auth.signOut();
   };
 
