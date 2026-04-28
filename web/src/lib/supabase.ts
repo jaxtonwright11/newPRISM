@@ -54,5 +54,3 @@ export function getSupabaseWithAuth(accessToken: string) {
   });
 }
 
-/** Convenience re-export — returns client or null. */
-export const supabase = typeof window === "undefined" ? null : getSupabase();
