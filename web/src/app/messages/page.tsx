@@ -72,6 +72,8 @@ function MessageThread({
 
   // Subscribe to Realtime for new messages
   useEffect(() => {
+    if (!supabase) return;
+
     const channel = supabase
       .channel(`messages:${connection.id}`)
       .on(
@@ -287,7 +289,7 @@ export default function MessagesPage() {
   // Fetch accepted connections
   useEffect(() => {
     async function fetchConnections() {
-      if (!session?.access_token || !user) {
+      if (!session?.access_token || !user || !supabase) {
         setLoading(false);
         return;
       }

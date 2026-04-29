@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@supabase/supabase-js";
 import { PrismWordmark } from "@/components/prism-wordmark";
+import { createBrowserSupabaseClient } from "@/lib/supabase";
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
@@ -14,10 +14,7 @@ export default function ResetPasswordPage() {
   const [success, setSuccess] = useState(false);
   const router = useRouter();
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
 
   // Supabase puts the access token in the URL hash after email link click
   useEffect(() => {
@@ -26,12 +23,12 @@ export default function ResetPasswordPage() {
     const type = hashParams.get("type");
 
     if (accessToken && type === "recovery") {
-      supabase.auth.setSession({
+      supabase?.auth.setSession({
         access_token: accessToken,
         refresh_token: hashParams.get("refresh_token") ?? "",
       });
     }
-  }, [supabase.auth]);
+  }, [supabase]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +45,12 @@ export default function ResetPasswordPage() {
     }
 
     setLoading(true);
+
+    if (!supabase) {
+      setError("Authentication is not configured.");
+      setLoading(false);
+      return;
+    }
 
     const { error } = await supabase.auth.updateUser({ password });
 
