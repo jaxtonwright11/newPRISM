@@ -2,6 +2,15 @@ import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 let _client: SupabaseClient | null | undefined;
 
+export function isHttpUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Returns a lazily-initialised Supabase client when valid credentials
  * are configured, or null when running with no Supabase configured.
@@ -13,8 +22,23 @@ export function getSupabase(): SupabaseClient | null {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
-  _client = url.startsWith("http") && key ? createClient(url, key) : null;
+  _client = isHttpUrl(url) && key ? createClient(url, key) : null;
   return _client;
+}
+
+export function createBrowserSupabaseClient(): SupabaseClient | null {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+
+  if (!isHttpUrl(url) || !key) return null;
+
+  return createClient(url, key, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      debug: false,
+    },
+  });
 }
 
 /**
@@ -24,7 +48,7 @@ export function getSupabase(): SupabaseClient | null {
 export function getSupabaseServer() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !serviceKey) return null;
+  if (!url || !serviceKey || !isHttpUrl(url)) return null;
   return createClient(url, serviceKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
@@ -37,7 +61,7 @@ export function getSupabaseServer() {
 export function getSupabaseWithAuth(accessToken: string) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !anonKey) return null;
+  if (!url || !anonKey || !isHttpUrl(url)) return null;
   return createClient(url, anonKey, {
     global: { headers: { Authorization: `Bearer ${accessToken}` } },
     auth: { autoRefreshToken: false, persistSession: false },
