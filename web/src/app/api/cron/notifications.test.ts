@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 type QueryStep = {
   select?: ReturnType<typeof vi.fn>;
@@ -11,6 +11,10 @@ type QueryStep = {
 };
 
 const envBackup = { ...process.env };
+
+afterEach(() => {
+  process.env = { ...envBackup };
+});
 
 function authorizedRequest(): Request {
   return new Request("https://example.com/api/cron", {
