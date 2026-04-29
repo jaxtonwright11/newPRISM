@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { createClient } from "@supabase/supabase-js";
-import { isHttpUrl } from "@/lib/supabase";
+import { isHttpUrl } from "../lib/supabase";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://web-liard-psi-12.vercel.app";
 
