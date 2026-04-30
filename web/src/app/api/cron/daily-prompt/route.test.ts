@@ -8,19 +8,29 @@ type QueryResponse = {
   count?: number | null;
 };
 
+type QueryBuilder = {
+  select: (columns: string, options?: unknown) => QueryBuilder;
+  eq: (column: string, value: unknown) => QueryBuilder;
+  lte: (column: string, value: unknown) => QueryBuilder;
+  gte: (column: string, value: unknown) => QueryBuilder;
+  order: (column: string, options: unknown) => QueryBuilder;
+  limit: (count: number) => QueryBuilder;
+  single: () => Promise<{ data: unknown }>;
+  then: Promise<QueryResponse>["then"];
+};
+
 function createQueryBuilder(response: QueryResponse) {
-  const builder = {
-    select: vi.fn(() => builder),
-    eq: vi.fn(() => builder),
-    lte: vi.fn(() => builder),
-    gte: vi.fn(() => builder),
-    order: vi.fn(() => builder),
-    limit: vi.fn(() => builder),
-    single: vi.fn(async () => ({ data: response.data })),
-    then: vi.fn((resolve: (value: QueryResponse) => unknown) =>
-      Promise.resolve(resolve(response))
-    ),
-  };
+  const builder = {} as QueryBuilder;
+  builder.select = vi.fn(() => builder);
+  builder.eq = vi.fn(() => builder);
+  builder.lte = vi.fn(() => builder);
+  builder.gte = vi.fn(() => builder);
+  builder.order = vi.fn(() => builder);
+  builder.limit = vi.fn(() => builder);
+  builder.single = vi.fn(async () => ({ data: response.data }));
+  builder.then = vi.fn((onfulfilled, onrejected) =>
+    Promise.resolve(response).then(onfulfilled, onrejected)
+  );
 
   return builder;
 }
