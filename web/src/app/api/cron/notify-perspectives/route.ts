@@ -36,7 +36,7 @@ export async function GET(request: Request) {
   let totalSent = 0;
   const notifications = buildCommunityPerspectiveNotifications(newPerspectives);
   for (const notification of notifications) {
-    const { communityId, count: _count, ...payload } = notification;
+    const { communityId, ...payload } = notification;
     const sent = await sendPushToCommunityFollowers(communityId, payload);
     totalSent += sent;
   }

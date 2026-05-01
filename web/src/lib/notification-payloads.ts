@@ -37,7 +37,6 @@ export interface CommunityPerspectiveNotification {
   body: string;
   url: string;
   icon: string;
-  count: number;
 }
 
 function unwrapRelation<T>(relation: Relation<T>): T | null {
@@ -109,6 +108,5 @@ export function buildCommunityPerspectiveNotifications(
         : info.firstQuote.slice(0, 100),
     url: info.topicSlug ? `/compare/${info.topicSlug}` : "/feed",
     icon: "/icons/icon-192.svg",
-    count: info.count,
   }));
 }

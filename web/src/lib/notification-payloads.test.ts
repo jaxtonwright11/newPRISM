@@ -77,7 +77,6 @@ describe("buildCommunityPerspectiveNotifications", () => {
         body: "2 new perspectives from Southside neighbors",
         url: "/compare/housing-costs",
         icon: "/icons/icon-192.svg",
-        count: 2,
       },
       {
         communityId: "community-2",
@@ -85,7 +84,6 @@ describe("buildCommunityPerspectiveNotifications", () => {
         body: "Our rural transit route changes every commute.",
         url: "/compare/transit-access",
         icon: "/icons/icon-192.svg",
-        count: 1,
       },
     ]);
   });
@@ -114,7 +112,6 @@ describe("buildCommunityPerspectiveNotifications", () => {
       body: "This quote is intentionally longer than one hundred characters so the single-perspective notification body is",
       url: "/feed",
       icon: "/icons/icon-192.svg",
-      count: 1,
     });
   });
 });
