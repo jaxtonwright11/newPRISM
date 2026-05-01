@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { buildDailyPromptNotification } from "@/lib/notification-payloads";
 import { sendPushBroadcast } from "@/lib/send-push";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
@@ -39,9 +40,6 @@ export async function GET(request: Request) {
       return NextResponse.json({ sent: 0, reason: "no active prompt" });
     }
 
-    const topic = Array.isArray(prompt.topic) ? prompt.topic[0] : prompt.topic;
-    const topicName = topic?.title ?? "today's topic";
-
     // Count perspectives posted today for context
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
@@ -50,13 +48,10 @@ export async function GET(request: Request) {
       .select("id", { count: "exact", head: true })
       .gte("created_at", todayStart.toISOString());
 
-    const sent = await sendPushBroadcast({
-      title: "A new perspective prompt is live",
-      body: `Communities are posting about ${topicName} right now. ${count ?? 0} perspectives so far today.`,
-      url: topic?.slug ? `/compare/${topic.slug}` : "/feed",
-    });
+    const notification = buildDailyPromptNotification(prompt, count);
+    const sent = await sendPushBroadcast(notification);
 
-    return NextResponse.json({ sent, prompt_id: prompt.id, topic: topicName });
+    return NextResponse.json({ sent, prompt_id: prompt.id, topic: notification.topicName });
   } catch (err) {
     return NextResponse.json({ error: "Failed", details: String(err) }, { status: 500 });
   }
