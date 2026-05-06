@@ -28,9 +28,28 @@ type SupabaseFixtures = {
   perspectives?: PerspectiveRow[] | null;
 };
 
+const originalEnv = {
+  NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+  CRON_SECRET: process.env.CRON_SECRET,
+};
+
+const createClientMock = vi.fn<
+  (url: string, key: string) => ReturnType<typeof createSupabaseMock>
+>();
 const sendPushBroadcastMock = vi.fn<(payload: PushPayload) => Promise<number>>();
 const sendPushToCommunityFollowersMock =
   vi.fn<(communityId: string, payload: PushPayload) => Promise<number>>();
+
+function restoreEnv() {
+  for (const [key, value] of Object.entries(originalEnv)) {
+    if (value === undefined) {
+      delete process.env[key];
+    } else {
+      process.env[key] = value;
+    }
+  }
+}
 
 function createSupabaseMock(fixtures: SupabaseFixtures) {
   return {
@@ -70,9 +89,10 @@ async function loadDailyPromptRoute(fixtures: SupabaseFixtures) {
   process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
   process.env.SUPABASE_SERVICE_ROLE_KEY = "service-role-key";
   process.env.CRON_SECRET = "cron-secret";
+  createClientMock.mockImplementation(() => createSupabaseMock(fixtures));
 
   vi.doMock("@supabase/supabase-js", () => ({
-    createClient: vi.fn(() => createSupabaseMock(fixtures)),
+    createClient: createClientMock,
   }));
   vi.doMock("@/lib/send-push", () => ({
     sendPushBroadcast: sendPushBroadcastMock,
@@ -86,9 +106,10 @@ async function loadNotifyPerspectivesRoute(fixtures: SupabaseFixtures) {
   process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
   process.env.SUPABASE_SERVICE_ROLE_KEY = "service-role-key";
   process.env.CRON_SECRET = "cron-secret";
+  createClientMock.mockImplementation(() => createSupabaseMock(fixtures));
 
   vi.doMock("@supabase/supabase-js", () => ({
-    createClient: vi.fn(() => createSupabaseMock(fixtures)),
+    createClient: createClientMock,
   }));
   vi.doMock("@/lib/send-push", () => ({
     sendPushToCommunityFollowers: sendPushToCommunityFollowersMock,
@@ -114,8 +135,7 @@ describe("daily prompt push cron", () => {
   afterEach(() => {
     vi.restoreAllMocks();
     vi.resetModules();
-    vi.doUnmock("@supabase/supabase-js");
-    vi.doUnmock("@/lib/send-push");
+    restoreEnv();
   });
 
   it("deep-links active prompt notifications to the comparison view", async () => {
@@ -141,6 +161,27 @@ describe("daily prompt push cron", () => {
       body: "Communities are posting about Housing Costs right now. 4 perspectives so far today.",
       url: "/compare/housing-costs",
     });
+    expect(createClientMock).toHaveBeenCalledWith(
+      "https://example.supabase.co",
+      "service-role-key"
+    );
+  });
+
+  it("rejects unauthorized requests before creating clients or sending pushes", async () => {
+    const { GET } = await loadDailyPromptRoute({
+      prompt: {
+        id: "prompt-1",
+        prompt_text: "What changed locally?",
+        topic: { title: "Housing Costs", slug: "housing-costs" },
+      },
+    });
+
+    const response = await GET(createCronRequest("wrong-secret"));
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+    expect(createClientMock).not.toHaveBeenCalled();
+    expect(sendPushBroadcastMock).not.toHaveBeenCalled();
   });
 });
 
@@ -154,8 +195,7 @@ describe("notify perspectives push cron", () => {
   afterEach(() => {
     vi.restoreAllMocks();
     vi.resetModules();
-    vi.doUnmock("@supabase/supabase-js");
-    vi.doUnmock("@/lib/send-push");
+    restoreEnv();
   });
 
   it("groups by community and deep-links topic notifications to comparison views", async () => {
@@ -209,6 +249,10 @@ describe("notify perspectives push cron", () => {
       url: "/compare/grocery-prices",
       icon: "/icons/icon-192.svg",
     });
+    expect(createClientMock).toHaveBeenCalledWith(
+      "https://example.supabase.co",
+      "service-role-key"
+    );
   });
 
   it("falls back to the feed when a perspective has no topic slug", async () => {
@@ -234,5 +278,27 @@ describe("notify perspectives push cron", () => {
       url: "/feed",
       icon: "/icons/icon-192.svg",
     });
+  });
+
+  it("rejects unauthorized requests before creating clients or sending pushes", async () => {
+    const { GET } = await loadNotifyPerspectivesRoute({
+      perspectives: [
+        {
+          id: "perspective-1",
+          quote: "The first visible sentence should carry the notification.",
+          community_id: "community-1",
+          topic_id: null,
+          community: { name: "North Loop" },
+          topic: null,
+        },
+      ],
+    });
+
+    const response = await GET(createCronRequest("wrong-secret"));
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+    expect(createClientMock).not.toHaveBeenCalled();
+    expect(sendPushToCommunityFollowersMock).not.toHaveBeenCalled();
   });
 });
