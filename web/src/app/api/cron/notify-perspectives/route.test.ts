@@ -76,7 +76,7 @@ describe("GET /api/cron/notify-perspectives", () => {
   });
 
   it("sends one comparison deep link per community and handles array-shaped relations", async () => {
-    setupSupabasePerspectives([
+    const { query } = setupSupabasePerspectives([
       {
         id: "perspective-1",
         quote: "The morning bus is the difference between getting to work or not.",
@@ -111,6 +111,8 @@ describe("GET /api/cron/notify-perspectives", () => {
       url: "/compare/transit-funding",
       icon: "/icons/icon-192.svg",
     });
+    expect(query.eq).toHaveBeenCalledWith("verified", true);
+    expect(query.gte).toHaveBeenCalledWith("created_at", expect.any(String));
   });
 
   it("falls back to a community alert and feed deep link when a perspective has no topic", async () => {
@@ -137,13 +139,24 @@ describe("GET /api/cron/notify-perspectives", () => {
     });
   });
 
-  it("does not create a Supabase client for unauthorized cron requests", async () => {
+  it("does not create a Supabase client for invalid cron tokens", async () => {
     const { GET } = await importRoute();
     const response = await GET(
       new Request("https://example.com/api/cron/notify-perspectives", {
         headers: { authorization: "Bearer wrong-secret" },
       })
     );
+
+    expect(response.status).toBe(401);
+    expect(createClientMock).not.toHaveBeenCalled();
+    expect(sendPushToCommunityFollowersMock).not.toHaveBeenCalled();
+  });
+
+  it("does not create a Supabase client when CRON_SECRET is not configured", async () => {
+    delete process.env.CRON_SECRET;
+
+    const { GET } = await importRoute();
+    const response = await GET(authorizedRequest());
 
     expect(response.status).toBe(401);
     expect(createClientMock).not.toHaveBeenCalled();

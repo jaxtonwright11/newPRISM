@@ -85,7 +85,7 @@ describe("GET /api/cron/daily-prompt", () => {
   });
 
   it("deep-links the daily prompt notification to the comparison view when the topic relation is an array", async () => {
-    setupSupabasePrompt(
+    const { countQuery, promptQuery } = setupSupabasePrompt(
       {
         id: "prompt-1",
         prompt_text: "What changed in your city this week?",
@@ -108,6 +108,11 @@ describe("GET /api/cron/daily-prompt", () => {
       body: "Communities are posting about Transit funding right now. 5 perspectives so far today.",
       url: "/compare/transit-funding",
     });
+    expect(promptQuery.eq).toHaveBeenCalledWith("active", true);
+    expect(promptQuery.lte).toHaveBeenCalledWith("starts_at", expect.any(String));
+    expect(promptQuery.order).toHaveBeenCalledWith("starts_at", { ascending: false });
+    expect(promptQuery.limit).toHaveBeenCalledWith(1);
+    expect(countQuery.gte).toHaveBeenCalledWith("created_at", expect.any(String));
   });
 
   it("falls back to the feed when the active prompt has no topic slug", async () => {
@@ -131,13 +136,24 @@ describe("GET /api/cron/daily-prompt", () => {
     });
   });
 
-  it("does not query Supabase when the cron secret is missing or invalid", async () => {
+  it("does not query Supabase when the authorization token is invalid", async () => {
     const { GET } = await importRoute();
     const response = await GET(
       new Request("https://example.com/api/cron/daily-prompt", {
         headers: { authorization: "Bearer wrong-secret" },
       })
     );
+
+    expect(response.status).toBe(401);
+    expect(createClientMock).not.toHaveBeenCalled();
+    expect(sendPushBroadcastMock).not.toHaveBeenCalled();
+  });
+
+  it("does not query Supabase when CRON_SECRET is not configured", async () => {
+    delete process.env.CRON_SECRET;
+
+    const { GET } = await importRoute();
+    const response = await GET(authorizedRequest());
 
     expect(response.status).toBe(401);
     expect(createClientMock).not.toHaveBeenCalled();
