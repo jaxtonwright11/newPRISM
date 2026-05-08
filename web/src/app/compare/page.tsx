@@ -48,7 +48,7 @@ function ComparePageInner() {
     setLoading(true);
     Promise.all(
       ids.map((id) =>
-        fetch(`/api/perspectives/${id}`)
+        fetch(`/api/perspectives/${encodeURIComponent(id)}`)
           .then(async (response) => {
             if (!response.ok) return null;
             const data = await response.json();
