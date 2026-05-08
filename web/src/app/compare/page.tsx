@@ -10,6 +10,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { PerspectiveComparison } from "@/components/perspective-comparison";
 import { PrismWordmark } from "@/components/prism-wordmark";
+import { unwrapPerspectiveResponse } from "@/lib/compare-responses";
 import type { CommunityType } from "@shared/types";
 
 interface ComparisonData {
@@ -26,34 +27,51 @@ interface ComparisonData {
 
 function ComparePageInner() {
   const searchParams = useSearchParams();
-  const ids = searchParams.get("ids")?.split(",").filter(Boolean) ?? [];
+  const idsParam = searchParams.get("ids") ?? "";
   const [perspectives, setPerspectives] = useState<ComparisonData[]>([]);
   const [topicTitle, setTopicTitle] = useState("Perspective Comparison");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+    const ids = idsParam.split(",").filter(Boolean);
+
     if (ids.length === 0) {
+      setPerspectives([]);
+      setTopicTitle("Perspective Comparison");
       setLoading(false);
-      return;
+      return () => {
+        cancelled = true;
+      };
     }
 
+    setLoading(true);
     Promise.all(
       ids.map((id) =>
-        fetch(`/api/perspectives/${id}`)
-          .then((r) => r.json())
-          .then((data) => data.perspective ?? data)
+        fetch(`/api/perspectives/${encodeURIComponent(id)}`)
+          .then(async (response) => {
+            if (!response.ok) return null;
+            const data = await response.json();
+            return unwrapPerspectiveResponse<ComparisonData>(data);
+          })
           .catch(() => null)
       )
     ).then((results) => {
+      if (cancelled) return;
       const valid = results.filter(Boolean) as ComparisonData[];
       setPerspectives(valid);
       if (valid[0]?.topic?.title) {
         setTopicTitle(valid[0].topic.title);
+      } else {
+        setTopicTitle("Perspective Comparison");
       }
       setLoading(false);
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams.get("ids")]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [idsParam]);
 
   if (loading) {
     return (
