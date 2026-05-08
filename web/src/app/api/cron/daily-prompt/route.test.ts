@@ -146,6 +146,24 @@ describe("GET /api/cron/daily-prompt", () => {
     expect(sendPushBroadcastMock).not.toHaveBeenCalled();
   });
 
+  it("rejects requests with a mismatched cron secret", async () => {
+    configureEnv();
+    const GET = await importRoute();
+
+    const response = await GET(
+      new Request("https://example.com/api/cron/daily-prompt", {
+        headers: {
+          Authorization: "Bearer wrong-secret",
+        },
+      })
+    );
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+    expect(createClientMock).not.toHaveBeenCalled();
+    expect(sendPushBroadcastMock).not.toHaveBeenCalled();
+  });
+
   it("returns not configured before creating a Supabase client when service env is missing", async () => {
     configureEnv({ SUPABASE_SERVICE_ROLE_KEY: "" });
     const GET = await importRoute();
@@ -193,6 +211,21 @@ describe("GET /api/cron/daily-prompt", () => {
           table: "perspective_prompts",
           method: "eq",
           args: ["active", true],
+        },
+        {
+          table: "perspective_prompts",
+          method: "lte",
+          args: ["starts_at", expect.any(String)],
+        },
+        {
+          table: "perspective_prompts",
+          method: "order",
+          args: ["starts_at", { ascending: false }],
+        },
+        {
+          table: "perspective_prompts",
+          method: "limit",
+          args: [1],
         },
         {
           table: "perspectives",
