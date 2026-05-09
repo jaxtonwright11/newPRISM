@@ -10,19 +10,10 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { PerspectiveComparison } from "@/components/perspective-comparison";
 import { PrismWordmark } from "@/components/prism-wordmark";
-import type { CommunityType } from "@shared/types";
-
-interface ComparisonData {
-  id: string;
-  quote: string;
-  topic?: { title: string };
-  community: {
-    name: string;
-    region: string;
-    community_type: CommunityType;
-    color_hex: string;
-  };
-}
+import {
+  fetchComparisonPerspective,
+  type ComparisonData,
+} from "@/lib/comparison-perspectives";
 
 function ComparePageInner() {
   const searchParams = useSearchParams();
@@ -38,12 +29,7 @@ function ComparePageInner() {
     }
 
     Promise.all(
-      ids.map((id) =>
-        fetch(`/api/perspectives/${id}`)
-          .then((r) => r.json())
-          .then((data) => data.perspective ?? data)
-          .catch(() => null)
-      )
+      ids.map((id) => fetchComparisonPerspective(id))
     ).then((results) => {
       const valid = results.filter(Boolean) as ComparisonData[];
       setPerspectives(valid);
