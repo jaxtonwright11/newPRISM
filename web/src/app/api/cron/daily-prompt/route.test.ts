@@ -141,4 +141,16 @@ describe("GET /api/cron/daily-prompt", () => {
       url: "/feed",
     });
   });
+
+  it("rejects unauthenticated cron requests before touching Supabase or push broadcast", async () => {
+    const { GET } = await importRoute();
+    const response = await GET(
+      new Request("https://example.com/api/cron/daily-prompt")
+    );
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+    expect(mocks.createClient).not.toHaveBeenCalled();
+    expect(mocks.sendPushBroadcast).not.toHaveBeenCalled();
+  });
 });
