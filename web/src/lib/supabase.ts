@@ -55,5 +55,19 @@ export function getSupabaseWithAuth(accessToken: string) {
   });
 }
 
+export function createSupabaseBrowserClient(): SupabaseClient | null {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!isValidHttpUrl(url) || !anonKey) return null;
+
+  return createClient(url, anonKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      debug: false,
+    },
+  });
+}
+
 /** Convenience re-export — returns client or null. */
 export const supabase = typeof window === "undefined" ? null : getSupabase();
