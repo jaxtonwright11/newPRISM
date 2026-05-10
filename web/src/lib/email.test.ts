@@ -5,11 +5,13 @@ const resendMock = vi.hoisted(() => ({
 }));
 
 vi.mock("resend", () => ({
-  Resend: vi.fn().mockImplementation(() => ({
-    emails: {
-      send: resendMock.send,
-    },
-  })),
+  Resend: vi.fn().mockImplementation(function MockResend() {
+    return {
+      emails: {
+        send: resendMock.send,
+      },
+    };
+  }),
 }));
 
 describe("sendDigestEmail", () => {
