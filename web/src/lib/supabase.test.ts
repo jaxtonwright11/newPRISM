@@ -11,8 +11,14 @@ describe("Supabase client helpers", () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "test-anon-key");
     vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "test-service-key");
 
-    const { getSupabase, getSupabaseServer, getSupabaseWithAuth } = await import("./supabase");
+    const {
+      createSupabaseBrowserClient,
+      getSupabase,
+      getSupabaseServer,
+      getSupabaseWithAuth,
+    } = await import("./supabase");
 
+    expect(createSupabaseBrowserClient()).toBeNull();
     expect(getSupabase()).toBeNull();
     expect(getSupabaseServer()).toBeNull();
     expect(getSupabaseWithAuth("access-token")).toBeNull();
