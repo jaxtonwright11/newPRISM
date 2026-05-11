@@ -197,6 +197,17 @@ describe("notify-perspectives cron route", () => {
 });
 
 describe("daily-prompt cron route", () => {
+  it("rejects requests without the configured cron secret", async () => {
+    setCronEnv();
+    const { GET } = await import("./daily-prompt/route");
+
+    const response = await GET(new Request("https://prism.example/api/cron/daily-prompt"));
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+    expect(mocks.createClient).not.toHaveBeenCalled();
+  });
+
   it("deep-links the daily prompt broadcast to its comparison page", async () => {
     setCronEnv();
     vi.useFakeTimers();
