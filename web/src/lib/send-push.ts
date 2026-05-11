@@ -5,6 +5,7 @@ const VAPID_PUBLIC = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
 const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY ?? "";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
+const DEFAULT_PUSH_URL = "/feed";
 
 let vapidConfigured = false;
 try {
@@ -32,6 +33,23 @@ interface PushPayload {
   icon?: string;
 }
 
+function normalizePushUrl(url: string | undefined): string {
+  if (!url || !url.startsWith("/") || url.startsWith("//")) return DEFAULT_PUSH_URL;
+  return url;
+}
+
+export function serializePushPayload(payload: PushPayload): string {
+  const url = normalizePushUrl(payload.url);
+
+  return JSON.stringify({
+    ...payload,
+    url,
+    data: {
+      url,
+    },
+  });
+}
+
 /**
  * Send push notification to a specific user
  */
@@ -54,7 +72,7 @@ export async function sendPushToUser(userId: string, payload: PushPayload): Prom
           endpoint: sub.endpoint,
           keys: { p256dh: sub.keys_p256dh, auth: sub.keys_auth },
         },
-        JSON.stringify(payload)
+        serializePushPayload(payload)
       );
       sent++;
     } catch (err: unknown) {
@@ -92,7 +110,7 @@ export async function sendPushBroadcast(payload: PushPayload): Promise<number> {
           endpoint: sub.endpoint,
           keys: { p256dh: sub.keys_p256dh, auth: sub.keys_auth },
         },
-        JSON.stringify(payload)
+        serializePushPayload(payload)
       );
       sent++;
     } catch (err: unknown) {
