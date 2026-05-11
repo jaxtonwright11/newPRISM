@@ -22,6 +22,7 @@ export default function ResetPasswordPage() {
       setSessionReady(true);
       return;
     }
+    const client = supabase;
 
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const accessToken = hashParams.get("access_token");
@@ -33,7 +34,7 @@ export default function ResetPasswordPage() {
         return;
       }
 
-      const { error: sessionError } = await supabase.auth.setSession({
+      const { error: sessionError } = await client.auth.setSession({
         access_token: accessToken,
         refresh_token: hashParams.get("refresh_token") ?? "",
       });
