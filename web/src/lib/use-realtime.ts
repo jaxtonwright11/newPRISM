@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 
 type RealtimeEvent = "INSERT" | "UPDATE" | "DELETE";
@@ -29,10 +29,9 @@ export function useRealtime({
   enabled = true,
 }: UseRealtimeOptions) {
   const { supabase } = useAuth();
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || !supabase) return;
 
     const channelName = `realtime:${table}:${filter ?? "all"}`;
     const channel = supabase.channel(channelName);
@@ -72,11 +71,8 @@ export function useRealtime({
       )
       .subscribe();
 
-    channelRef.current = channel;
-
     return () => {
       supabase.removeChannel(channel);
-      channelRef.current = null;
     };
   }, [supabase, table, event, filter, onInsert, onUpdate, onDelete, enabled]);
 }

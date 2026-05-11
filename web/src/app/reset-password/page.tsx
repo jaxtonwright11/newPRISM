@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@supabase/supabase-js";
 import { PrismWordmark } from "@/components/prism-wordmark";
+import { getSupabase } from "@/lib/supabase";
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
@@ -12,26 +12,41 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
+  const [supabase] = useState(() => getSupabase());
   const router = useRouter();
-
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
 
   // Supabase puts the access token in the URL hash after email link click
   useEffect(() => {
+    if (!supabase) {
+      setSessionReady(true);
+      return;
+    }
+    const client = supabase;
+
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const accessToken = hashParams.get("access_token");
     const type = hashParams.get("type");
 
-    if (accessToken && type === "recovery") {
-      supabase.auth.setSession({
+    async function establishRecoverySession() {
+      if (!accessToken || type !== "recovery") {
+        setSessionReady(true);
+        return;
+      }
+
+      const { error: sessionError } = await client.auth.setSession({
         access_token: accessToken,
         refresh_token: hashParams.get("refresh_token") ?? "",
       });
+
+      if (sessionError) {
+        setError(sessionError.message);
+      }
+      setSessionReady(true);
     }
-  }, [supabase.auth]);
+
+    establishRecoverySession();
+  }, [supabase]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +62,18 @@ export default function ResetPasswordPage() {
       return;
     }
 
+    if (!sessionReady) {
+      setError("Preparing your reset session. Please try again in a moment.");
+      return;
+    }
+
     setLoading(true);
+
+    if (!supabase) {
+      setError("Password reset is not configured");
+      setLoading(false);
+      return;
+    }
 
     const { error } = await supabase.auth.updateUser({ password });
 
@@ -129,10 +155,10 @@ export default function ResetPasswordPage() {
 
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !sessionReady}
                 className="w-full py-2.5 rounded-xl bg-prism-accent-primary text-white text-sm font-medium hover:shadow-[0_0_24px_rgba(212,149,107,0.3)] transition-all disabled:opacity-50"
               >
-                {loading ? "Updating..." : "Update password"}
+                {loading ? "Updating..." : sessionReady ? "Update password" : "Preparing reset..."}
               </button>
             </form>
 
