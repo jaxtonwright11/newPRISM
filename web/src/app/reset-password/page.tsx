@@ -12,23 +12,39 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
   const [supabase] = useState(() => getSupabase());
   const router = useRouter();
 
   // Supabase puts the access token in the URL hash after email link click
   useEffect(() => {
-    if (!supabase) return;
+    if (!supabase) {
+      setSessionReady(true);
+      return;
+    }
 
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const accessToken = hashParams.get("access_token");
     const type = hashParams.get("type");
 
-    if (accessToken && type === "recovery") {
-      supabase.auth.setSession({
+    async function establishRecoverySession() {
+      if (!accessToken || type !== "recovery") {
+        setSessionReady(true);
+        return;
+      }
+
+      const { error: sessionError } = await supabase.auth.setSession({
         access_token: accessToken,
         refresh_token: hashParams.get("refresh_token") ?? "",
       });
+
+      if (sessionError) {
+        setError(sessionError.message);
+      }
+      setSessionReady(true);
     }
+
+    establishRecoverySession();
   }, [supabase]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,6 +58,11 @@ export default function ResetPasswordPage() {
 
     if (password !== confirmPassword) {
       setError("Passwords do not match");
+      return;
+    }
+
+    if (!sessionReady) {
+      setError("Preparing your reset session. Please try again in a moment.");
       return;
     }
 
@@ -133,10 +154,10 @@ export default function ResetPasswordPage() {
 
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !sessionReady}
                 className="w-full py-2.5 rounded-xl bg-prism-accent-primary text-white text-sm font-medium hover:shadow-[0_0_24px_rgba(212,149,107,0.3)] transition-all disabled:opacity-50"
               >
-                {loading ? "Updating..." : "Update password"}
+                {loading ? "Updating..." : sessionReady ? "Update password" : "Preparing reset..."}
               </button>
             </form>
 
