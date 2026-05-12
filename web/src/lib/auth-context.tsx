@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { createClient, SupabaseClient, User, Session, AuthError } from '@supabase/supabase-js';
 import { subscribeToPush } from '@/lib/push';
 import { identifyUser, resetUser } from '@/lib/posthog';
+import { getSupabase } from '@/lib/supabase';
 
 type AuthResult = { error: AuthError | null };
 type SignUpResult = { error: AuthError | null; confirmationRequired: boolean };
@@ -21,21 +22,19 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function createAuthClient(): SupabaseClient {
+  return getSupabase() ?? createClient('http://127.0.0.1', 'prism-disabled-anon-key', {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      debug: false,
+    },
+  });
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Create browser client
-  const [supabase] = useState(() =>
-    createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        auth: {
-          persistSession: true,
-          autoRefreshToken: true,
-          debug: false,
-        },
-      }
-    )
-  );
+  const [supabase] = useState(createAuthClient);
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
