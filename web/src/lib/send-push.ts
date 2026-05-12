@@ -1,5 +1,6 @@
 import webpush from "web-push";
 import { createClient } from "@supabase/supabase-js";
+import { isValidSupabaseUrl } from "./supabase";
 
 const VAPID_PUBLIC = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
 const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY ?? "";
@@ -21,7 +22,7 @@ try {
 }
 
 function getServiceSupabase() {
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) return null;
+  if (!isValidSupabaseUrl(SUPABASE_URL) || !SUPABASE_SERVICE_KEY) return null;
   return createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 }
 
@@ -30,6 +31,36 @@ interface PushPayload {
   body: string;
   url?: string;
   icon?: string;
+  data?: Record<string, unknown>;
+}
+
+function sanitizePushUrl(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+
+  const trimmedUrl = url.trim();
+  const hasControlChars = /[\u0000-\u001F\u007F]/.test(trimmedUrl);
+  if (!trimmedUrl.startsWith("/") || trimmedUrl.startsWith("//") || hasControlChars) {
+    return "/feed";
+  }
+
+  return trimmedUrl;
+}
+
+export function buildPushNotificationPayload(payload: PushPayload): PushPayload & { data: Record<string, unknown> } {
+  const payloadData = payload.data ?? {};
+  const dataUrl = typeof payloadData.url === "string" ? payloadData.url : undefined;
+  const safeUrl = sanitizePushUrl(payload.url ?? dataUrl);
+  const data: Record<string, unknown> = { ...payloadData };
+
+  if (safeUrl) {
+    data.url = safeUrl;
+  }
+
+  return {
+    ...payload,
+    ...(safeUrl ? { url: safeUrl } : {}),
+    data,
+  };
 }
 
 /**
@@ -54,7 +85,7 @@ export async function sendPushToUser(userId: string, payload: PushPayload): Prom
           endpoint: sub.endpoint,
           keys: { p256dh: sub.keys_p256dh, auth: sub.keys_auth },
         },
-        JSON.stringify(payload)
+        JSON.stringify(buildPushNotificationPayload(payload))
       );
       sent++;
     } catch (err: unknown) {
@@ -92,7 +123,7 @@ export async function sendPushBroadcast(payload: PushPayload): Promise<number> {
           endpoint: sub.endpoint,
           keys: { p256dh: sub.keys_p256dh, auth: sub.keys_auth },
         },
-        JSON.stringify(payload)
+        JSON.stringify(buildPushNotificationPayload(payload))
       );
       sent++;
     } catch (err: unknown) {
