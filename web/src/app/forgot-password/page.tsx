@@ -16,9 +16,17 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     setError(null);
 
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+    if (!supabaseUrl.startsWith("http") || !supabaseAnonKey) {
+      setError("Password reset is unavailable while Supabase is not configured.");
+      setLoading(false);
+      return;
+    }
+
     const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      supabaseUrl,
+      supabaseAnonKey
     );
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {

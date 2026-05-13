@@ -21,26 +21,51 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  // Create browser client
-  const [supabase] = useState(() =>
-    createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        auth: {
-          persistSession: true,
-          autoRefreshToken: true,
-          debug: false,
-        },
-      }
-    )
+const SUPABASE_FALLBACK_URL = 'https://placeholder.supabase.co';
+const SUPABASE_FALLBACK_ANON_KEY = 'placeholder-anon-key';
+
+function hasBrowserSupabaseConfig() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
+  return url.startsWith('http') && key.length > 0;
+}
+
+function createBrowserSupabaseClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
+
+  return createClient(
+    url.startsWith('http') ? url : SUPABASE_FALLBACK_URL,
+    key || SUPABASE_FALLBACK_ANON_KEY,
+    {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        debug: false,
+      },
+    }
   );
+}
+
+function supabaseNotConfiguredError() {
+  return new AuthError('Supabase is not configured.');
+}
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [supabase] = useState(createBrowserSupabaseClient);
+  const [supabaseConfigured] = useState(hasBrowserSupabaseConfig);
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!supabaseConfigured) {
+      setSession(null);
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -65,9 +90,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, [supabase]);
+  }, [supabase, supabaseConfigured]);
 
   const signUp = async (email: string, password: string, username: string) => {
+    if (!supabaseConfigured) {
+      return { error: supabaseNotConfiguredError(), confirmationRequired: false };
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -77,11 +106,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
+    if (!supabaseConfigured) {
+      return { error: supabaseNotConfiguredError() };
+    }
+
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error };
   };
 
   const signInWithGoogle = async () => {
+    if (!supabaseConfigured) {
+      return { error: supabaseNotConfiguredError() };
+    }
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/auth/callback` },
@@ -90,6 +127,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    if (!supabaseConfigured) return;
     await supabase.auth.signOut();
   };
 
