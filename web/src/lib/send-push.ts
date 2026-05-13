@@ -30,6 +30,46 @@ interface PushPayload {
   body: string;
   url?: string;
   icon?: string;
+  data?: Record<string, unknown>;
+}
+
+const DEFAULT_CLICK_URL = "/feed";
+
+function normalizeClickUrl(url: unknown): string {
+  if (typeof url !== "string") return DEFAULT_CLICK_URL;
+
+  const trimmed = url.trim();
+  if (!trimmed || trimmed.startsWith("//")) return DEFAULT_CLICK_URL;
+
+  if (trimmed.startsWith("/")) {
+    return trimmed;
+  }
+
+  try {
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+    if (!siteUrl) return DEFAULT_CLICK_URL;
+
+    const siteOrigin = new URL(siteUrl).origin;
+    const parsed = new URL(trimmed);
+    if (parsed.origin !== siteOrigin) return DEFAULT_CLICK_URL;
+
+    return `${parsed.pathname}${parsed.search}${parsed.hash}` || "/";
+  } catch {
+    return DEFAULT_CLICK_URL;
+  }
+}
+
+export function buildWebPushPayload(payload: PushPayload): PushPayload & { data: Record<string, unknown> & { url: string } } {
+  const clickUrl = normalizeClickUrl(payload.url ?? payload.data?.url);
+
+  return {
+    ...payload,
+    url: clickUrl,
+    data: {
+      ...(payload.data ?? {}),
+      url: clickUrl,
+    },
+  };
 }
 
 /**
@@ -47,6 +87,7 @@ export async function sendPushToUser(userId: string, payload: PushPayload): Prom
   if (!subscriptions || subscriptions.length === 0) return 0;
 
   let sent = 0;
+  const notificationPayload = JSON.stringify(buildWebPushPayload(payload));
   for (const sub of subscriptions) {
     try {
       await webpush.sendNotification(
@@ -54,7 +95,7 @@ export async function sendPushToUser(userId: string, payload: PushPayload): Prom
           endpoint: sub.endpoint,
           keys: { p256dh: sub.keys_p256dh, auth: sub.keys_auth },
         },
-        JSON.stringify(payload)
+        notificationPayload
       );
       sent++;
     } catch (err: unknown) {
@@ -85,6 +126,7 @@ export async function sendPushBroadcast(payload: PushPayload): Promise<number> {
   if (!subscriptions || subscriptions.length === 0) return 0;
 
   let sent = 0;
+  const notificationPayload = JSON.stringify(buildWebPushPayload(payload));
   for (const sub of subscriptions) {
     try {
       await webpush.sendNotification(
@@ -92,7 +134,7 @@ export async function sendPushBroadcast(payload: PushPayload): Promise<number> {
           endpoint: sub.endpoint,
           keys: { p256dh: sub.keys_p256dh, auth: sub.keys_auth },
         },
-        JSON.stringify(payload)
+        notificationPayload
       );
       sent++;
     } catch (err: unknown) {

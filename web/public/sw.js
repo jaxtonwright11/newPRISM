@@ -1,6 +1,21 @@
 const CACHE_NAME = "prism-v2";
 const PRECACHE_URLS = ["/", "/offline"];
 
+function normalizeNotificationUrl(url) {
+  if (typeof url !== "string") return "/feed";
+
+  const trimmed = url.trim();
+  if (!trimmed || trimmed.startsWith("//")) return "/feed";
+
+  try {
+    const parsed = new URL(trimmed, self.location.origin);
+    if (parsed.origin !== self.location.origin) return "/feed";
+    return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+  } catch {
+    return "/feed";
+  }
+}
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS))
@@ -58,6 +73,7 @@ self.addEventListener("push", (event) => {
   }
 
   const { title = "PRISM", body, icon, badge, data, tag } = payload;
+  const clickUrl = normalizeNotificationUrl(data?.url || payload.url);
 
   event.waitUntil(
     self.registration.showNotification(title, {
@@ -66,7 +82,7 @@ self.addEventListener("push", (event) => {
       badge: badge || "/icons/icon-192.svg",
       tag: tag || "prism-default",
       renotify: !!tag,
-      data: data || {},
+      data: { ...(data || {}), url: clickUrl },
       actions: payload.actions || [],
       vibrate: [100, 50, 100],
     })
@@ -76,7 +92,7 @@ self.addEventListener("push", (event) => {
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
-  const url = event.notification.data?.url || "/feed";
+  const url = normalizeNotificationUrl(event.notification.data?.url);
 
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
