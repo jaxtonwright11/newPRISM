@@ -80,6 +80,8 @@ describe("daily-prompt cron route", () => {
       prompt_id: "prompt-1",
       topic: "Water policy",
     });
+    expect(from).toHaveBeenCalledWith("perspective_prompts");
+    expect(from).toHaveBeenCalledWith("perspectives");
     expect(promptQuery.select).toHaveBeenCalledWith("id, prompt_text, topic:topics(title, slug)");
     expect(promptQuery.eq).toHaveBeenCalledWith("active", true);
     expect(countQuery.select).toHaveBeenCalledWith("id", { count: "exact", head: true });
