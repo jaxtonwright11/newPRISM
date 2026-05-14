@@ -71,6 +71,7 @@ function loadServiceWorker(windowClients: unknown[] = []) {
     fetch: vi.fn(),
     Promise,
     Response,
+    URL,
   });
 
   return { listeners, showNotification, openWindow };
