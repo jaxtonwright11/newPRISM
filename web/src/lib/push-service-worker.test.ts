@@ -26,7 +26,7 @@ type NotificationClickEvent = WaitableEvent & {
 type ServiceWorkerEvent = WaitableEvent | PushEvent | NotificationClickEvent;
 type ServiceWorkerListener = (event: ServiceWorkerEvent) => void;
 
-function loadServiceWorker() {
+function loadServiceWorker(windowClients: unknown[] = []) {
   const listeners = new Map<string, ServiceWorkerListener>();
   const showNotification =
     vi.fn<(title: string, options: Record<string, unknown>) => Promise<void>>().mockResolvedValue(
@@ -47,7 +47,7 @@ function loadServiceWorker() {
       skipWaiting: vi.fn(),
       clients: {
         claim: vi.fn(),
-        matchAll: vi.fn((): Promise<unknown[]> => Promise.resolve([])),
+        matchAll: vi.fn((): Promise<unknown[]> => Promise.resolve(windowClients)),
         openWindow,
       },
       location: {
@@ -165,6 +165,29 @@ describe("push service worker", () => {
     );
   });
 
+  it("falls back to the feed for cross-origin payload URLs", async () => {
+    const { listeners, showNotification } = loadServiceWorker();
+    const pushListener = listeners.get("push");
+    if (!pushListener) {
+      throw new Error("Expected service worker push listener to be registered");
+    }
+
+    await dispatchPush(pushListener, {
+      title: "Daily perspective prompt",
+      body: "Communities are posting right now.",
+      url: "https://malicious.example/compare/housing-costs",
+    });
+
+    expect(showNotification).toHaveBeenCalledWith(
+      "Daily perspective prompt",
+      expect.objectContaining({
+        data: {
+          url: "/feed",
+        },
+      })
+    );
+  });
+
   it("opens the URL stored on notification data when clicked", async () => {
     const { listeners, openWindow } = loadServiceWorker();
     const clickListener = listeners.get("notificationclick");
@@ -175,5 +198,23 @@ describe("push service worker", () => {
     await dispatchNotificationClick(clickListener, "/compare/climate-resilience");
 
     expect(openWindow).toHaveBeenCalledWith("/compare/climate-resilience");
+  });
+
+  it("sanitizes notification data URLs before navigating existing clients", async () => {
+    const existingClient = {
+      url: "https://prism.example/feed",
+      navigate: vi.fn(),
+      focus: vi.fn((): Promise<void> => Promise.resolve()),
+    };
+    const { listeners, openWindow } = loadServiceWorker([existingClient]);
+    const clickListener = listeners.get("notificationclick");
+    if (!clickListener) {
+      throw new Error("Expected service worker notificationclick listener to be registered");
+    }
+
+    await dispatchNotificationClick(clickListener, "javascript:alert(1)");
+
+    expect(existingClient.navigate).toHaveBeenCalledWith("/feed");
+    expect(openWindow).not.toHaveBeenCalled();
   });
 });

@@ -42,6 +42,18 @@ self.addEventListener("fetch", (event) => {
 });
 
 // ─── Push Notifications ────────────────────────────────────────────────────
+function getSafeNavigationUrl(rawUrl) {
+  if (typeof rawUrl !== "string" || rawUrl.trim() === "") return "/feed";
+
+  try {
+    const url = new URL(rawUrl, self.location.origin);
+    if (url.origin !== self.location.origin) return "/feed";
+    return `${url.pathname}${url.search}${url.hash}` || "/feed";
+  } catch {
+    return "/feed";
+  }
+}
+
 self.addEventListener("push", (event) => {
   if (!event.data) return;
 
@@ -58,11 +70,12 @@ self.addEventListener("push", (event) => {
   }
 
   const { title = "PRISM", body, icon, badge, data, tag, url } = payload;
+  const safeUrl = getSafeNavigationUrl(url);
   const notificationData =
     url && data && typeof data === "object" && !Array.isArray(data)
-      ? { ...data, url }
+      ? { ...data, url: safeUrl }
       : url
-        ? { url }
+        ? { url: safeUrl }
         : data || {};
 
   event.waitUntil(
@@ -82,7 +95,7 @@ self.addEventListener("push", (event) => {
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
-  const url = event.notification.data?.url || "/feed";
+  const url = getSafeNavigationUrl(event.notification.data?.url);
 
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
