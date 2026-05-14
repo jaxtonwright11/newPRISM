@@ -84,6 +84,25 @@ export default function TopicDetailPage() {
     fetchTopic();
   }, [slug, session?.access_token]);
 
+  useEffect(() => {
+    if (!session?.access_token || !topic?.id) {
+      setTopicSaved(false);
+      return;
+    }
+
+    fetch("/api/bookmarks/topics", {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch bookmarked topics");
+        return res.json();
+      })
+      .then((data: { topics?: Array<{ id?: string }> }) => {
+        setTopicSaved((data.topics ?? []).some((savedTopic) => savedTopic.id === topic.id));
+      })
+      .catch(() => {});
+  }, [session?.access_token, topic?.id]);
+
   // Fetch sentiment data for geographic summary
   useEffect(() => {
     if (!topic?.id) return;
@@ -201,9 +220,8 @@ export default function TopicDetailPage() {
                   if (!session.access_token) return;
                   const wasSaved = topicSaved;
                   setTopicSaved(!wasSaved);
-                  toast(wasSaved ? "Topic unsaved" : "Topic saved");
                   try {
-                    await fetch("/api/bookmarks/topics", {
+                    const response = await fetch("/api/bookmarks/topics", {
                       method: wasSaved ? "DELETE" : "POST",
                       headers: {
                         "Content-Type": "application/json",
@@ -211,8 +229,11 @@ export default function TopicDetailPage() {
                       },
                       body: JSON.stringify({ topic_id: topic.id }),
                     });
+                    if (!response.ok) throw new Error("Failed to update topic bookmark");
+                    toast(wasSaved ? "Topic unsaved" : "Topic saved");
                   } catch {
                     setTopicSaved(wasSaved);
+                    toast("Couldn't update topic bookmark");
                   }
                 }}
                 className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full transition-all ${
