@@ -28,10 +28,11 @@ type ServiceWorkerListener = (event: ServiceWorkerEvent) => void;
 
 function loadServiceWorker() {
   const listeners = new Map<string, ServiceWorkerListener>();
-  const showNotification = vi.fn(
-    (_title: string, _options: Record<string, unknown>): Promise<void> => Promise.resolve()
-  );
-  const openWindow = vi.fn((_url: string): Promise<unknown> => Promise.resolve({}));
+  const showNotification =
+    vi.fn<(title: string, options: Record<string, unknown>) => Promise<void>>().mockResolvedValue(
+      undefined
+    );
+  const openWindow = vi.fn<(url: string) => Promise<unknown>>().mockResolvedValue({});
 
   const script = readFileSync(
     fileURLToPath(new URL("../../public/sw.js", import.meta.url)),
