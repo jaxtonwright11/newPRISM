@@ -32,6 +32,29 @@ interface PushPayload {
   icon?: string;
 }
 
+function normalizePushUrl(url?: string): string {
+  const fallbackUrl = "/feed";
+  const trimmed = url?.trim();
+
+  if (!trimmed || !trimmed.startsWith("/") || trimmed.startsWith("//")) {
+    return fallbackUrl;
+  }
+
+  return trimmed;
+}
+
+export function buildWebPushPayload(payload: PushPayload) {
+  const url = normalizePushUrl(payload.url);
+
+  return {
+    ...payload,
+    url,
+    data: {
+      url,
+    },
+  };
+}
+
 /**
  * Send push notification to a specific user
  */
@@ -54,7 +77,7 @@ export async function sendPushToUser(userId: string, payload: PushPayload): Prom
           endpoint: sub.endpoint,
           keys: { p256dh: sub.keys_p256dh, auth: sub.keys_auth },
         },
-        JSON.stringify(payload)
+        JSON.stringify(buildWebPushPayload(payload))
       );
       sent++;
     } catch (err: unknown) {
@@ -92,7 +115,7 @@ export async function sendPushBroadcast(payload: PushPayload): Promise<number> {
           endpoint: sub.endpoint,
           keys: { p256dh: sub.keys_p256dh, auth: sub.keys_auth },
         },
-        JSON.stringify(payload)
+        JSON.stringify(buildWebPushPayload(payload))
       );
       sent++;
     } catch (err: unknown) {
