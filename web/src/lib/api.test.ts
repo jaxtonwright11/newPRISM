@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
-import { applyRateLimit, parseQuery, slugSchema } from "./api";
+import { applyRateLimit, parseJsonBody, parseParams, parseQuery, slugSchema } from "./api";
 
 const configuredLimit = Number.parseInt(process.env.API_RATE_LIMIT_MAX ?? "120", 10);
 const rateLimitMaxRequests =
@@ -118,6 +118,120 @@ describe("parseQuery", () => {
       issues: expect.arrayContaining([
         expect.objectContaining({
           path: "page",
+        }),
+      ]),
+    });
+  });
+});
+
+describe("parseParams", () => {
+  const schema = z.object({
+    id: z.string().uuid(),
+  });
+
+  it("returns parsed route parameters for valid input", () => {
+    const parsed = parseParams(
+      { id: "123e4567-e89b-12d3-a456-426614174000" },
+      schema
+    );
+
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) {
+      throw new Error("Expected parseParams success");
+    }
+
+    expect(parsed.data).toEqual({
+      id: "123e4567-e89b-12d3-a456-426614174000",
+    });
+  });
+
+  it("returns a structured 400 response for invalid route parameters", async () => {
+    const parsed = parseParams({ id: "not-a-uuid" }, schema);
+
+    expect(parsed.success).toBe(false);
+    if (parsed.success) {
+      throw new Error("Expected parseParams failure");
+    }
+
+    expect(parsed.response.status).toBe(400);
+    await expect(parsed.response.json()).resolves.toMatchObject({
+      error: "Invalid route parameters",
+      issues: expect.arrayContaining([
+        expect.objectContaining({
+          path: "id",
+        }),
+      ]),
+    });
+  });
+});
+
+describe("parseJsonBody", () => {
+  const schema = z.object({
+    content: z.string().trim().min(1).max(20),
+    radius_miles: z.union([z.literal(10), z.literal(20)]),
+  });
+
+  function createJsonRequest(body: string): Request {
+    return new Request("https://example.com/api/posts", {
+      method: "POST",
+      body,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  }
+
+  it("returns parsed JSON body values for valid input", async () => {
+    const parsed = await parseJsonBody(
+      createJsonRequest(JSON.stringify({ content: "  hello  ", radius_miles: 10 })),
+      schema
+    );
+
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) {
+      throw new Error("Expected parseJsonBody success");
+    }
+
+    expect(parsed.data).toEqual({
+      content: "hello",
+      radius_miles: 10,
+    });
+  });
+
+  it("returns a structured 400 response for malformed JSON", async () => {
+    const parsed = await parseJsonBody(createJsonRequest("{not-json"), schema);
+
+    expect(parsed.success).toBe(false);
+    if (parsed.success) {
+      throw new Error("Expected parseJsonBody failure");
+    }
+
+    expect(parsed.response.status).toBe(400);
+    await expect(parsed.response.json()).resolves.toEqual({
+      error: "Invalid request body",
+    });
+  });
+
+  it("returns a structured 400 response for schema validation failures", async () => {
+    const parsed = await parseJsonBody(
+      createJsonRequest(JSON.stringify({ content: "   ", radius_miles: 30 })),
+      schema
+    );
+
+    expect(parsed.success).toBe(false);
+    if (parsed.success) {
+      throw new Error("Expected parseJsonBody failure");
+    }
+
+    expect(parsed.response.status).toBe(400);
+    await expect(parsed.response.json()).resolves.toMatchObject({
+      error: "Invalid request body",
+      issues: expect.arrayContaining([
+        expect.objectContaining({
+          path: "content",
+        }),
+        expect.objectContaining({
+          path: "radius_miles",
         }),
       ]),
     });
