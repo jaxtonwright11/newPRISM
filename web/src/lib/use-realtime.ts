@@ -29,10 +29,10 @@ export function useRealtime({
   enabled = true,
 }: UseRealtimeOptions) {
   const { supabase } = useAuth();
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const channelRef = useRef<ReturnType<NonNullable<typeof supabase>["channel"]> | null>(null);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || !supabase) return;
 
     const channelName = `realtime:${table}:${filter ?? "all"}`;
     const channel = supabase.channel(channelName);
